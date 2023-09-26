@@ -1,0 +1,289 @@
+import * as React from 'react';
+import Avatar from '@mui/material/Avatar';
+import Button from '@mui/material/Button';
+import TextField from '@mui/material/TextField';
+import FormControlLabel from '@mui/material/FormControlLabel';
+import Checkbox from '@mui/material/Checkbox';
+import Link from '@mui/material/Link';
+import Grid from '@mui/material/Grid';
+import Box from '@mui/material/Box';
+import { ThemeProvider, createTheme } from '@mui/material/styles';
+import { Copyright } from './SignIn.jsx'
+import './App.css';
+import { useState, useEffect} from 'react';
+import FrontAPI from './FrontAPI.jsx';
+
+const theme = createTheme({
+  palette: {
+    primary: {
+      main: '#ff5722', //orange
+    },
+    secondary: {
+      main: '#ffea00', //yellow
+    },
+  },
+});
+
+export default function SignUp() {
+  const [confirmPassword, setConfirmPassword] = useState(''); // store reenter
+  const [passwordsMatch, setPasswordsMatch] = useState(true); // check reenter password
+  const [passwordValid, setPasswordValid] = useState(true); // check password
+  const [passwordValidationMessage, setPasswordValidationMessage] = useState('');
+
+  const [showMore, setShowMore] = useState(false);
+  const [formData, setFormData] = useState({
+    email: '',
+    password: '',
+    repassword: '',
+    firstName: '',
+    lastName: '',
+    phone: '',
+    netId: '',
+    criminal: '',
+    //update records later
+    tutor: false,
+  });
+
+  // get data from form
+  const handleChange = (event) => {
+    const { name, value, type, checked } = event.target;
+    
+    if (type === 'checkbox') {
+      setFormData({
+        ...formData,
+        [name]: checked,
+      });
+    }
+    else if (name === 'password') {
+      // check if the password meets the validation criteria
+      const isPasswordValid =
+        value.length >= 8 && /[A-Z]/.test(value) && /[0-9]/.test(value);   
+  
+      // set the password validation message based on the validation result
+      setPasswordValidationMessage(
+        isPasswordValid ? '' : 'Password must be at least 8 characters long and contain at least 1 capital letter (A-Z) and 1 number (0-9)'
+      );
+  
+      // update the error state based on validation result
+      setPasswordValid(isPasswordValid);
+  
+      // update the form data
+      setFormData({
+        ...formData,
+        [name]: value,
+      });
+    }
+    else if (name === 'repassword') {
+      setConfirmPassword(value); // update confirmPassword state
+      setFormData({
+        ...formData,
+        [name]: value,
+      });
+    } 
+    else {
+      setFormData({
+        ...formData,
+        [name]: value,
+      });
+    }
+  };
+
+  useEffect(() => {
+    setPasswordsMatch(formData.password === confirmPassword);
+  }, [formData.password, confirmPassword]);
+
+  function handleMoreClick() {
+    setShowMore(!showMore);
+  }
+
+  // listen for submit event from "Sign in" Button
+  const handleSubmit = async (event) => {
+    // preventDefault() prevents a page refresh
+    event.preventDefault();
+
+    try {
+      const response = await FrontAPI.signUp(formData);
+  
+      if (response.status === 200) {
+        // success msg
+        console.log('Registration successful');
+      } else {
+        // fail msg
+        console.log('Registration failed');
+      }
+    } 
+    catch (error) {
+      // error msg
+      console.error('Error:', error);
+    }
+  };
+
+  return (
+      <ThemeProvider theme={theme}>
+          <Box sx={{
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+              }}> 
+            <Link href="https://www.utdallas.edu/">
+              <Avatar sx={{ bgcolor: 'primary.main', width: 60, height: 60 }}>
+                <h4>UTD</h4>
+              </Avatar>
+            </Link>
+          </Box>
+
+          <h2>Online Tutoring Service</h2>
+          <h2>SIGN UP</h2>
+
+          <Box component="form" onSubmit={handleSubmit} noValidate >
+
+            <Grid container spacing={2}>
+              <Grid item xs={12} sm={6}>
+                <TextField
+                  autoComplete="given-name"
+                  name="firstName"
+                  required
+                  fullWidth
+                  id="firstName"
+                  label="First Name"
+                  value={formData.firstName}
+                  onChange={handleChange}
+                />
+              </Grid>
+              <Grid item xs={12} sm={6}>
+                <TextField
+                  required
+                  fullWidth
+                  id="lastName"
+                  label="Last Name"
+                  name="lastName"
+                  autoComplete="family-name"
+                  value={formData.lastName}
+                  onChange={handleChange}
+                />
+              </Grid>
+              <Grid item xs={12}>
+                <TextField
+                  required
+                  fullWidth
+                  id="email"
+                  label="Email Address"
+                  name="email"
+                  autoComplete="email"
+                  value={formData.email}
+                  onChange={handleChange}
+                />
+              </Grid>
+              <Grid item xs={12}>
+                <TextField
+                  required
+                  fullWidth
+                  id="phone"
+                  label="Phone Number"
+                  name="phone"
+                  autoComplete="phone"
+                  value={formData.phone}
+                  onChange={handleChange}
+                />
+              </Grid>
+              <Grid item xs={12}>
+                <TextField
+                  required
+                  fullWidth
+                  name="netId"
+                  label="NetID"
+                  type="netId"
+                  id="netId"
+                  autoComplete="netId"
+                  value={formData.netId}
+                  onChange={handleChange}
+                />
+              </Grid>
+              <Grid item xs={12}>
+                <TextField
+                  required
+                  fullWidth
+                  name="password"
+                  label="Password"
+                  type="password"
+                  id="password"
+                  autoComplete="new-password"
+                  error={!passwordValid}
+                  value={formData.password}
+                  onChange={handleChange}
+                />
+                {!passwordValid && (
+                  <p style={{ color: 'red' }}>{passwordValidationMessage}</p>
+                )}
+              </Grid>
+              <Grid item xs={12}>
+                <TextField
+                  required
+                  fullWidth
+                  name="repassword"
+                  label="Re-enter Password"
+                  type="password"
+                  id="repassword"
+                  autoComplete="new-password"
+                  error={!passwordsMatch}
+                  value={formData.repassword}
+                  onChange={handleChange}
+                />
+                {!passwordsMatch && (
+                  <p style={{ color: 'red' }}>Passwords do not match</p>
+                )}
+              </Grid>
+            </Grid>
+
+            <Grid container justifyContent="flex-end"> 
+              <Button onClick={handleMoreClick} label="I want to sign up as a tutor">
+                {showMore ? 'Hide' : 'Show'} tutor account sign up
+              </Button>
+              {showMore && 
+                <TextField
+                  required
+                  fullWidth
+                  name="criminal"
+                  label="Criminal Records"
+                  type="criminal"
+                  id="criminal"
+                  value={formData.criminal}
+                  onChange={handleChange}
+                />
+              }
+              {showMore && 
+                <FormControlLabel 
+                  control={<Checkbox name="tutor" checked={formData.tutor} onChange={handleChange} />}
+                  label="I want to sign up as a tutor"
+                />
+              }
+            </Grid>
+
+            <Button
+              type="submit"
+              fullWidth
+              variant="contained"
+              sx={{ mt: 2, mb: 2 }}
+              disabled={!passwordsMatch || !passwordValid}
+            >
+              Sign Up
+            </Button>
+            
+            {/* hyper links */}
+            <Grid container justifyContent="flex-end">
+              <Grid item>
+                <Link href="#" variant="body1">
+                  Sign in with account
+                </Link>
+              </Grid>
+            </Grid>
+
+          </Box>
+
+          <Grid item sx={{mt: 10}}>
+            <Copyright/>
+          </Grid>
+
+      </ThemeProvider>
+  );
+}
