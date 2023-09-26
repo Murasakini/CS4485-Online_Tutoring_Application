@@ -1,0 +1,21 @@
+services:
+  server:
+    build: ./backend
+    ports:
+    - "5000:5000"
+    volumes:
+    - ./backend:/app
+    environment:
+      FLASK_ENV: development
+  web:
+    build: ./frontend
+    ports:
+    - "3000:3000"
+    volumes:
+      - ./frontend:/user/src/app
+      - /user/src/app/node_modules
+    environment:
+      HOST: 0.0.0.0
+      WATCHPACK_POLLING: "true"
+    depends_on:
+      - server
