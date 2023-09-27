@@ -1,0 +1,6 @@
+.app-container {
+    display: flex;
+    justify-content: center; /* Horizontally center */
+    align-items: center; /* Vertically center */
+}
+/* this is NOT used */
