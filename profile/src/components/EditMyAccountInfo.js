@@ -52,9 +52,13 @@ export default function EditAccountInfo(props) {
 
         <br />
         <Button type="Submit" 
-        //component={Link} to='/MyAccount'
+        // component={Link} to='/MyAccount'
         variant="contained" size="large" style={{marginBottom:"8px"}}>
           Save
+        </Button>
+        <Button component={Link} to='/MyAccount'
+        variant="contained" size="large" style={{marginBottom:"8px"}}>
+          Return
         </Button>
       </Box>
     );

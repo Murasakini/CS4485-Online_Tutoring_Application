@@ -16,6 +16,7 @@ const MyAccount = () => {
         // get result and store data
         .then(response => {
             setAccInfo(response.data);
+            console.log(accInfo)
         })
 
         // handle error
