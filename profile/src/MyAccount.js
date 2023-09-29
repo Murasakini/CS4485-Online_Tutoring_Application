@@ -8,9 +8,10 @@ const MyAccount = () => {
     // hold json data from db and function to store data
     const [accInfo, setAccInfo] = useState(null);
 
+    // retrieve data from db
     useEffect(() => {
         // call GET api 
-        Axios.get('http://localhost:3006/accountInfo')
+        Axios.get('http://localhost:3006/accountInfo/')
 
         // get result and store data
         .then(response => {
