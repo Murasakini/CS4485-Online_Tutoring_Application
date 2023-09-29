@@ -25,15 +25,15 @@ const FrontAPI = {
   
   signUp: async (formData) => {
     try {
-      const response = await axiosInstance.post('/api/signin', { 
-        email: formData.email,
+      const response = await axiosInstance.post('/api/signup', { 
         // hash password
         password: SHA256(formData.password).toString(),
+        // encrpyt the rest
+        email: formData.email,
         firstName: formData.firstName,
         lastName: formData.lastName,
-        phone: SHA256(formData.phone).toString(),
-        netId: SHA256(formData.netId).toString(),
-        //check to see if hash is needed, dont know specifically what to take from bg check
+        phone: formData.phone,
+        netId: formData.netId,
         criminalHistory: formData.criminalHistory,
         pendingCharges: formData.pendingCharges,
         probationOrParole: formData.probationOrParole,
