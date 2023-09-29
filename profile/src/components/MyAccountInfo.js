@@ -16,32 +16,32 @@ export default function AccountInfo(props) {
       <TextField
         id="name"
         label="First and Last Name"
-        defaultValue={props.accInfo[0].name}
+        defaultValue={props.accInfo.name}
         InputProps={{ readOnly: true }}
       />
       <TextField
         id="email"
         label="Email Address"
-        defaultValue={props.accInfo[0].email}
+        defaultValue={props.accInfo.email}
         InputProps={{ readOnly: true }}
       />
       <TextField
         id="phone"
         label="Phone Number"
-        defaultValue={props.accInfo[0].phone}
+        defaultValue={props.accInfo.phone}
         InputProps={{ readOnly: true }}
       />
       <TextField
         id="about"
         label="About Me"
-        defaultValue={props.accInfo[0].about}
+        defaultValue={props.accInfo.about}
         multiline
         InputProps={{ readOnly: true }}
       />
       <TextField
         id="subjects"
         label="Subject List"
-        defaultValue={props.accInfo[0].subject}
+        defaultValue={props.accInfo.subject}
         InputProps={{ readOnly: true }}
       />
       <br />
