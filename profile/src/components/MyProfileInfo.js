@@ -3,7 +3,7 @@ import { TextField, Box, Button } from "@mui/material/";
 import { Link } from "react-router-dom";
 import profile_photo from "../logo/profile_photo.png";
 
-export default function AccountInfo(props) {
+export default function MyProfileInfo(props) {
   const data = {
     photo: profile_photo,
     name: props.accInfo.name,
@@ -65,7 +65,7 @@ export default function AccountInfo(props) {
       />
       <br />
 
-      <Link to="/EditMyAccount" state={{ fromMyAccount: {data}}} >
+      <Link to="/EditMyProfile" state={{ fromMyAccount: {data}}} >
         <Button
           variant="contained"
           size="large"

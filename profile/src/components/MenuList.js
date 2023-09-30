@@ -70,11 +70,11 @@ export default function BasicList() {
 
       <nav aria-label="account setting">
         <List>
-          <ListItem disablePadding component={Link} to="/MyAccount">
+          {/* <ListItem disablePadding component={Link} to="/MyAccount">
             <ListItemButton>
               <ListItemText primary="My Account" />
             </ListItemButton>
-          </ListItem>
+          </ListItem> */}
 
           <ListItem disablePadding>
             <ListItemButton>

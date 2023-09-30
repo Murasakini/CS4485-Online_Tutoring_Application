@@ -3,7 +3,6 @@ import Box from '@mui/material/Box';
 import TextField from '@mui/material/TextField';
 import Button from '@mui/material/Button';
 import SearchResult from './SearchResult.js';
-import { useState } from 'react';
 
 const Search = (props) => {
     // // create holder for values and function to update values

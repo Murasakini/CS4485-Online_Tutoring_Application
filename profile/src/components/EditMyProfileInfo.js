@@ -2,7 +2,7 @@ import * as React from 'react';
 import { TextField, Box, Button } from '@mui/material/';
 import { Link } from 'react-router-dom';
 
-export default function EditAccountInfo(props) {
+export default function EditProfileInfo(props) {
   return (
       <Box
         component="form"
@@ -56,12 +56,11 @@ export default function EditAccountInfo(props) {
         />
 
         <br />
-        <Button type="Submit" 
-        // component={Link} to='/MyAccount'
+        <Button type="Submit"
         variant="contained" size="large" style={{marginBottom:"8px"}}>
           Save
         </Button>
-        <Button component={Link} to='/MyAccount'
+        <Button component={Link} to='/MyProfile'
         variant="contained" size="large" style={{marginBottom:"8px"}}>
           Return
         </Button>

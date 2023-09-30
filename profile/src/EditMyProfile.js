@@ -2,11 +2,10 @@ import { useState,  } from 'react';
 import { useLocation } from 'react-router-dom';
 import Header from './components/Header.js';
 import Body from './components/Body.js';
-import EditAccountInfo from './components/EditMyAccountInfo.js'
+import EditMyProfileInfo from './components/EditMyProfileInfo.js'
 import Axios from 'axios';
 
-
-const EditMyAccount = () => {
+const EditMyProfile = () => {
     // get data passed from MyAccount page
     const location = useLocation();
     const {fromMyAccount} = location.state;
@@ -45,7 +44,7 @@ const EditMyAccount = () => {
         <div>
             <Header title="MY ACCOUNT" />
             <Body content={
-                <EditAccountInfo
+                <EditMyProfileInfo
                 accInfo={accInfo}
                 handleChange={handleChange} 
                 handleSaveSubmit={handleSaveSubmit}/>}
@@ -54,4 +53,4 @@ const EditMyAccount = () => {
     );
 }
  
-export default EditMyAccount;
+export default EditMyProfile;

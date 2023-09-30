@@ -23,22 +23,6 @@ const MyAccount = () => {
         .catch(err => console.log(err))
     }, [])
 
-    // // retrieve data from db
-    // useEffect(() => {
-    //     // api call to db
-    //     fetch("http://localhost:3006/accountInfo")
-    //     // return response
-    //     .then((response) => {
-    //         return response.json();
-    //     })
-
-    //     // store data
-    //     .then((data) => {
-    //         console.log(data);
-    //         setAccInfo(data);
-    //     });
-    // }, []);
-
     return (
         <div>
             <Header title="MY ACCOUNT" />

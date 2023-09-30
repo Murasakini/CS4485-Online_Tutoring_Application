@@ -1,11 +1,13 @@
 import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
 import Home from './Home.js';
 import MyProfile from './MyProfile.js';
+import EditMyProfile from './EditMyProfile.js'
 import Appointments from './Appointments.js';
 import FindTutor from './FindTutor.js';
 import './App.css'
 import MyAccount from './MyAccount.js';
 import EditMyAccount from './EditMyAccount.js'
+
 
 function App() {
   return (
@@ -15,6 +17,7 @@ function App() {
           <Routes>
             <Route path='/' element={<Home />} />
             <Route path='/MyProfile' element={<MyProfile />} />
+            <Route path='/EditMyProfile' element={<EditMyProfile />} />
             <Route path='/Appointments' element={<Appointments />} />
             <Route path='/FindTutor' element={<FindTutor />} />
             <Route path='/MyAccount' element={<MyAccount />} />
