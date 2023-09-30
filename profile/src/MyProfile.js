@@ -5,7 +5,7 @@ import Profile from './components/Profile.js';
 const MyProfile = () => {
     return (
         <div>
-            <Header title="MY PROFILE"/>
+            <Header title="TUTOR PROFILE"/>
             <Body content={<Profile profileType="tutor"/>}/>
         </div>
     );

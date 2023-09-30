@@ -6,29 +6,29 @@ import SearchResult from './SearchResult.js';
 import { useState } from 'react';
 
 const Search = (props) => {
-    // create holder for values and function to update values
-    const [searchInfo, setSearchInfo] = useState({
-        instructorName: "",
-        subject: "",
-        dayOfWeek: "",
-    })
+    // // create holder for values and function to update values
+    // const [searchInfo, setSearchInfo] = useState({
+    //     instructorName: "",
+    //     subject: "",
+    //     dayOfWeek: "",
+    // })
 
-    // update values when any changes
-    const handleChange = (e) => {
-        // get input name and value
-        const{name, value} = e.target;
+    // // update values when any changes
+    // const handleChange = (e) => {
+    //     // get input name and value
+    //     const{name, value} = e.target;
 
-        // update values
-        setSearchInfo((prev) => {
-            return {...prev, [name]: value};
-        })
-    }
+    //     // update values
+    //     setSearchInfo((prev) => {
+    //         return {...prev, [name]: value};
+    //     })
+    // }
 
-    // do something when clicking save button (submit)
-    const handleSearchSubmit = (e) => {
-        e.preventDefault();
-        console.log(searchInfo);
-    }
+    // // do something when clicking save button (submit)
+    // const handleSearchSubmit = (e) => {
+    //     e.preventDefault();
+    //     console.log(searchInfo);
+    // }
 
 
     return (
@@ -39,27 +39,27 @@ const Search = (props) => {
             noValidate
             autoComplete="off"
             textAlign="center"
-            onSubmit={handleSearchSubmit}
+            onSubmit={props.handleSearchSubmit}
             >
                 <TextField id="instructorName" label="Instructor Name" variant="outlined" 
-                name="instructorName" value={searchInfo.instructorName}
-                onChange={handleChange} />
+                name="instructorName" value={props.searchInfo.instructorName}
+                onChange={props.handleChange} />
 
                 <TextField id="subject" label="Subject" variant="outlined"
-                name="subject" value={searchInfo.subject}
-                onChange={handleChange} />
+                name="subject" value={props.searchInfo.subject}
+                onChange={props.handleChange} />
 
                 <TextField id="dayOfWeek" label="Day of the Week" variant="outlined"
-                name="dayOfWeek" value={searchInfo.dayOfWeek}
-                onChange={handleChange} />
-
+                name="dayOfWeek" value={props.searchInfo.dayOfWeek}
+                onChange={props.handleChange} />
+                <br></br>
                 <Button type="Submit" variant="contained" size="large">Search</Button>
             </Box>
 
             <SearchResult 
-            instructorName={searchInfo.instructorName} 
-            subjects={searchInfo.subject} 
-            dayOfWeek={searchInfo.dayOfWeek} />
+            instructorName={props.searchInfo.instructorName} 
+            subjects={props.searchInfo.subject} 
+            dayOfWeek={props.searchInfo.dayOfWeek} />
 
         </React.Fragment>
     );
