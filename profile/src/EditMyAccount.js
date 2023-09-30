@@ -1,4 +1,5 @@
-import { useState, useEffect } from 'react';
+import { useState,  } from 'react';
+import { useLocation } from 'react-router-dom';
 import Header from './components/Header.js';
 import Body from './components/Body.js';
 import EditAccountInfo from './components/EditMyAccountInfo.js'
@@ -6,29 +7,18 @@ import Axios from 'axios';
 
 
 const EditMyAccount = () => {
-    // create holder for values and function to update values
-    const [accInfo, setAccInfo] = useState([{
-        name: 'Puppy Cute',
-        email: 'puppy.cute@animal.com',
-        phone: '(999)999-999',
-        about: 'I am the cutest puppy in the world.',
-        subject: 'Math',
-    }]);
-
-    // // retrieve data from db
-    // useEffect(() => {
-    //     // call GET api 
-    //     Axios.get('http://localhost:3006/accountInfo/')
-
-    //     // get result and store data
-    //     .then(response => {
-    //         setAccInfo(response.data);
-    //         console.log(accInfo)
-    //     })
-
-    //     // handle error
-    //     .catch(err => console.log(err))
-    // }, [])
+    // get data passed from MyAccount page
+    const location = useLocation();
+    const {fromMyAccount} = location.state;
+    
+    // get data from MyAccount and store as initial state
+    const [accInfo, setAccInfo] = useState({
+        name: fromMyAccount.data.name,
+        email: fromMyAccount.data.email, 
+        phone: fromMyAccount.data.phone,
+        about: fromMyAccount.data.about,
+        subject: fromMyAccount.data.subject
+    });
 
     // update values when any changes
     const handleChange = (e) => {
@@ -49,7 +39,6 @@ const EditMyAccount = () => {
         .then(response => console.log(response.data))
         .catch(err => console.log(err));
     }
-
 
     return (
         <div>
