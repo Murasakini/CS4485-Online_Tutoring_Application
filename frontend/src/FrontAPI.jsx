@@ -47,6 +47,34 @@ const FrontAPI = {
       throw error;
     }
   },
+
+  fetchTutors: async (subject) => {
+    try {
+      const response = await axiosInstance.get('/api/tutors', {
+        params: {
+          subject: subject,
+        },
+      });
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  },
+
+  fetchSubjects: async () => {
+    try {
+      const response = await axiosInstance.get('/api/subjects');
+      if (response.status === 200) {
+        return response.data;
+      } else {
+        throw new Error('Failed to fetch subjects');
+      }
+    } catch (error) {
+      console.error('Error fetching subjects:', error);
+      throw error;
+    }
+  },
+
 };
 
 export default FrontAPI;
