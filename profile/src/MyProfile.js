@@ -11,7 +11,7 @@ const MyAccount = () => {
     // retrieve data from db
     useEffect(() => {
         // call GET api 
-        Axios.get('http://localhost:3006/accountInfo/')
+        Axios.get('http://localhost:3006/accountInfo1/')
 
         // get result and store data
         .then(response => {
