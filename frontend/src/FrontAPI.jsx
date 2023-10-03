@@ -80,21 +80,6 @@ const FrontAPI = {
     }
   },
 
-  // create a new appointment
-  createAppointment: async (formData) => {
-    try {
-      const response = await axiosInstance.post('/api/appointments', {
-        subject: formData.subject,
-        tutor: formData.tutor,
-        timeSlot: formData.timeSlot,
-        // Add other appointment-related data here
-      });
-      return response.data;
-    } catch (error) {
-      throw error;
-    }
-  },  
-
   // get timeslot of the subject, tutor combination
   fetchTimeSlots: async (tutor, subject) => {
     try {
@@ -109,6 +94,21 @@ const FrontAPI = {
       throw error;
     }
   },
+  
+  // create a new appointment
+  createAppointment: async (formData) => {
+    try {
+      const response = await axiosInstance.post('/api/appointments', {
+        subject: formData.subject,
+        tutor: formData.tutor,
+        timeSlot: formData.timeSlot,
+        // Add other appointment-related data here
+      });
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  },  
 };
 
 export default FrontAPI;

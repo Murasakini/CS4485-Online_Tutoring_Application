@@ -12,7 +12,7 @@ const CalendarDisplay = ({ events }) => {
         events={events}
         startAccessor="start"
         endAccessor="end"
-        style={{ height: 500 }} // Adjust the height as needed
+        style={{ height: 500 }} // adjust the height as needed
       />
     </div>
   );

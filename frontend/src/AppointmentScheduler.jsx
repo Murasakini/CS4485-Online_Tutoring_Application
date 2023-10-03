@@ -143,23 +143,23 @@ export default function AppointmentScheduler() {
             </Select>
         </FormControl>
         <FormControl fullWidth required>
-            <InputLabel>Time Slot</InputLabel>
-            <Select
-              label="Time Slot"
-              name="timeSlot"
-              value={selectedTimeSlot}
-              onChange={(event) => setSelectedTimeSlot(event.target.value)}
-            >
-              <MenuItem value="">
-                <em>Select a time slot</em>
+          <InputLabel>Time Slot</InputLabel>
+          <Select
+            label="Time Slot"
+            name="timeSlot"
+            value={selectedTimeSlot}
+            onChange={(event) => setSelectedTimeSlot(event.target.value)}
+          >
+            <MenuItem value="">
+              <em>Select a time slot</em>
+            </MenuItem>
+            {/* Add the available time slots as MenuItem options */}
+            {availableSlots.map((slot) => (
+              <MenuItem key={slot.id} value={slot}>
+                {new Date(slot).toLocaleString()} {/* Format and display date and time */}
               </MenuItem>
-              {/* add the available time slots as MenuItem options */}
-              {availableSlots.map((slot) => (
-                <MenuItem key={slot.id} value={slot.time}>
-                  {slot.time}
-                </MenuItem>
-              ))}
-            </Select>
+            ))}
+          </Select>
         </FormControl>
         <Button
           type="submit"
