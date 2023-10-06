@@ -13,14 +13,20 @@ const FrontAPI = {
   // send sign in info for checking
   signIn: async (formData) => {
     try {
-      const response = await axiosInstance.post('/api/signin', { 
+      const response = await axiosInstance.post('/api/signin', {
         email: formData.email,
-        // hash password
         password: SHA256(formData.password).toString(),
-    });
+      });
       return response.data;
-    } 
-    catch (error) {
+    } catch (error) {
+      if (error.response) {
+        console.error('Error response status:', error.response.status);
+        console.error('Error response data:', error.response.data);
+      } else if (error.request) {
+        console.error('No response received:', error.request);
+      } else {
+        console.error('Error message:', error.message);
+      }
       throw error;
     }
   },
@@ -28,10 +34,9 @@ const FrontAPI = {
   // send sign up info
   signUp: async (formData) => {
     try {
-      const response = await axiosInstance.post('/api/signup', { 
-        // hash password
+      const response = await axiosInstance.post('/api/signup', {
+        //hash password
         password: SHA256(formData.password).toString(),
-        // encrpyt the rest
         email: formData.email,
         firstName: formData.firstName,
         lastName: formData.lastName,
@@ -43,10 +48,17 @@ const FrontAPI = {
         sexOffenderRegistry: formData.sexOffenderRegistry,
         outstandingWarrants: formData.outstandingWarrants,
         authorizationBackgroundCheck: formData.authorizationBackgroundCheck,
-    });
+      });
       return response.data;
-    } 
-    catch (error) {
+    } catch (error) {
+      if (error.response) {
+        console.error('Error response status:', error.response.status);
+        console.error('Error response data:', error.response.data);
+      } else if (error.request) {
+        console.error('No response received:', error.request);
+      } else {
+        console.error('Error message:', error.message);
+      }
       throw error;
     }
   },
@@ -61,6 +73,14 @@ const FrontAPI = {
       });
       return response.data;
     } catch (error) {
+      if (error.response) {
+        console.error('Error response status:', error.response.status);
+        console.error('Error response data:', error.response.data);
+      } else if (error.request) {
+        console.error('No response received:', error.request);
+      } else {
+        console.error('Error message:', error.message);
+      }
       throw error;
     }
   },
@@ -69,13 +89,16 @@ const FrontAPI = {
   fetchSubjects: async () => {
     try {
       const response = await axiosInstance.get('/api/subjects');
-      if (response.status === 200) {
-        return response.data;
-      } else {
-        throw new Error('Failed to fetch subjects');
-      }
+      return response.data;
     } catch (error) {
-      console.error('Error fetching subjects:', error);
+      if (error.response) {
+        console.error('Error response status:', error.response.status);
+        console.error('Error response data:', error.response.data);
+      } else if (error.request) {
+        console.error('No response received:', error.request);
+      } else {
+        console.error('Error message:', error.message);
+      }
       throw error;
     }
   },
@@ -91,6 +114,14 @@ const FrontAPI = {
       });
       return response.data;
     } catch (error) {
+      if (error.response) {
+        console.error('Error response status:', error.response.status);
+        console.error('Error response data:', error.response.data);
+      } else if (error.request) {
+        console.error('No response received:', error.request);
+      } else {
+        console.error('Error message:', error.message);
+      }
       throw error;
     }
   },
@@ -102,13 +133,21 @@ const FrontAPI = {
         subject: formData.subject,
         tutor: formData.tutor,
         timeSlot: formData.timeSlot,
-        // Add other appointment-related data here
       });
       return response.data;
     } catch (error) {
+      if (error.response) {
+        console.error('Error response status:', error.response.status);
+        console.error('Error response data:', error.response.data);
+      } else if (error.request) {
+        console.error('No response received:', error.request);
+      } else {
+        console.error('Error message:', error.message);
+      }
       throw error;
     }
-  },  
+  },
+  
 };
 
 export default FrontAPI;
