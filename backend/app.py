@@ -1,6 +1,7 @@
 from flask import Flask, jsonify
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import text
+from sqlalchemy.exc import IntegrityError
 from flask import Blueprint, request
 import yaml
 
@@ -32,21 +33,54 @@ TUTOR_FIELDS = USER_FIELDS.union({"criminal"})
 def validate_fields(data, expected_fields):
     return set(data.keys()) == expected_fields
 
+def user_exists(netID):
+    sql = text("SELECT 1 FROM users WHERE netID=:netID")
+    result = db.session.execute(sql, {"netID": netID})
+    return result.scalar() is not None
+
+
 def insert_user(data):
+    if user_exists(data['netID']):
+            return "User with that netID already exists", False
+
     sql = text("""
         INSERT INTO users (first_name, last_name, netID, email, phone_num, password) 
         VALUES (:first_name, :last_name, :netID, :email, :phone_num, :password)
     """)
-    db.session.execute(sql, data)
-    db.session.commit()
+    try:
+        result = db.session.execute(sql, data)
+        db.session.commit()
+
+        # Check if insert was successful
+        if result.rowcount == 1:
+            # Return the inserted data. 
+            # If you need the actual row from the DB, you'll need to query it here.
+            return data, True
+        else:
+            return "The insert was unsuccessful", False
+    except IntegrityError:  # Catch any IntegrityError (like unique constraint violations)
+        db.session.rollback()
+        return "An error occurred while inserting the user.", False
 
 def insert_tutor(data):
     sql = text("""
         INSERT INTO tutors (first_name, last_name, netID, email, phone_num, password, criminal) 
         VALUES (:first_name, :last_name, :netID, :email, :phone_num, :password, :criminal)
     """)
-    db.session.execute(sql, data)
-    db.session.commit()
+    try:
+        result = db.session.execute(sql, data)
+        db.session.commit()
+
+        # Check if insert was successful
+        if result.rowcount == 1:
+            # Return the inserted data. 
+            # If you need the actual row from the DB, you'll need to query it here.
+            return data, True
+        else:
+            return "The insert was unsuccessful", False
+    except IntegrityError:  # Catch any IntegrityError (like unique constraint violations)
+        db.session.rollback()
+        return "An error occurred while inserting the user.", False
 
 
 #####################
@@ -71,7 +105,24 @@ def signup_user():
         }
         return jsonify(response), 400
 
-    insert_user(data)
+    inserted_data, success = insert_user(data)
+
+    if success:
+        response = {
+            'error': False,
+            'status_code': 201,
+            'result': inserted_data
+        }
+        return jsonify(response), 201
+    else:
+        response = {
+            'error': True,
+            'status_code': 409, # 409 is the status code for a conflict
+            'message': inserted_data  # This will contain the error message
+        }
+        return jsonify(response), 409 
+
+    
 
 @version.route("/signup/tutor", methods=["POST"])
 def signup_tutor():
@@ -86,7 +137,23 @@ def signup_tutor():
         return jsonify(response), 400
 
     # If validation passes, you can continue with inserting the data into the database.
-    insert_tutor(data)
+    inserted_data, success = insert_tutor(data)
+
+    if success:
+        response = {
+            'error': False,
+            'status_code': 201,
+            'result': inserted_data
+        }
+        return jsonify(response), 201
+    else:
+        response = {
+            'error': True,
+            'status_code': 409, # 409 is the status code for a conflict
+            'message': inserted_data  # This will contain the error message
+        }
+        return jsonify(response), 409 
+
 
 
 
