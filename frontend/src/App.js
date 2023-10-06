@@ -8,6 +8,7 @@ import './App.css'
 import MyAccount from './MyAccount.js';
 import EditMyAccount from './EditMyAccount.js'
 import SignIn from './SignIn.js';
+import SignUp from './SignUp.js';
 
 
 function App() {
@@ -17,6 +18,7 @@ function App() {
         <div className="content">
           <Routes>
             <Route path='/' element={<Home />} />
+            <Route path='/SignUp' element={<SignUp />} />
             <Route path='/SignIn' element={<SignIn />} />
             <Route path='/MyProfile' element={<MyProfile />} />
             <Route path='/EditMyProfile' element={<EditMyProfile />} />

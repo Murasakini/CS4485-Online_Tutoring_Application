@@ -75,6 +75,12 @@ export default function BasicList() {
               <ListItemText primary="My Account" />
             </ListItemButton>
           </ListItem> */}
+          <ListItem disablePadding component={Link} to="/SignUp">
+            <ListItemButton>
+              <ListItemText primary="Sign Up" />
+            </ListItemButton>
+          </ListItem>
+
           <ListItem disablePadding component={Link} to="/SignIn">
             <ListItemButton>
               <ListItemText primary="Sign In" />
