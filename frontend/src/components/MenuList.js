@@ -11,7 +11,6 @@ import Person2Icon from '@mui/icons-material/Person2';
 import StarIcon from '@mui/icons-material/Star';
 import CalendarMonthIcon from '@mui/icons-material/CalendarMonth';
 import SearchIcon from '@mui/icons-material/Search';
-
 import { Link } from 'react-router-dom';
 
 export default function BasicList() {
@@ -46,7 +45,7 @@ export default function BasicList() {
             </ListItemButton>
           </ListItem>
 
-          <ListItem disablePadding component={Link} to="/Appointments">
+          <ListItem disablePadding component={Link} to="/AppointmentScheduler">
             <ListItemButton>
               <ListItemIcon>
                 <CalendarMonthIcon />

@@ -13,6 +13,7 @@
     "axios": "^1.5.0",
     "crypto-js": "^4.1.1",
     "react": "^18.2.0",
+    "react-big-calendar": "^1.8.4",
     "react-dom": "^18.2.0",
     "react-router-dom": "^6.16.0",
     "react-scripts": "5.0.1",
