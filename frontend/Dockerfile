@@ -6,7 +6,9 @@ COPY ./package.json ./
 
 COPY ./package-lock.json ./
 
-RUN npm install
+RUN npm install react-router-dom
+RUN npm install @mui/material @emotion/react @emotion/styled
+RUN npm install axios
 
 COPY . .
 
