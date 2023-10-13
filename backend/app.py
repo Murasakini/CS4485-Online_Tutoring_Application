@@ -24,6 +24,7 @@ db = SQLAlchemy(app)
 
 USER_FIELDS = {"first_name", "last_name", "netID", "email", "phone_num", "password"}
 TUTOR_FIELDS = USER_FIELDS.union({"criminal"})
+AUTHENTICATE_FIELDS = {"email", "password"}
 
 
 #####################
@@ -81,6 +82,45 @@ def insert_tutor(data):
     except IntegrityError:  # Catch any IntegrityError (like unique constraint violations)
         db.session.rollback()
         return "An error occurred while inserting the user.", False
+    
+def authenticate(email, password):
+    user_sql = text("""
+        SELECT users.user_id, users.email, users.password 
+        FROM users 
+        WHERE users.email = :email
+    """)
+    
+    tutor_sql = text("""
+        SELECT tutors.tutor_id, tutors.email, tutors.password 
+        FROM tutors 
+        WHERE tutors.email = :email
+    """)
+
+    #execute tutor action first, as tutors should not be allowed to be users.
+    tutor_result = db.session.execute(tutor_sql, {"email": email}).fetchone()
+    user_result = db.session.execute(user_sql, {"email": email}).fetchone()
+
+    if tutor_result and tutor_result[2] == password:
+        data = {
+            "user_type": "tutor",
+            "user_id": tutor_result[0],
+            "email": tutor_result[1],
+            # "token": generate_token(user_result['user_id']),  # Waiting for token generation
+        }
+        return data, True
+
+    elif user_result and user_result[2] == password:
+        data = {
+            "user_type": "user",
+            "user_id": user_result[0],
+            "email": user_result[1],
+            # "token": generate_token(user_result['user_id']),  # Waiting for token generation
+        }
+        return data, True
+    
+    else:
+        return None, False
+
 
 
 #####################
@@ -153,7 +193,38 @@ def signup_tutor():
             'message': inserted_data  # This will contain the error message
         }
         return jsonify(response), 409 
+    
+@version.route("/login", methods=["POST"])
+def login():
+    
+    data = request.get_json()
+    email = data.get("email")
+    password = data.get("password")
 
+    if not validate_fields(data, AUTHENTICATE_FIELDS):
+        response = {
+            'error': True,
+            'status_code': 400,
+            'message': 'Invalid or missing fields in request.'
+        }
+        return jsonify(response), 400
+    
+    user_data, authenticated = authenticate(email, password)
+
+    if authenticated:
+        response = {
+            'error': False,
+            'status_code': 200,
+            'result': user_data
+        }
+        return jsonify(response), 200
+    else:
+        response = {
+            'error': True,
+            'status_code': 401,
+            'message': 'Invalid email or password.'
+        }
+        return jsonify(response), 401
 
 
 
