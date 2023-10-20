@@ -50,9 +50,10 @@ def validate_fields(data, expected_fields):
     return set(data.keys()) == expected_fields
 
 def user_exists(netID):
-    sql = text("SELECT 1 FROM users WHERE netID=:netID")
+    # SQL returns number of users with netID in table.
+    sql = text("SELECT COUNT(1) FROM users WHERE netID=:netID")
     result = db.session.execute(sql, {"netID": netID})
-    return result.scalar() is not None
+    return result.scalar() != 0
 
 
 def insert_user(data):
@@ -100,26 +101,26 @@ def insert_tutor(data):
     
 def authenticate(email, password):
     user_sql = text("""
-        SELECT users.user_id, users.email, users.password 
+        SELECT users.user_id 
         FROM users 
-        WHERE users.email = :email
+        WHERE users.email = :email AND users.password = :password
     """)
     
     tutor_sql = text("""
-        SELECT tutors.tutor_id, tutors.email, tutors.password 
+        SELECT tutors.tutor_id 
         FROM tutors 
-        WHERE tutors.email = :email
+        WHERE tutors.email = :email AND tutors.password = :password
     """)
 
     # Try to authenticate as a tutor first
-    tutor_result = db.session.execute(tutor_sql, {"email": email}).fetchone()
-    if tutor_result and tutor_result[2] == password:
+    tutor_result = db.session.execute(tutor_sql, {"email": email, "password": password}).fetchone()
+    if tutor_result:
         user_type = 'tutor'
         user_id = tutor_result[0]
     else:
         # If not a tutor, try to authenticate as a user
-        user_result = db.session.execute(user_sql, {"email": email}).fetchone()
-        if user_result and user_result[2] == password:
+        user_result = db.session.execute(user_sql, {"email": email, "password": password}).fetchone()
+        if user_result:
             user_type = 'user'
             user_id = user_result[0]
         else:
@@ -199,6 +200,7 @@ def index():
 
 @version.before_request
 def verify_session():
+
     print("checking session...", flush=True)
     print(f"Accessed endpoint: {request.endpoint}", flush=True)
 
@@ -206,15 +208,15 @@ def verify_session():
         print("endpoint is protected", flush=True)
         session_id = request.cookies.get('session_id')
 
-        # TODO: Write SQL query to check if session_id exists and is not expired in the database.
-        # david, you should edit this to do what query you want to do -chris
+        # SQL query first deletes expired session_ids, then checks if session_id exists in table
         sql = text("""
-            SELECT * FROM auth_table WHERE session_id = :session_id AND expire > NOW()
+            CALL validate_auth;
+            SELECT COUNT(1) FROM auth_table WHERE session_id = :session_id;
         """)
         result = db.session.execute(sql, {"session_id": session_id}).fetchone()
         print(result, flush=True)
 
-        if result:
+        if result == 1:
             print("session_id exists and is valid", flush=True)
         else:
             response = {
