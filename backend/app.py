@@ -26,12 +26,25 @@ db = SQLAlchemy(app)
 USER_FIELDS = {"first_name", "last_name", "netID", "email", "phone_num", "password"}
 TUTOR_FIELDS = USER_FIELDS.union({"criminal"})
 AUTHENTICATE_FIELDS = {"email", "password"}
-PROTECTED_ENDPOINTS = ['v1.login']
+PROTECTED_ENDPOINTS = ['v1.test_protected']
 
 
 #####################
 # Helper Functions
 #####################
+
+def datetime_to_str(expire_datetime):
+    """
+    Converts a datetime object to a string in the format 'YYYY-MM-DD HH:MM:SS'.
+    """
+    return expire_datetime.strftime('%Y-%m-%d %H:%M:%S')
+
+
+def str_to_datetime(expire_str):
+    """
+    Converts a string in the format 'YYYY-MM-DD HH:MM:SS' to a datetime object.
+    """
+    return datetime.strptime(expire_str, '%Y-%m-%d %H:%M:%S')
 
 def validate_fields(data, expected_fields):
     return set(data.keys()) == expected_fields
@@ -119,8 +132,11 @@ def authenticate(email, password):
     expire = datetime.now() + timedelta(hours=1)
     
     # Save the session to the database
-    save_session_to_db(session_id, user_id, user_type, expire)
+    a, b = save_session_to_db(session_id, user_id, user_type, expire)
     
+    print("session result message: " + str(a), flush=True)
+    print("success in inserting session: " + str(b), flush=True)
+
     data = {
         "user_type": user_type,
         "user_id": user_id,
@@ -144,8 +160,10 @@ def save_session_to_db(session_id, user_id, user_type, expire):
         "session_id": session_id,
         "user_id": user_id,
         "tutor_id": tutor_id,
-        "expire": expire
+        "expire": datetime_to_str(expire)
     }
+
+    print("data: " + str(data), flush=True)
 
     #TODO: Fix this query because it's not inserting into the database for some reason
     #david, i leave this to you as well -chris
@@ -303,6 +321,11 @@ def login():
         }
         return jsonify(response), 401
 
+@version.route("/test_protected", methods=["GET"])
+def test_protected():
+    return {
+        "message": "This is a protected endpoint."
+    }
 
 
 #####################
