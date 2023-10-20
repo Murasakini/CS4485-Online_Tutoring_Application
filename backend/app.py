@@ -150,10 +150,10 @@ def save_session_to_db(session_id, user_id, user_type, expire):
     # Save the session_id, user_id, and expiration to the auth_table in the database
     if user_type == 'user':
         user_id = user_id
-        tutor_id = ''
+        tutor_id = None
 
     elif user_type == 'tutor':
-        user_id = ''
+        user_id = None
         tutor_id = user_id
 
     data = {
@@ -165,8 +165,6 @@ def save_session_to_db(session_id, user_id, user_type, expire):
 
     print("data: " + str(data), flush=True)
 
-    #TODO: Fix this query because it's not inserting into the database for some reason
-    #david, i leave this to you as well -chris
     sql = text("""
         INSERT INTO auth_table (session_id, user_id, tutor_id, expire)
         VALUES (:session_id, :user_id, :tutor_id, :expire)
