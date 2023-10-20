@@ -1,9 +1,10 @@
-from flask import Flask, jsonify
+from flask import Flask, jsonify, Blueprint, request
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import text
 from sqlalchemy.exc import IntegrityError
-from flask import Blueprint, request
+from datetime import datetime, timedelta
 import yaml
+import uuid
 
 #####################
 # Global Variables and Setup
@@ -25,6 +26,7 @@ db = SQLAlchemy(app)
 USER_FIELDS = {"first_name", "last_name", "netID", "email", "phone_num", "password"}
 TUTOR_FIELDS = USER_FIELDS.union({"criminal"})
 AUTHENTICATE_FIELDS = {"email", "password"}
+PROTECTED_ENDPOINTS = ['v1.login']
 
 
 #####################
@@ -96,30 +98,76 @@ def authenticate(email, password):
         WHERE tutors.email = :email
     """)
 
-    #execute tutor action first, as tutors should not be allowed to be users.
+    # Try to authenticate as a tutor first
     tutor_result = db.session.execute(tutor_sql, {"email": email}).fetchone()
-    user_result = db.session.execute(user_sql, {"email": email}).fetchone()
-
     if tutor_result and tutor_result[2] == password:
-        data = {
-            "user_type": "tutor",
-            "user_id": tutor_result[0],
-            "email": tutor_result[1],
-            # "token": generate_token(user_result['user_id']),  # Waiting for token generation
-        }
-        return data, True
-
-    elif user_result and user_result[2] == password:
-        data = {
-            "user_type": "user",
-            "user_id": user_result[0],
-            "email": user_result[1],
-            # "token": generate_token(user_result['user_id']),  # Waiting for token generation
-        }
-        return data, True
-    
+        user_type = 'tutor'
+        user_id = tutor_result[0]
     else:
-        return None, False
+        # If not a tutor, try to authenticate as a user
+        user_result = db.session.execute(user_sql, {"email": email}).fetchone()
+        if user_result and user_result[2] == password:
+            user_type = 'user'
+            user_id = user_result[0]
+        else:
+            return None, False  # Authentication failed
+
+    # Generate a unique session_id
+    session_id = uuid.uuid4().hex
+    
+    # Set an expiration time for the session
+    expire = datetime.now() + timedelta(hours=1)
+    
+    # Save the session to the database
+    save_session_to_db(session_id, user_id, user_type, expire)
+    
+    data = {
+        "user_type": user_type,
+        "user_id": user_id,
+        "email": email,
+        "session_id": session_id
+    }
+    
+    return data, True
+    
+def save_session_to_db(session_id, user_id, user_type, expire):
+    # Save the session_id, user_id, and expiration to the auth_table in the database
+    if user_type == 'user':
+        user_id = user_id
+        tutor_id = ''
+
+    elif user_type == 'tutor':
+        user_id = ''
+        tutor_id = user_id
+
+    data = {
+        "session_id": session_id,
+        "user_id": user_id,
+        "tutor_id": tutor_id,
+        "expire": expire
+    }
+
+    #TODO: Fix this query because it's not inserting into the database for some reason
+    #david, i leave this to you as well -chris
+    sql = text("""
+        INSERT INTO auth_table (session_id, user_id, tutor_id, expire)
+        VALUES (:session_id, :user_id, :tutor_id, :expire)
+    """)
+
+    try:
+        result = db.session.execute(sql, data)
+        db.session.commit()
+
+        # Check if insert was successful
+        if result.rowcount == 1:
+            # Return the inserted data. 
+            # If you need the actual row from the DB, you'll need to query it here.
+            return data, True
+        else:
+            return "The insert was unsuccessful", False
+    except IntegrityError:  # Catch any IntegrityError (like unique constraint violations)
+        db.session.rollback()
+        return "An error occurred while inserting the user.", False    
 
 
 
@@ -132,6 +180,35 @@ def index():
     return {
         "message": "Hello World!"
     }
+
+@version.before_request
+def verify_session():
+    print("checking session...", flush=True)
+    print(f"Accessed endpoint: {request.endpoint}", flush=True)
+
+    if request.endpoint in PROTECTED_ENDPOINTS:
+        print("endpoint is protected", flush=True)
+        session_id = request.cookies.get('session_id')
+
+        # TODO: Write SQL query to check if session_id exists and is not expired in the database.
+        # david, you should edit this to do what query you want to do -chris
+        sql = text("""
+            SELECT * FROM auth_table WHERE session_id = :session_id AND expire > NOW()
+        """)
+        result = db.session.execute(sql, {"session_id": session_id}).fetchone()
+        print(result, flush=True)
+
+        if result:
+            print("session_id exists and is valid", flush=True)
+        else:
+            response = {
+                'error': True,
+                'status_code': 401,
+                'message': 'Invalid or expired session.'
+            }
+            return jsonify(response), 401
+
+
 
 @version.route("/signup/user", methods=["POST"])
 def signup_user():
