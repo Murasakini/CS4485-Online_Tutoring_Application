@@ -26,7 +26,7 @@ const theme = createTheme({
 });
 
 export default function SignUp() {
-  // keep track if logging in successfully
+  // keep track if signing up successfully
   const [isSuccessful, setSuccessful] = useState(false);
 
   const [confirmPassword, setConfirmPassword] = useState(''); // store reenter

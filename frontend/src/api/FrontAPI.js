@@ -78,9 +78,10 @@ const FrontAPI = {
   // send sign in info for checking
   signIn: async (formData) => {
     try {
-      const response = await axiosInstance.post('/api/signin', {
+      const response = await axiosInstance.post('/api/v1/login', {
         email: formData.email,
-        password: SHA256(formData.password).toString(),
+        // password: SHA256(formData.password).toString(),
+        password: formData.password,
       });
       return response.data;
     } catch (error) {

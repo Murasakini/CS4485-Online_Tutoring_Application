@@ -1,4 +1,5 @@
 import * as React from 'react';
+import { Navigate } from 'react-router-dom';
 import Avatar from '@mui/material/Avatar';
 import Button from '@mui/material/Button';
 import TextField from '@mui/material/TextField';
@@ -36,6 +37,9 @@ export function Copyright() {
 }
 
 export default function SignIn() {
+  // keep track if logging in successfully
+  const [isSuccessful, setSuccessful] = useState(false);
+
   //form as a state
   const [formData, setFormData] = useState({
     email: '',
@@ -59,12 +63,15 @@ export default function SignIn() {
     try {
       const response = await FrontAPI.signIn(formData);
   
-      if (response.status === 200) {
+      if (response.status_code === 200) {
         // success msg
-        console.log('Registration successful');
+        console.log('Login successful');
+
+        // set sign up status as successful
+        setSuccessful(true);
       } else {
         // fail msg
-        console.log('Registration failed');
+        console.log('Login failed');
       }
     } 
     catch (error) {
@@ -74,86 +81,94 @@ export default function SignIn() {
   };
   
   return (
-      <ThemeProvider theme={theme}>
-          <Box sx={{
-                display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'center',
-              }}> 
-            <Link href="https://www.utdallas.edu/">
-              <Avatar sx={{ bgcolor: 'primary.main', width: 60, height: 60 }}>
-                <h4>UTD</h4>
-              </Avatar>
-            </Link>
-          </Box>
+    <React.Fragment>
+      {isSuccessful ? 
+        // navigate to home page
+        <Navigate to="/" /> :
 
-          <h2>Online Tutoring Service</h2>
-          <h2>SIGN IN</h2>
+        // display input form
+        <ThemeProvider theme={theme}>
+            <Box sx={{
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'center',
+                }}> 
+              <Link href="https://www.utdallas.edu/">
+                <Avatar sx={{ bgcolor: 'primary.main', width: 60, height: 60 }}>
+                  <h4>UTD</h4>
+                </Avatar>
+              </Link>
+            </Box>
 
-          <Box component="form" onSubmit={handleSubmit} noValidate >
+            <h2>Online Tutoring Service</h2>
+            <h2>SIGN IN</h2>
 
-            <TextField
-              margin="normal"
-              required
-              fullWidth
-              id="email"
-              label="Email Address"
-              name="email"
-              autoComplete="email"
-              autoFocus
-              type="email"
-              value={formData.email}
-              onChange={handleChange}
-            />
+            <Box component="form" onSubmit={handleSubmit} noValidate >
 
-            <TextField
-              margin="normal"
-              required
-              fullWidth
-              name="password"
-              label="Password"
-              type="password"
-              id="password"
-              autoComplete="current-password"
-              value={formData.password}
-              onChange={handleChange}
-            />
-            
-            <FormControlLabel
-              control={<Checkbox value="remember"/>}
-              label="Remember me"
-            />
+              <TextField
+                margin="normal"
+                required
+                fullWidth
+                id="email"
+                label="Email Address"
+                name="email"
+                autoComplete="email"
+                autoFocus
+                type="email"
+                value={formData.email}
+                onChange={handleChange}
+              />
 
-            <Button
-              type="submit"
-              fullWidth
-              variant="contained"
-              sx={{ mt: 2, mb: 2 }}
-            >
-              Sign In
-            </Button>
-            
-            {/* hyper links */}
-            <Grid container justifyContent="space-between">
-              <Grid item>
-                <Link href="#" variant="body1">
-                  Forgot your password?
-                </Link>
+              <TextField
+                margin="normal"
+                required
+                fullWidth
+                name="password"
+                label="Password"
+                type="password"
+                id="password"
+                autoComplete="current-password"
+                value={formData.password}
+                onChange={handleChange}
+              />
+              
+              <FormControlLabel
+                control={<Checkbox value="remember"/>}
+                label="Remember me"
+              />
+
+              <Button
+                type="submit"
+                fullWidth
+                variant="contained"
+                sx={{ mt: 2, mb: 2 }}
+              >
+                Sign In
+              </Button>
+              
+              {/* hyper links */}
+              <Grid container justifyContent="space-between">
+                <Grid item>
+                  <Link href="#" variant="body1">
+                    Forgot your password?
+                  </Link>
+                </Grid>
+
+                <Grid item>
+                  <Link href="#" variant="body1">
+                    Don't have an account? Sign Up
+                  </Link>
+                </Grid>
               </Grid>
 
-              <Grid item>
-                <Link href="#" variant="body1">
-                  Don't have an account? Sign Up
-                </Link>
-              </Grid>
+            </Box>
+
+            <Grid item sx={{mt: 10}}>
+              <Copyright/>
             </Grid>
 
-          </Box>
-
-          <Grid item sx={{mt: 10}}>
-            <Copyright/>
-          </Grid>
-
-      </ThemeProvider>
+        </ThemeProvider>
+      }
+    </React.Fragment>
   );
 }
