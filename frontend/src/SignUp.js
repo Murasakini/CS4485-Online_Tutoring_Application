@@ -107,8 +107,9 @@ export default function SignUp() {
 
     try {
       const response = await FrontAPI.signUp(formData);
+      console.log(response)
   
-      if (response.status === 200) {
+      if (response.status_code === 201) {
         // success msg
         console.log('Registration successful');
       } else {

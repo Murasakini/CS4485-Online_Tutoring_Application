@@ -1,5 +1,6 @@
 from flask import Flask, jsonify, Blueprint, request
 from flask_sqlalchemy import SQLAlchemy
+from flask_cors import CORS
 from sqlalchemy import text
 from sqlalchemy.exc import IntegrityError
 from datetime import datetime, timedelta
@@ -19,6 +20,7 @@ username = creds["database"]["username"]
 password = creds["database"]["password"]
 
 app = Flask(__name__)
+CORS(app)
 app.config['SQLALCHEMY_DATABASE_URI'] = f'mysql+pymysql://{username}:{password}@online-tutoring-application.ccm0nvuvbmz8.us-east-2.rds.amazonaws.com:3306/ota_db'
 db = SQLAlchemy(app)
 
@@ -47,7 +49,7 @@ def str_to_datetime(expire_str):
     return datetime.strptime(expire_str, '%Y-%m-%d %H:%M:%S')
 
 def validate_fields(data, expected_fields):
-    return set(data.keys()) == expected_fields
+    return all(field in data.keys() for field in expected_fields)
 
 def user_exists(netID):
     # SQL returns number of users with netID in table.
@@ -231,6 +233,7 @@ def verify_session():
 @version.route("/signup/user", methods=["POST"])
 def signup_user():
     data = request.get_json()
+    print(data, flush=True)
 
     if not validate_fields(data, USER_FIELDS):
         response = {

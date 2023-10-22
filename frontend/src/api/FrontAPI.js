@@ -1,21 +1,35 @@
 import axios from 'axios';
 import { SHA256 } from 'crypto-js';
 
-const baseURL = 'https://your-backend-api-url.com';
+const baseURL = 'http://localhost:5000';
 
 const axiosInstance = axios.create({
   baseURL,
+  headers: {
+    'Content-Type': 'application/json'
+  }
 });
 
 // api functions
 const FrontAPI = {
-
-  // send sign in info for checking
-  signIn: async (formData) => {
+  
+  // send sign up info
+  signUp: async (formData) => {
     try {
-      const response = await axiosInstance.post('/api/signin', {
-        email: formData.email,
+      const response = await axiosInstance.post('/api/v1/signup/user', {
+        //hash password
         password: SHA256(formData.password).toString(),
+        email: formData.email,
+        first_name: formData.firstName,
+        last_name: formData.lastName,
+        phone_num: formData.phone,
+        netID: formData.netId
+        // criminalHistory: formData.criminalHistory,
+        // pendingCharges: formData.pendingCharges,
+        // probationOrParole: formData.probationOrParole,
+        // sexOffenderRegistry: formData.sexOffenderRegistry,
+        // outstandingWarrants: formData.outstandingWarrants,
+        // authorizationBackgroundCheck: formData.authorizationBackgroundCheck,
       });
       return response.data;
     } catch (error) {
@@ -31,23 +45,12 @@ const FrontAPI = {
     }
   },
 
-  // send sign up info
-  signUp: async (formData) => {
+  // send sign in info for checking
+  signIn: async (formData) => {
     try {
-      const response = await axiosInstance.post('/api/signup', {
-        //hash password
-        password: SHA256(formData.password).toString(),
+      const response = await axiosInstance.post('/api/signin', {
         email: formData.email,
-        firstName: formData.firstName,
-        lastName: formData.lastName,
-        phone: formData.phone,
-        netId: formData.netId,
-        criminalHistory: formData.criminalHistory,
-        pendingCharges: formData.pendingCharges,
-        probationOrParole: formData.probationOrParole,
-        sexOffenderRegistry: formData.sexOffenderRegistry,
-        outstandingWarrants: formData.outstandingWarrants,
-        authorizationBackgroundCheck: formData.authorizationBackgroundCheck,
+        password: SHA256(formData.password).toString(),
       });
       return response.data;
     } catch (error) {
