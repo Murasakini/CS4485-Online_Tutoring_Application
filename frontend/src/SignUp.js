@@ -1,5 +1,4 @@
 import * as React from 'react';
-import { Navigate } from "react-router-dom";
 import Avatar from '@mui/material/Avatar';
 import Button from '@mui/material/Button';
 import TextField from '@mui/material/TextField';
@@ -9,10 +8,15 @@ import Link from '@mui/material/Link';
 import Grid from '@mui/material/Grid';
 import Box from '@mui/material/Box';
 import { ThemeProvider, createTheme } from '@mui/material/styles';
-import { Copyright } from './SignIn.js'
 import './App.css';
 import { useState, useEffect} from 'react';
-import FrontAPI from './api/FrontAPI.js';
+import FrontAPI from './FrontAPI.js';
+import Copyright from './Copyright';
+import Dialog from '@mui/material/Dialog';
+import DialogTitle from '@mui/material/DialogTitle';
+import DialogContent from '@mui/material/DialogContent';
+import DialogActions from '@mui/material/DialogActions';
+
 
 const theme = createTheme({
   palette: {
@@ -26,14 +30,11 @@ const theme = createTheme({
 });
 
 export default function SignUp() {
-  // keep track if signing up successfully
-  const [isSuccessful, setSuccessful] = useState(false);
-
   const [confirmPassword, setConfirmPassword] = useState(''); // store reenter
   const [passwordsMatch, setPasswordsMatch] = useState(true); // check reenter password
   const [passwordValid, setPasswordValid] = useState(true); // check password
   const [passwordValidationMessage, setPasswordValidationMessage] = useState('');
-
+  const [openDialog, setOpenDialog] = useState(false);
   const [showMore, setShowMore] = useState(false);
   const [formData, setFormData] = useState({
     email: '',
@@ -49,7 +50,7 @@ export default function SignUp() {
     probationOrParole: false,
     sexOffenderRegistry: false,
     outstandingWarrants: false,
-    authorizationBackgroundCheck: false
+    authorizationBackgroundCheck: false,
   });
 
   // get data from form
@@ -104,47 +105,22 @@ export default function SignUp() {
     setShowMore(!showMore);
   }
 
-  // listen for submit event from "Sign in" Button
-  const handleSubmit = async (event) => {
-    // preventDefault() prevents a page refresh
-    event.preventDefault();
+// listen for submit event from "Sign Up" Button
+const handleSubmit = async (event) => {
+  event.preventDefault();
 
-    try {
-      let isTutor = false;
-
-      // check if user click '
-      if (formData.tutor)
-        isTutor = true;
-
-      const response = await FrontAPI.signUp(formData, isTutor);
-
-      console.log(response)
-  
-      if (response.status_code === 201) {
-        // success msg
-        console.log('Registration successful');
-
-        // set sign up status as successful
-        setSuccessful(true);
-
-      } else {
-        // fail msg
-        console.log('Registration failed');
-      }
-    } 
-    catch (error) {
-      // error msg
-      console.error('Error:', error);
-    }
-  };
+  try {
+    await FrontAPI.signUp(formData);
+    // sucess
+    setOpenDialog(true);
+    console.log('Registration successful');
+  } catch (error) {
+    // error from FrontAPI
+    console.error('Error:', error);
+  }
+};
 
   return (
-    <React.Fragment>
-    {isSuccessful ? 
-      // navigate to home page
-      <Navigate to="/" /> :
-      
-      // display input form
       <ThemeProvider theme={theme}>
           <Box sx={{
                 display: 'flex',
@@ -161,7 +137,7 @@ export default function SignUp() {
           <h2>Online Tutoring Service</h2>
           <h2>SIGN UP</h2>
 
-          <Box component="form" onSubmit={handleSubmit} noValidate >
+          <Box component="form" onSubmit={handleSubmit}>
 
             <Grid container spacing={2}>
               <Grid item xs={12} sm={6}>
@@ -193,8 +169,9 @@ export default function SignUp() {
                   required
                   fullWidth
                   id="email"
-                  label="Email Address"
+                  label="Email Address | Ex: email@utdallas.edu"
                   name="email"
+                  type="email"
                   autoComplete="email"
                   value={formData.email}
                   onChange={handleChange}
@@ -205,7 +182,7 @@ export default function SignUp() {
                   required
                   fullWidth
                   id="phone"
-                  label="Phone Number"
+                  label="Phone Number | Ex: 2133139622"
                   name="phone"
                   autoComplete="phone"
                   value={formData.phone}
@@ -394,9 +371,29 @@ export default function SignUp() {
           <Grid item sx={{mt: 10}}>
             <Copyright/>
           </Grid>
+          
+          {/* dialog box to hlink to signIn page */}
+          <Dialog open={openDialog} onClose={() => setOpenDialog(false)}>
+            <DialogTitle>Registration Successful</DialogTitle>
+            <DialogContent>
+              <p>Your registration was successful. You can now sign in with your new account.</p>
+            </DialogContent>
+            <DialogActions>
+              <Button onClick={() => setOpenDialog(false)} color="primary">
+                Close
+              </Button>
+              <Button
+                onClick={() => {
+                  setOpenDialog(false);
+                  // navigation logic here to go to the sign-in page
+                }}
+                color="primary"
+              >
+                Sign In
+              </Button>
+            </DialogActions>
+          </Dialog>
 
       </ThemeProvider>
-              }      
-    </React.Fragment>
   );
 }
