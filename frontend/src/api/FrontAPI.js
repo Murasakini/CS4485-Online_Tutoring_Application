@@ -14,23 +14,53 @@ const axiosInstance = axios.create({
 const FrontAPI = {
   
   // send sign up info
-  signUp: async (formData) => {
+  signUp: async (formData, isTutor) => {
     try {
-      const response = await axiosInstance.post('/api/v1/signup/user', {
-        //hash password
-        password: SHA256(formData.password).toString(),
-        email: formData.email,
-        first_name: formData.firstName,
-        last_name: formData.lastName,
-        phone_num: formData.phone,
-        netID: formData.netId
-        // criminalHistory: formData.criminalHistory,
-        // pendingCharges: formData.pendingCharges,
-        // probationOrParole: formData.probationOrParole,
-        // sexOffenderRegistry: formData.sexOffenderRegistry,
-        // outstandingWarrants: formData.outstandingWarrants,
-        // authorizationBackgroundCheck: formData.authorizationBackgroundCheck,
-      });
+      let endpoint = '/api/v1/signup';
+      let response = null;
+
+      // tutor
+      if (isTutor) {
+        endpoint += '/tutor'
+
+        response = await axiosInstance.post(endpoint, {
+          //hash password
+          password: SHA256(formData.password).toString(),
+          email: formData.email,
+          first_name: formData.firstName,
+          last_name: formData.lastName,
+          phone_num: formData.phone,
+          netID: formData.netId,
+          criminal: + formData.criminalHistory,
+
+          // pendingCharges: formData.pendingCharges,
+          // probationOrParole: formData.probationOrParole,
+          // sexOffenderRegistry: formData.sexOffenderRegistry,
+          // outstandingWarrants: formData.outstandingWarrants,
+          // authorizationBackgroundCheck: formData.authorizationBackgroundCheck,
+        });
+      }
+
+      // user
+      else {
+        endpoint += '/user'
+
+        response = await axiosInstance.post(endpoint, {
+          //hash password
+          password: SHA256(formData.password).toString(),
+          email: formData.email,
+          first_name: formData.firstName,
+          last_name: formData.lastName,
+          phone_num: formData.phone,
+          netID: formData.netId
+          // criminalHistory: formData.criminalHistory,
+          // pendingCharges: formData.pendingCharges,
+          // probationOrParole: formData.probationOrParole,
+          // sexOffenderRegistry: formData.sexOffenderRegistry,
+          // outstandingWarrants: formData.outstandingWarrants,
+          // authorizationBackgroundCheck: formData.authorizationBackgroundCheck,
+        });
+      }
       return response.data;
     } catch (error) {
       if (error.response) {

@@ -1,4 +1,5 @@
 import * as React from 'react';
+import { Navigate } from "react-router-dom";
 import Avatar from '@mui/material/Avatar';
 import Button from '@mui/material/Button';
 import TextField from '@mui/material/TextField';
@@ -25,6 +26,9 @@ const theme = createTheme({
 });
 
 export default function SignUp() {
+  // keep track if logging in successfully
+  const [isSuccessful, setSuccessful] = useState(false);
+
   const [confirmPassword, setConfirmPassword] = useState(''); // store reenter
   const [passwordsMatch, setPasswordsMatch] = useState(true); // check reenter password
   const [passwordValid, setPasswordValid] = useState(true); // check password
@@ -45,7 +49,7 @@ export default function SignUp() {
     probationOrParole: false,
     sexOffenderRegistry: false,
     outstandingWarrants: false,
-    authorizationBackgroundCheck: false,
+    authorizationBackgroundCheck: false
   });
 
   // get data from form
@@ -106,12 +110,23 @@ export default function SignUp() {
     event.preventDefault();
 
     try {
-      const response = await FrontAPI.signUp(formData);
+      let isTutor = false;
+
+      // check if user click '
+      if (formData.tutor)
+        isTutor = true;
+
+      const response = await FrontAPI.signUp(formData, isTutor);
+
       console.log(response)
   
       if (response.status_code === 201) {
         // success msg
         console.log('Registration successful');
+
+        // set sign up status as successful
+        setSuccessful(true);
+
       } else {
         // fail msg
         console.log('Registration failed');
@@ -124,6 +139,12 @@ export default function SignUp() {
   };
 
   return (
+    <React.Fragment>
+    {isSuccessful ? 
+      // navigate to home page
+      <Navigate to="/" /> :
+      
+      // display input form
       <ThemeProvider theme={theme}>
           <Box sx={{
                 display: 'flex',
@@ -375,5 +396,7 @@ export default function SignUp() {
           </Grid>
 
       </ThemeProvider>
+              }      
+    </React.Fragment>
   );
 }
