@@ -8,6 +8,21 @@ import 'react-big-calendar/lib/css/react-big-calendar.css';
 import FrontAPI from './api/FrontAPI';
 import CalendarDisplay from './components/CalendarDisplay'; // Import the CalendarDisplay component
 
+//#step 1: find available classes for user to get tutoring
+//SELECT user_classes_readable.class_name, user_classes_readable.class_num, user_classes_readable.department_id 
+//	FROM user_classes_readable 
+//    LEFT JOIN auth_table ON user_classes_readable.user_id=auth_table.user_id 
+//    WHERE auth_table.session_id = :session_id;
+
+//#step 2: find available tutors for class
+//SELECT tutor_id, first_name, last_name, class_name FROM tutor_classes_readable WHERE class_num = :class_num AND department_id = :department_id;
+
+//#step 3: find when selected tutor is available
+//SELECT time_available FROM tutor_schedules WHERE tutor_id= :tutor_id;
+
+//#step 4: create appointment
+//INSERT INTO appointments (user_id, tutor_id, class_num, department_id, meeting_time) VALUES (:user_id, :tutor_id, :class_num, :department_id, :meeting_time);
+
 export default function AppointmentScheduler() {
   const [formData, setFormData] = useState({
     date: null,
