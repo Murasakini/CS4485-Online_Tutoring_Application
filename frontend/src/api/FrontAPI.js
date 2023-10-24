@@ -20,7 +20,7 @@ axiosInstance.interceptors.request.use((config) => {
   const sessionCookie = localStorage.getItem('sessionCookie');
 
   // add  session cookie to headers
-  config.headers['Cookie'] = sessionCookie;
+  config.headers.common['Cookie'] = sessionCookie;
 
   return config;
 });
@@ -98,7 +98,7 @@ const FrontAPI = {
         // password: SHA256(formData.password).toString(),
         password: formData.password,
       });
-      return response.data;
+      return response;
     } catch (error) {
       if (error.response) {
         console.error('Error response status:', error.response.status);
