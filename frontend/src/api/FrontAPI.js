@@ -10,6 +10,21 @@ const axiosInstance = axios.create({
   }
 });
 
+// interceptor to send session cookie with every request
+axiosInstance.interceptors.request.use((config) => {
+  // ensure that config.headers is initialized
+  // initialize if not defined
+  config.headers = config.headers || {}; 
+
+  // get session cookie from local storage
+  const sessionCookie = localStorage.getItem('sessionCookie');
+
+  // add  session cookie to headers
+  config.headers['Cookie'] = sessionCookie;
+
+  return config;
+});
+
 // api functions
 const FrontAPI = {
   
