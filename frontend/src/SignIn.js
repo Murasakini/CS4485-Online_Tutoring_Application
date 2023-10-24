@@ -11,7 +11,6 @@ import Box from '@mui/material/Box';
 import { ThemeProvider, createTheme } from '@mui/material/styles';
 import './App.css';
 import { useState } from 'react';
-//import axios from 'axios';
 import FrontAPI from './api/FrontAPI.js';
 
 const theme = createTheme({
@@ -64,11 +63,12 @@ export default function SignIn() {
       const response = await FrontAPI.signIn(formData);
   
       if (response.status_code === 200) {
-        // success msg
-        console.log('Login successful');
-
+        // store session cookie in local storage
+        localStorage.setItem('sessionCookie', response.result);
         // set sign up status as successful
         setSuccessful(true);
+        // success msg
+        console.log('Login successful');
       } else {
         // fail msg
         console.log('Login failed');
