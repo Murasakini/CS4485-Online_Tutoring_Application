@@ -98,7 +98,7 @@ const FrontAPI = {
         // password: SHA256(formData.password).toString(),
         password: formData.password,
       });
-      return response;
+      return response.data;
     } catch (error) {
       if (error.response) {
         console.error('Error response status:', error.response.status);
@@ -214,6 +214,26 @@ const FrontAPI = {
       throw error;
     }
   },
+
+  // verify session is valid
+  verifySession: async () => {
+    try {
+      // POST request to /verify_session endpoint
+      const response = await axiosInstance.post('/verify_session');
+      return response.data;
+    } catch (error) {
+      if (error.response) {
+        console.error('Error response status:', error.response.status);
+        console.error('Error response data:', error.response.data);
+      } else if (error.request) {
+        console.error('No response received:', error.request);
+      } else {
+        console.error('Error message:', error.message);
+      }
+      throw error;
+    }
+  },
+
 };
 
 export default FrontAPI;
