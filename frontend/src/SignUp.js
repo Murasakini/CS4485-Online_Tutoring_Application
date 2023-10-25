@@ -10,7 +10,7 @@ import Box from '@mui/material/Box';
 import { ThemeProvider, createTheme } from '@mui/material/styles';
 import './App.css';
 import { useState, useEffect} from 'react';
-import FrontAPI from './FrontAPI.js';
+import FrontAPI from './api/FrontAPI.js';
 import Copyright from './Copyright';
 import Dialog from '@mui/material/Dialog';
 import DialogTitle from '@mui/material/DialogTitle';
