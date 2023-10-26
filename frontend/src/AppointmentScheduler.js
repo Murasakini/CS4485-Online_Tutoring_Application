@@ -5,8 +5,8 @@ import InputLabel from '@mui/material/InputLabel';
 import Select from '@mui/material/Select';
 import MenuItem from '@mui/material/MenuItem';
 import 'react-big-calendar/lib/css/react-big-calendar.css';
-import FrontAPI from './api/FrontAPI';
-import CalendarDisplay from './components/CalendarDisplay';
+import FrontAPI from './FrontAPI';
+import CalendarDisplay from './CalendarDisplay';
 import { addToDate } from './Utils'; 
 
 
@@ -14,13 +14,12 @@ export default function AppointmentScheduler() {
   const [formData, setFormData] = useState({
     date: null,
     subject: '',
-    tutor: '',
+    tutor: '',    // this is tutor_id
     timeSlot: '',
-    // fields go here
   });
 
   const [subjects, setSubjects] = useState([]); // subjects
-  const [tutors, setTutors] = useState([]);     // tutors
+  const [tutorsList, setTutorsList] = useState([]);     // tutors
   const [availableSlots, setAvailableSlots] = useState([]); // time slots
   const [selectedTimeSlot, setSelectedTimeSlot] = useState('');
 
@@ -50,14 +49,14 @@ export default function AppointmentScheduler() {
       // fetch tutors for selected subject
       FrontAPI.fetchTutors(selectedSubject)
         .then((data) => {
-          setTutors(data);
+          setTutorsList(data);
         })
         .catch((error) => {
           console.error('Failed to fetch tutors:', error);
         });
     } else {
       // reset
-      setTutors([]);
+      setTutorsList([]);
     }
   };
   
@@ -73,7 +72,7 @@ export default function AppointmentScheduler() {
   
     if (selectedTutor) {
       // fetch available time slots for selected tutor and subject
-      FrontAPI.fetchTimeSlots(selectedTutor, formData.subject)
+      FrontAPI.fetchTimeSlots(selectedTutor)
         .then((data) => {
           setAvailableSlots(data);
         })
@@ -113,15 +112,6 @@ export default function AppointmentScheduler() {
   const handleSubmit = async (event) => {
     event.preventDefault();
     try {
-      // verify user's session before allowing them to create an appointment
-      const sessionResponse = await FrontAPI.verifySession();
-
-      if (sessionResponse.error) {
-        // handle invalid session
-        console.log('User is not logged in or the session is invalid. Redirect to login or show a message.');
-        return;
-      }
-
       // send form
       console.log('Appointment data submitted:', {
         date: formData.date,
@@ -129,7 +119,6 @@ export default function AppointmentScheduler() {
         tutor: formData.tutor,
         timeSlot: selectedTimeSlot,
       });
-      
       // reset form fields after submission
       setFormData({
         date: null,
@@ -137,9 +126,7 @@ export default function AppointmentScheduler() {
         tutor: '',
       });
       setSelectedTimeSlot('');
-    } 
-    // handle errors like network, w/e happens when click submit
-    catch (error) {
+    } catch (error) {
       console.error('Error:', error);
     }
   };  
@@ -178,8 +165,8 @@ export default function AppointmentScheduler() {
               <MenuItem value="">
                 <em>Select a tutor</em>
               </MenuItem>
-              {tutors.map((tutor) => (
-                <MenuItem key={tutor.id} value={tutor.name}>
+              {tutorsList.map((tutor) => (
+                <MenuItem key={tutor.tutor_id} value={tutor.tutor_id}> {/* TODO: change key to something else*/ }
                   {tutor.name}
                 </MenuItem>
               ))}
