@@ -1,18 +1,20 @@
 import * as React from 'react';
-import { Navigate } from "react-router-dom";
+import { Navigate, Link } from "react-router-dom";
 import Avatar from '@mui/material/Avatar';
 import Button from '@mui/material/Button';
 import TextField from '@mui/material/TextField';
 import FormControlLabel from '@mui/material/FormControlLabel';
 import Checkbox from '@mui/material/Checkbox';
-import Link from '@mui/material/Link';
 import Grid from '@mui/material/Grid';
 import Box from '@mui/material/Box';
 import { ThemeProvider, createTheme } from '@mui/material/styles';
-import { Copyright } from './SignIn.js'
 import './App.css';
 import { useState, useEffect} from 'react';
 import FrontAPI from './api/FrontAPI.js';
+import List from '@mui/material/List';
+import ListItem from '@mui/material/ListItem';
+import ListItemText from '@mui/material/ListItemText';
+import Copyright from './components/Copyright';
 
 const theme = createTheme({
   palette: {
@@ -447,11 +449,13 @@ export default function SignUp() {
             {/* hyper links */}
             <Grid container justifyContent="flex-end">
               <Grid item>
-                <Link href="#" variant="body1">
-                  Sign in with account
-                </Link>
-              </Grid>
-            </Grid>
+                  <List>
+                    <ListItem disablePadding component={Link} to="/SignIn">
+                      <ListItemText primary="Sign in with account" />
+                    </ListItem>
+                  </List>
+                </Grid>
+            </Grid>    
 
           </Box>
 
