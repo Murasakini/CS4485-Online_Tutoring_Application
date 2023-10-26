@@ -28,7 +28,7 @@ db = SQLAlchemy(app)
 USER_FIELDS = {"first_name", "last_name", "netID", "email", "phone_num", "password"}
 TUTOR_FIELDS = USER_FIELDS.union({"criminal"})
 AUTHENTICATE_FIELDS = {"email", "password"}
-PROTECTED_ENDPOINTS = ['v1.test_protected']
+PROTECTED_ENDPOINTS = ['v1.test_protected', 'v1.subjects']
 
 
 #####################
@@ -266,7 +266,7 @@ def signup_user():
 def tutors_of_subject():
     data = request.get_json()
 
-    if not validate_fields(data, {"subject"}):
+    if not validate_fields(data, {"class_num", "department_num"}):
         response = {
             'error': True,
             'status_code': 400,
@@ -274,26 +274,49 @@ def tutors_of_subject():
         }
         return jsonify(response), 400
     
-    # placeholder SQL
+    class_num = data.get("class_num")
+    department_id = data.get("department_id")
+    
+    # recieves (tutor_id, first_name, last_name) arrays of matching tutors
     sql = text("""
-            CALL validate_auth;
-            SELECT COUNT(1) FROM auth_table WHERE session_id = :session_id;
+            SELECT tutor_id, first_name, last_name FROM tutor_classes_readable 
+            WHERE class_num = :class_num AND department_id = :department_id;
         """)
+    
+    result = db.session.execute(sql, {"class_num": class_num, "department_id": department_id})
+
+    response = list()
+    for row in result:
+        # Combine first and last name of tutors before sending
+        response.append({'name': row[1] + ' ' + row[2], 'tutor_id': row[0]})
+    return jsonify(response), 201
+
 
 
 @version.route("/subjects", methods=["POST"])
 def subjects():
-    
+    # pulls a user's session_id from the browser
     session_id = request.cookies.get('session_id')
 
-    # placeholder SQL
+    # finds available classes based on session id
     sql = text("""
             CALL validate_auth;
-            SELECT COUNT(1) FROM auth_table WHERE session_id = :session_id;
+            SELECT user_classes_readable.class_name, user_classes_readable.class_num, user_classes_readable.department_id, user_classes_readable.department_name
+                FROM user_classes_readable 
+                LEFT JOIN auth_table ON user_classes_readable.user_id=auth_table.user_id 
+                WHERE auth_table.session_id = :session_id;
         """)
+    
+    result = db.session.execute(sql, {"session_id": session_id})
+
+    # jsonify sql result
+    response = list()
+    for row in result:
+        response.append({'class_name': row[0], 'class_id': row[1], 'department_id': row[2], 'department_name': row[3]})
+    return jsonify(response), 201
 
 @version.route("/tutor_timeslots", methods=["POST"])
-def subjects():
+def tutor_timeslots():
     
     data = request.get_json()
 
@@ -304,6 +327,8 @@ def subjects():
             'message': 'Invalid or missing fields in request.'
         }
         return jsonify(response), 400
+    
+    tutor_id = data.get("tutor_id")
 
     # placeholder SQL
     sql = text("""
