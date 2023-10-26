@@ -34,6 +34,8 @@ export default function SignUp() {
   const [passwordValid, setPasswordValid] = useState(true); // check password
   const [passwordValidationMessage, setPasswordValidationMessage] = useState('');
   const [criminal, setCriminal] = useState(false); // AND operator of all crime related questionaire boxes
+  const [snackbarOpen, setSnackbarOpen] = useState(false);      // for dialog
+  const [snackbarMessage, setSnackbarMessage] = useState('');  // for dialog msg
 
   const [showMore, setShowMore] = useState(false);
   const [formData, setFormData] = useState({
@@ -140,8 +142,7 @@ export default function SignUp() {
     // preventDefault() prevents a page refresh
     event.preventDefault();
 
-    try {
-      let isTutor = false;
+    let isTutor = false;
 
       // check if user click '
       if (formData.tutor)
@@ -150,23 +151,30 @@ export default function SignUp() {
       const response = await FrontAPI.signUp(formData, isTutor);
 
       console.log(response)
-  
-      if (response.status_code === 201) {
-        // success msg
-        console.log('Registration successful');
-
-        // set sign up status as successful
-        setSuccessful(true);
-
-      } else {
-        // fail msg
-        console.log('Registration failed');
+      switch (response.status_code) {
+              case 201:
+                // Registration success
+                console.log('Registration successful');
+                setSuccessful(true);
+                break;
+              case 400:
+                // Bad request
+                console.log(`Error ${response.status_code}: ${response.message}`);
+                setSnackbarMessage(response.message);
+                setSnackbarOpen(true);
+                break;
+              case 409:
+                // Unauthorized
+                console.log(`Error ${response.status_code}: ${response.message}`);
+                setSnackbarMessage(response.message);
+                setSnackbarOpen(true);
+                break;
+              default:
+                console.log('Registration failed');
+                setSnackbarMessage(response.message);
+                setSnackbarOpen(true);
+                break;
       }
-    } 
-    catch (error) {
-      // error msg
-      console.error('Error:', error);
-    }
   };
 
   return (
