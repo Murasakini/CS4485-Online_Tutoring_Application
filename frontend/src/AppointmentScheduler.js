@@ -156,7 +156,7 @@ export default function AppointmentScheduler() {
               </MenuItem>
               {subjects.map((subject) => (
               <MenuItem key={subject.class_name} value={subject.class_num}>
-                {subject.class_name} - {subject.class_num}
+                {subject.class_name} - {subject.class_num} - {subject.department_name}
               </MenuItem>
               ))}
             </Select>
