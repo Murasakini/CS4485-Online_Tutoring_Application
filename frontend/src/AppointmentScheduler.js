@@ -6,7 +6,7 @@ import Select from '@mui/material/Select';
 import MenuItem from '@mui/material/MenuItem';
 import 'react-big-calendar/lib/css/react-big-calendar.css';
 import FrontAPI from './api/FrontAPI';
-import CalendarDisplay from './CalendarDisplay';
+import CalendarDisplay from './components/CalendarDisplay';
 import { addToDate } from './Utils'; 
 
 
