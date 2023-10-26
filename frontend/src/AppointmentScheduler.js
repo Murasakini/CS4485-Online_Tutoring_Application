@@ -112,6 +112,14 @@ export default function AppointmentScheduler() {
   const handleSubmit = async (event) => {
     event.preventDefault();
     try {
+      // verify user's session before allowing them to create an appointment
+      const sessionResponse = await FrontAPI.verifySession();
+
+      if (sessionResponse.error) {
+        // handle invalid session
+        console.log('User is not logged in or the session is invalid. Redirect to login or show a message.');
+        return;
+      }
       // send form
       console.log('Appointment data submitted:', {
         date: formData.date,
