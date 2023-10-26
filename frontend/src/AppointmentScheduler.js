@@ -6,39 +6,25 @@ import Select from '@mui/material/Select';
 import MenuItem from '@mui/material/MenuItem';
 import 'react-big-calendar/lib/css/react-big-calendar.css';
 import FrontAPI from './api/FrontAPI';
-import CalendarDisplay from './components/CalendarDisplay'; // Import the CalendarDisplay component
+import CalendarDisplay from './components/CalendarDisplay';
+import { addToDate } from './Utils'; 
 
-//#step 1: find available classes for user to get tutoring
-//SELECT user_classes_readable.class_name, user_classes_readable.class_num, user_classes_readable.department_id 
-//	FROM user_classes_readable 
-//    LEFT JOIN auth_table ON user_classes_readable.user_id=auth_table.user_id 
-//    WHERE auth_table.session_id = :session_id;
-
-//#step 2: find available tutors for class
-//SELECT tutor_id, first_name, last_name, class_name FROM tutor_classes_readable WHERE class_num = :class_num AND department_id = :department_id;
-
-//#step 3: find when selected tutor is available
-//SELECT time_available FROM tutor_schedules WHERE tutor_id= :tutor_id;
-
-//#step 4: create appointment
-//INSERT INTO appointments (user_id, tutor_id, class_num, department_id, meeting_time) VALUES (:user_id, :tutor_id, :class_num, :department_id, :meeting_time);
 
 export default function AppointmentScheduler() {
   const [formData, setFormData] = useState({
     date: null,
     subject: '',
-    tutor: '',  
+    tutor: '',    // this is tutor_id
     timeSlot: '',
-    // fields go here
   });
 
   const [subjects, setSubjects] = useState([]); // subjects
-  const [tutors, setTutors] = useState([]);     // tutors
+  const [tutorsList, setTutorsList] = useState([]);     // tutors
   const [availableSlots, setAvailableSlots] = useState([]); // time slots
   const [selectedTimeSlot, setSelectedTimeSlot] = useState('');
 
   useEffect(() => {
-    // fetch the list of subjects 
+    // fetch the list of subjects. unconditional 
     FrontAPI.fetchSubjects()
       .then((data) => {
         setSubjects(data);
@@ -48,41 +34,45 @@ export default function AppointmentScheduler() {
       });
   }, []);
   
+  // handle when user change selected subject
   const handleSubjectChange = (event) => {
     const selectedSubject = event.target.value;
     setFormData({
       ...formData,
       subject: selectedSubject,
-      tutor: '', // Reset when subject changed
+      // reset these when subject changed
+      tutor: '', 
       timeSlot: '',
     });
   
     if (selectedSubject) {
-      // fetch tutors for the subject
+      // fetch tutors for selected subject
       FrontAPI.fetchTutors(selectedSubject)
         .then((data) => {
-          setTutors(data);
+          setTutorsList(data);
         })
         .catch((error) => {
           console.error('Failed to fetch tutors:', error);
         });
     } else {
       // reset
-      setTutors([]);
+      setTutorsList([]);
     }
   };
   
+  // handle when user change selected tutor
   const handleTutorChange = (event) => {
     const selectedTutor = event.target.value;
     setFormData({
       ...formData,
       tutor: selectedTutor,
-      timeSlot: '', // reset when tutor changes
+      // reset when tutor changes
+      timeSlot: '', 
     });
   
     if (selectedTutor) {
       // fetch available time slots for selected tutor and subject
-      FrontAPI.fetchTimeSlots(selectedTutor, formData.subject)
+      FrontAPI.fetchTimeSlots(selectedTutor)
         .then((data) => {
           setAvailableSlots(data);
         })
@@ -94,10 +84,42 @@ export default function AppointmentScheduler() {
       setAvailableSlots([]);
     }
   };
+
+  // handle when user change selected timeslot
+  const handleTimeSlotChange = (event) => {
+    const selectedTimeSlot = event.target.value;
+    setFormData({
+      ...formData,
+      timeSlot: selectedTimeSlot,
+    });
+
+    if (selectedTimeSlot) {
+      // convert selected timestamp to Date object
+      const start = new Date(selectedTimeSlot);
+
+      // get end property
+      const end = addToDate(start, 1, 'hour'); 
+
+      const event = {
+        title: `Appointment with ${formData.subject} - ${formData.tutor}`,
+        start,
+        end,
+      };
+    }
+  };
   
+  // handle when user click submit button
   const handleSubmit = async (event) => {
     event.preventDefault();
     try {
+      // verify user's session before allowing them to create an appointment
+      const sessionResponse = await FrontAPI.verifySession();
+
+      if (sessionResponse.error) {
+        // handle invalid session
+        console.log('User is not logged in or the session is invalid. Redirect to login or show a message.');
+        return;
+      }
       // send form
       console.log('Appointment data submitted:', {
         date: formData.date,
@@ -139,6 +161,7 @@ export default function AppointmentScheduler() {
               ))}
             </Select>
         </FormControl>
+
         <FormControl fullWidth required>
           <InputLabel>Tutor</InputLabel>
             <Select
@@ -150,32 +173,34 @@ export default function AppointmentScheduler() {
               <MenuItem value="">
                 <em>Select a tutor</em>
               </MenuItem>
-              {tutors.map((tutor) => (
-                <MenuItem key={tutor.id} value={tutor.name}>
+              {tutorsList.map((tutor) => (
+                <MenuItem key={tutor.tutor_id} value={tutor.tutor_id}> {/* TODO: change key to something else*/ }
                   {tutor.name}
                 </MenuItem>
               ))}
             </Select>
         </FormControl>
+
         <FormControl fullWidth required>
-          <InputLabel>Time Slot</InputLabel>
-          <Select
-            label="Time Slot"
-            name="timeSlot"
-            value={selectedTimeSlot}
-            onChange={(event) => setSelectedTimeSlot(event.target.value)}
-          >
-            <MenuItem value="">
-              <em>Select a time slot</em>
-            </MenuItem>
-            {/* Add the available time slots as MenuItem options */}
-            {availableSlots.map((slot) => (
-              <MenuItem key={slot.id} value={slot}>
-                {new Date(slot).toLocaleString()} {/* Format and display date and time */}
+            <InputLabel>Time Slot</InputLabel>
+            <Select
+              label="Time Slot"
+              name="timeSlot"
+              value={selectedTimeSlot}
+              onChange={handleTimeSlotChange}
+            >
+              <MenuItem value="">
+                <em>Select a time slot</em>
               </MenuItem>
-            ))}
-          </Select>
+              {/* add the available time slots as MenuItem options */}
+              {availableSlots.map((slot) => (
+                <MenuItem key={slot.id} value={slot.timestamp}>
+                  {new Date(slot.timestamp).toLocaleTimeString()}
+                </MenuItem>
+              ))}
+            </Select>
         </FormControl>
+
         <Button
           type="submit"
           variant="contained"
@@ -186,7 +211,7 @@ export default function AppointmentScheduler() {
         </Button>
       </form>
 
-      {/* use the CalendarDisplay component */}
+      {/* CalendarDisplay component */}
       <CalendarDisplay events={availableSlots} />
     </div>
   );

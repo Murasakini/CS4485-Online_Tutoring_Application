@@ -1,4 +1,5 @@
 import * as React from 'react';
+import { Navigate } from "react-router-dom";
 import Avatar from '@mui/material/Avatar';
 import Button from '@mui/material/Button';
 import TextField from '@mui/material/TextField';
@@ -25,10 +26,14 @@ const theme = createTheme({
 });
 
 export default function SignUp() {
+  // keep track if logging in successfully
+  const [isSuccessful, setSuccessful] = useState(false);
+
   const [confirmPassword, setConfirmPassword] = useState(''); // store reenter
   const [passwordsMatch, setPasswordsMatch] = useState(true); // check reenter password
   const [passwordValid, setPasswordValid] = useState(true); // check password
   const [passwordValidationMessage, setPasswordValidationMessage] = useState('');
+  const [criminal, setCriminal] = useState(false); // AND operator of all crime related questionaire boxes
 
   const [showMore, setShowMore] = useState(false);
   const [formData, setFormData] = useState({
@@ -46,6 +51,7 @@ export default function SignUp() {
     sexOffenderRegistry: false,
     outstandingWarrants: false,
     authorizationBackgroundCheck: false,
+    criminal: false,
   });
 
   // get data from form
@@ -57,15 +63,22 @@ export default function SignUp() {
         ...formData,
         [name]: checked,
       });
+      if (name === 'tutor') {
+        setShowMore(checked);
+      }
     }
     else if (name === 'password') {
       // check if the password meets the validation criteria
       const isPasswordValid =
-        value.length >= 12 && /[A-Z]/.test(value) && /[0-9]/.test(value) && /[!@#$%^&*()_+{}\[\]:;<>,.?~\\-]/.test(value);   
+        value.length >= 12 && 
+        /[A-Z]/.test(value) && 
+        /[a-z]/.test(value) &&
+        /[0-9]/.test(value) && 
+        /[!@#$%^&*()_+{}\[\]:;<>,.?~\\-]/.test(value);   
   
       // set the password validation message based on the validation result
       setPasswordValidationMessage(
-        isPasswordValid ? '' : 'Password must be at least 12 characters long and contain at least 1 capital letter (A-Z), 1 number (0-9), and 1 special character (!@#$ ...)'
+        isPasswordValid ? '' : 'Password must be at least 12 characters long and contain at least 1 capital letter (A-Z), at least 1 lowercase letter (a-z), 1 number (0-9), and 1 special character (!@#$ ...)'
       );
   
       // update the error state based on validation result
@@ -92,13 +105,35 @@ export default function SignUp() {
     }
   };
 
+  // password matching
   useEffect(() => {
     setPasswordsMatch(formData.password === confirmPassword);
   }, [formData.password, confirmPassword]);
 
-  function handleMoreClick() {
-    setShowMore(!showMore);
-  }
+  // AND of all crime related questionaire boxes
+  useEffect(() => {
+    const {
+      criminalHistory,
+      pendingCharges,
+      probationOrParole,
+      sexOffenderRegistry,
+      outstandingWarrants,
+      authorizationBackgroundCheck,
+    } = formData;
+  
+    // update
+    setCriminal(
+      !(
+        criminalHistory ||
+        pendingCharges ||
+        probationOrParole ||
+        sexOffenderRegistry ||
+        outstandingWarrants ||
+        authorizationBackgroundCheck
+      )
+    );    
+  }, [formData]);
+  
 
   // listen for submit event from "Sign in" Button
   const handleSubmit = async (event) => {
@@ -106,11 +141,23 @@ export default function SignUp() {
     event.preventDefault();
 
     try {
-      const response = await FrontAPI.signUp(formData);
+      let isTutor = false;
+
+      // check if user click '
+      if (formData.tutor)
+        isTutor = true;
+
+      const response = await FrontAPI.signUp(formData, isTutor);
+
+      console.log(response)
   
-      if (response.status === 200) {
+      if (response.status_code === 201) {
         // success msg
         console.log('Registration successful');
+
+        // set sign up status as successful
+        setSuccessful(true);
+
       } else {
         // fail msg
         console.log('Registration failed');
@@ -123,6 +170,12 @@ export default function SignUp() {
   };
 
   return (
+    <React.Fragment>
+    {isSuccessful ? 
+      // navigate to home page
+      <Navigate to="/" /> :
+      
+      // display input form
       <ThemeProvider theme={theme}>
           <Box sx={{
                 display: 'flex',
@@ -139,7 +192,7 @@ export default function SignUp() {
           <h2>Online Tutoring Service</h2>
           <h2>SIGN UP</h2>
 
-          <Box component="form" onSubmit={handleSubmit} noValidate >
+          <Box component="form" onSubmit={handleSubmit}>
 
             <Grid container spacing={2}>
               <Grid item xs={12} sm={6}>
@@ -152,6 +205,9 @@ export default function SignUp() {
                   label="First Name"
                   value={formData.firstName}
                   onChange={handleChange}
+                  inputProps={{
+                    maxLength: 45, // Limit to 45 characters
+                  }}
                 />
               </Grid>
               <Grid item xs={12} sm={6}>
@@ -164,6 +220,9 @@ export default function SignUp() {
                   autoComplete="family-name"
                   value={formData.lastName}
                   onChange={handleChange}
+                  inputProps={{
+                    maxLength: 45, // Limit to 45 characters
+                  }}
                 />
               </Grid>
               <Grid item xs={12}>
@@ -171,11 +230,15 @@ export default function SignUp() {
                   required
                   fullWidth
                   id="email"
-                  label="Email Address"
+                  label="Email Address | @utdallas.edu domain only"
                   name="email"
                   autoComplete="email"
                   value={formData.email}
                   onChange={handleChange}
+                  inputProps={{
+                    pattern: '^[a-zA-Z0-9]+(\.[a-zA-Z0-9]+)?@utdallas.edu$',
+                    maxLength: 45, // Limit to 45 characters
+                  }}
                 />
               </Grid>
               <Grid item xs={12}>
@@ -183,11 +246,15 @@ export default function SignUp() {
                   required
                   fullWidth
                   id="phone"
-                  label="Phone Number"
+                  label="US Phone Number | Ex: 2133139622 | 10-digit US phone number"
                   name="phone"
                   autoComplete="phone"
                   value={formData.phone}
                   onChange={handleChange}
+                  inputProps={{
+                    pattern: "^[0-9]{10}$", // 10 digits
+                    maxLength: 10, // stops when hit 10
+                  }}
                 />
               </Grid>
               <Grid item xs={12}>
@@ -201,6 +268,9 @@ export default function SignUp() {
                   autoComplete="netId"
                   value={formData.netId}
                   onChange={handleChange}
+                  inputProps={{
+                    maxLength: 45, // Limit to 45 characters
+                  }}
                 />
               </Grid>
               <Grid item xs={12}>
@@ -215,6 +285,9 @@ export default function SignUp() {
                   error={!passwordValid}
                   value={formData.password}
                   onChange={handleChange}
+                  inputProps={{
+                    maxLength: 45, // Limit to 45 characters
+                  }}
                 />
                 {!passwordValid && (
                   <p style={{ color: 'red' }}>{passwordValidationMessage}</p>
@@ -232,6 +305,9 @@ export default function SignUp() {
                   error={!passwordsMatch}
                   value={formData.repassword}
                   onChange={handleChange}
+                  inputProps={{
+                    maxLength: 45, // Limit to 45 characters
+                  }}
                 />
                 {!passwordsMatch && (
                   <p style={{ color: 'red' }}>Passwords do not match</p>
@@ -240,15 +316,6 @@ export default function SignUp() {
             </Grid>
 
             <Grid container justifyContent="flex-end"> 
-              <Button onClick={handleMoreClick} label="I want to sign up as a tutor">
-                {showMore ? 'Hide' : 'Show'} tutor account sign up
-              </Button>
-              {showMore && 
-                <Grid container justifyContent="flex-start"> 
-                  <h3>CHECKBOX IF YES</h3>
-                </Grid>
-              }
-              {showMore && 
                 <Grid container justifyContent="flex-start"> 
                   <FormControlLabel 
                     control={
@@ -258,10 +325,16 @@ export default function SignUp() {
                         onChange={handleChange} 
                       />
                     }
-                    label="I want to sign up as a tutor"
+                    label="I want to sign up as a TUTOR"
                   />
                 </Grid>
+
+              {showMore && 
+                <Grid container justifyContent="flex-start"> 
+                  <h3>Checkbox if NO for questions below</h3>
+                </Grid>
               }
+
               {showMore && 
                 <Grid container justifyContent="flex-start"> 
                   <FormControlLabel
@@ -333,6 +406,11 @@ export default function SignUp() {
                 </Grid>
                 }
                 {showMore && 
+                  <Grid container justifyContent="flex-start"> 
+                    <h3>Checkbox if YES for this question below</h3>
+                  </Grid>
+                }
+                {showMore && 
                 <Grid container justifyContent="flex-start"> 
                   <FormControlLabel
                     control={
@@ -374,5 +452,7 @@ export default function SignUp() {
           </Grid>
 
       </ThemeProvider>
+              }      
+    </React.Fragment>
   );
 }

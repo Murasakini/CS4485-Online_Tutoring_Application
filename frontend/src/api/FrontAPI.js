@@ -1,22 +1,81 @@
 import axios from 'axios';
 import { SHA256 } from 'crypto-js';
 
-const baseURL = 'https://your-backend-api-url.com';
+const baseURL = 'http://localhost:5000';
 
 const axiosInstance = axios.create({
   baseURL,
+  headers: {
+    'Content-Type': 'application/json'
+  }
 });
+
+// interceptor to send session cookie with every request
+//axiosInstance.interceptors.request.use((config) => {
+  // ensure that config.headers is initialized
+  // initialize if not defined
+  //config.headers = config.headers || {}; 
+
+  // get session cookie from local storage
+  //const sessionCookie = localStorage.getItem('sessionCookie');
+
+  // add  session cookie to headers
+  //config.headers.common['Cookie'] = sessionCookie;
+
+  //return config;
+//});
 
 // api functions
 const FrontAPI = {
-
-  // send sign in info for checking
-  signIn: async (formData) => {
+  
+  // send sign up info
+  signUp: async (formData, isTutor) => {
     try {
-      const response = await axiosInstance.post('/api/signin', {
-        email: formData.email,
-        password: SHA256(formData.password).toString(),
-      });
+      let endpoint = '/api/v1/signup';
+      let response = null;
+
+      // tutor
+      if (isTutor) {
+        endpoint += '/tutor'
+
+        response = await axiosInstance.post(endpoint, {
+          //hash password
+          password: SHA256(formData.password).toString(),
+          email: formData.email,
+          first_name: formData.firstName,
+          last_name: formData.lastName,
+          phone_num: formData.phone,
+          netID: formData.netId,
+          criminal: formData.criminal,
+          //criminal: formData.criminalHistory,
+          // pendingCharges: formData.pendingCharges,
+          // probationOrParole: formData.probationOrParole,
+          // sexOffenderRegistry: formData.sexOffenderRegistry,
+          // outstandingWarrants: formData.outstandingWarrants,
+          // authorizationBackgroundCheck: formData.authorizationBackgroundCheck,
+        });
+      }
+
+      // user
+      else {
+        endpoint += '/user'
+
+        response = await axiosInstance.post(endpoint, {
+          //hash password
+          password: SHA256(formData.password).toString(),
+          email: formData.email,
+          first_name: formData.firstName,
+          last_name: formData.lastName,
+          phone_num: formData.phone,
+          netID: formData.netId,
+          // criminalHistory: formData.criminalHistory,
+          // pendingCharges: formData.pendingCharges,
+          // probationOrParole: formData.probationOrParole,
+          // sexOffenderRegistry: formData.sexOffenderRegistry,
+          // outstandingWarrants: formData.outstandingWarrants,
+          // authorizationBackgroundCheck: formData.authorizationBackgroundCheck,
+        });
+      }
       return response.data;
     } catch (error) {
       if (error.response) {
@@ -31,23 +90,13 @@ const FrontAPI = {
     }
   },
 
-  // send sign up info
-  signUp: async (formData) => {
+  // send sign in info for checking
+  signIn: async (formData) => {
     try {
-      const response = await axiosInstance.post('/api/signup', {
-        //hash password
-        password: SHA256(formData.password).toString(),
+      const response = await axiosInstance.post('/api/v1/login', {
         email: formData.email,
-        firstName: formData.firstName,
-        lastName: formData.lastName,
-        phone: formData.phone,
-        netId: formData.netId,
-        criminalHistory: formData.criminalHistory,
-        pendingCharges: formData.pendingCharges,
-        probationOrParole: formData.probationOrParole,
-        sexOffenderRegistry: formData.sexOffenderRegistry,
-        outstandingWarrants: formData.outstandingWarrants,
-        authorizationBackgroundCheck: formData.authorizationBackgroundCheck,
+        // password: SHA256(formData.password).toString(),
+        password: formData.password,
       });
       return response.data;
     } catch (error) {
@@ -104,12 +153,11 @@ const FrontAPI = {
   },
 
   // get timeslot of the subject, tutor combination
-  fetchTimeSlots: async (tutor, subject) => {
+  fetchTimeSlots: async (tutor) => {
     try {
       const response = await axiosInstance.get('/api/timeslots', {
         params: {
           tutor: tutor,
-          subject: subject,
         },
       });
       return response.data;
@@ -147,7 +195,44 @@ const FrontAPI = {
       throw error;
     }
   },
-  
+
+  // fetch time slots of tutor using tutorid
+  fetchTutorTimeSlots: async (tutorId) => {
+    try {
+      const response = await axiosInstance.get(`/api/tutorTimeSlots/${tutorId}`);
+      return response.data;
+    } catch (error) {
+      if (error.response) {
+        console.error('Error response status:', error.response.status);
+        console.error('Error response data:', error.response.data);
+      } else if (error.request) {
+        console.error('No response received:', error.request);
+      } else {
+        console.error('Error message:', error.message);
+      }
+      throw error;
+    }
+  },
+
+  // verify session is valid
+  verifySession: async () => {
+    try {
+      // POST request to /verify_session endpoint
+      const response = await axiosInstance.post('/verify_session');
+      return response.data;
+    } catch (error) {
+      if (error.response) {
+        console.error('Error response status:', error.response.status);
+        console.error('Error response data:', error.response.data);
+      } else if (error.request) {
+        console.error('No response received:', error.request);
+      } else {
+        console.error('Error message:', error.message);
+      }
+      throw error;
+    }
+  },
+
 };
 
 export default FrontAPI;
