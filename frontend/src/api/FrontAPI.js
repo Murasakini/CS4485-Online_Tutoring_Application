@@ -46,8 +46,8 @@ const FrontAPI = {
           last_name: formData.lastName,
           phone_num: formData.phone,
           netID: formData.netId,
-          criminal: + formData.criminalHistory,
-
+          allow: formDate.allow
+          //criminal: formData.criminalHistory,
           // pendingCharges: formData.pendingCharges,
           // probationOrParole: formData.probationOrParole,
           // sexOffenderRegistry: formData.sexOffenderRegistry,
@@ -67,7 +67,7 @@ const FrontAPI = {
           first_name: formData.firstName,
           last_name: formData.lastName,
           phone_num: formData.phone,
-          netID: formData.netId
+          netID: formData.netId,
           // criminalHistory: formData.criminalHistory,
           // pendingCharges: formData.pendingCharges,
           // probationOrParole: formData.probationOrParole,
