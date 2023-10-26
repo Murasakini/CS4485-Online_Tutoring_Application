@@ -236,7 +236,7 @@ export default function SignUp() {
                   value={formData.email}
                   onChange={handleChange}
                   inputProps={{
-                    pattern: '^[a-zA-Z0-9]+@utdallas.edu$',
+                    pattern: '^[a-zA-Z0-9]+(\.[a-zA-Z0-9]+)?@utdallas.edu$',
                     maxLength: 45, // Limit to 45 characters
                   }}
                 />
