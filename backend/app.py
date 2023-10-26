@@ -262,6 +262,55 @@ def signup_user():
 
     
 
+@version.route("/subj_tutors", methods=["POST"])
+def tutors_of_subject():
+    data = request.get_json()
+
+    if not validate_fields(data, {"subject"}):
+        response = {
+            'error': True,
+            'status_code': 400,
+            'message': 'Invalid or missing fields in request.'
+        }
+        return jsonify(response), 400
+    
+    # placeholder SQL
+    sql = text("""
+            CALL validate_auth;
+            SELECT COUNT(1) FROM auth_table WHERE session_id = :session_id;
+        """)
+
+
+@version.route("/subjects", methods=["POST"])
+def subjects():
+    
+    session_id = request.cookies.get('session_id')
+
+    # placeholder SQL
+    sql = text("""
+            CALL validate_auth;
+            SELECT COUNT(1) FROM auth_table WHERE session_id = :session_id;
+        """)
+
+@version.route("/tutor_timeslots", methods=["POST"])
+def subjects():
+    
+    data = request.get_json()
+
+    if not validate_fields(data, {"tutor_id"}):
+        response = {
+            'error': True,
+            'status_code': 400,
+            'message': 'Invalid or missing fields in request.'
+        }
+        return jsonify(response), 400
+
+    # placeholder SQL
+    sql = text("""
+            CALL validate_auth;
+            SELECT COUNT(1) FROM auth_table WHERE session_id = :session_id;
+        """)
+
 @version.route("/signup/tutor", methods=["POST"])
 def signup_tutor():
     data = request.get_json()

@@ -115,7 +115,7 @@ const FrontAPI = {
   //get tutors of the chosen subject
   fetchTutors: async (subject) => {
     try {
-      const response = await axiosInstance.get('/api/tutors', {
+      const response = await axiosInstance.get('/api/v1/subj_tutors', {
         params: {
           subject: subject,
         },
@@ -137,7 +137,7 @@ const FrontAPI = {
   // get available subjects
   fetchSubjects: async () => {
     try {
-      const response = await axiosInstance.get('/api/subjects');
+      const response = await axiosInstance.get('/api/v1/subjects');
       return response.data;
     } catch (error) {
       if (error.response) {
@@ -155,7 +155,7 @@ const FrontAPI = {
   // get timeslot of the subject, tutor combination
   fetchTimeSlots: async (tutor) => {
     try {
-      const response = await axiosInstance.get('/api/timeslots', {
+      const response = await axiosInstance.get('/api/v1/tutor_timeslots', {
         params: {
           tutor: tutor,
         },
