@@ -56,12 +56,11 @@ export default function SignIn() {
   const handleSubmit = async (event) => {
     // preventDefault() prevents a page refresh
     event.preventDefault();
-    const response = await FrontAPI.signIn(formData);
-
-    switch (response.status_code) {
-      case 200:
-        // success
-        localStorage.setItem('sessionCookie', response.result);
+    try {
+      const response = await FrontAPI.signIn(formData);
+  
+      if (response.status_code === 200) {
+        // set sign up status as successful
         setSuccessful(true);
         console.log('Login successful');
         break;

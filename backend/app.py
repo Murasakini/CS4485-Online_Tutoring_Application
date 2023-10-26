@@ -177,7 +177,8 @@ def authenticate(email, password):
         "user_type": user_type,
         "user_id": user_id,
         "email": email,
-        "session_id": session_id
+        "session_id": session_id,
+        "expire": expire
     }
     
     return data, True
@@ -295,7 +296,7 @@ def signup_user():
 
     
 
-@version.route("/subj_tutors", methods=["POST"])
+@version.route("/subj_tutors", methods=["GET"])
 def tutors_of_subject():
     data = request.get_json()
 
@@ -325,7 +326,7 @@ def tutors_of_subject():
     return jsonify(response), 200
 
 
-@version.route("/subjects", methods=["POST"])
+@version.route("/subjects", methods=["GET"])
 def subjects():
     # pulls a user's session_id from the browser
     session_id = request.cookies.get('session_id')
@@ -347,7 +348,7 @@ def subjects():
         response.append({'class_name': row[0], 'class_id': row[1], 'department_id': row[2], 'department_name': row[3]})
     return jsonify(response), 200
 
-@version.route("/tutor_timeslots", methods=["POST"])
+@version.route("/tutor_timeslots", methods=["GET"])
 def tutor_timeslots():
     
     data = request.get_json()
@@ -467,9 +468,11 @@ def login():
         response = {
             'error': False,
             'status_code': 200,
-            'result': user_data
+            'message': 'Login successful, cookie created.'
         }
-        return jsonify(response), 200
+        response_success = jsonify(response)
+        response_success.set_cookie('sessionCookie', user_data.session_id, expires = user_data.expire)
+        return response_success, 200
     else:
         response = {
             'error': True,
