@@ -8,6 +8,8 @@ import Checkbox from '@mui/material/Checkbox';
 import Link from '@mui/material/Link';
 import Grid from '@mui/material/Grid';
 import Box from '@mui/material/Box';
+import CustomSnackbar from './components/CustomSnackbar.js';
+import MuiAlert from '@mui/material/Alert';
 import { ThemeProvider, createTheme } from '@mui/material/styles';
 import './App.css';
 import { useState } from 'react';
@@ -39,6 +41,10 @@ export default function SignIn() {
   // keep track if logging in successfully
   const [isSuccessful, setSuccessful] = useState(false);
 
+  // display error msg to user
+  const [snackbarOpen, setSnackbarOpen] = useState(false);
+  const [snackbarMessage, setSnackbarMessage] = useState('');
+
   //form as a state
   const [formData, setFormData] = useState({
     email: '',
@@ -58,27 +64,33 @@ export default function SignIn() {
   const handleSubmit = async (event) => {
     //preventDefault() prevents a page refresh 
     event.preventDefault();
-    
-    try {
-      const response = await FrontAPI.signIn(formData);
+    const response = await FrontAPI.signIn(formData);
   
-      if (response.status_code === 200) {
-        // store session cookie in local storage
+    switch (response.status_code) {
+      case 200:
+        // success
         localStorage.setItem('sessionCookie', response.result);
-        // set sign up status as successful
         setSuccessful(true);
-        // success msg
         console.log('Login successful');
-      } else {
-        // fail msg
+        break;
+      case 400:
+        console.log(`Error ${response.status_code}: ${response.message}`);
+        setSnackbarMessage(response.message);
+        setSnackbarOpen(true);
+        break;
+      case 401:
+        console.log(`Error ${response.status_code}: ${response.message}`);
+        setSnackbarMessage(response.message);
+        setSnackbarOpen(true);
+        break;
+      default:
         console.log('Login failed');
-      }
-    } 
-    catch (error) {
-      // error msg
-      console.error('Error:', error);
+        setSnackbarMessage(response.message);
+        setSnackbarOpen(true);
+        break;
     }
-  };
+  } 
+};
   
   return (
     <React.Fragment>
@@ -152,7 +164,14 @@ export default function SignIn() {
               >
                 Sign In
               </Button>
-              
+
+              {/* CustomSnackbar component for displaying error messages */}
+              <CustomSnackbar
+                open={snackbarOpen}
+                message={snackbarMessage}
+                onClose={() => setSnackbarOpen(false)}
+              />
+                  
               {/* hyper links */}
               <Grid container justifyContent="space-between">
                 <Grid item>
