@@ -10,6 +10,7 @@ import EditMyAccount from './EditMyAccount.js'
 import SignIn from './SignIn.js';
 import SignUp from './SignUp.js';
 import AppointmentScheduler from './AppointmentScheduler.js';
+import TwoFactorAuthentication from './TwoFactorAuthentication.js';
 import Favorite from './Favorite.js';
 import Leaderboard from './Leaderboard.js';
 import TutorProfile from './TutorProfile.js';
@@ -34,6 +35,7 @@ function App() {
             <Route path='/FindTutor' element={<FindTutor />} />
             <Route path='/MyAccount' element={<MyAccount />} />
             <Route path='/EditMyAccount' element={<EditMyAccount />} />
+            <Route path='/TwoFactorAuthentication' element={<TwoFactorAuthentication/>} />
             <Route path='/Leaderboard' element={<Leaderboard />} />
           </Routes>
         </div>
