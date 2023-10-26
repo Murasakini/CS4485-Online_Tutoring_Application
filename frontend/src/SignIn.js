@@ -63,8 +63,6 @@ export default function SignIn() {
       const response = await FrontAPI.signIn(formData);
   
       if (response.status_code === 200) {
-        // store session cookie in local storage
-        localStorage.setItem('sessionCookie', response.result);
         // set sign up status as successful
         setSuccessful(true);
         // success msg
