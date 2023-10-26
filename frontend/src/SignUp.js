@@ -65,11 +65,15 @@ export default function SignUp() {
     else if (name === 'password') {
       // check if the password meets the validation criteria
       const isPasswordValid =
-        value.length >= 12 && /[A-Z]/.test(value) && /[0-9]/.test(value) && /[!@#$%^&*()_+{}\[\]:;<>,.?~\\-]/.test(value);   
+        value.length >= 12 && 
+        /[A-Z]/.test(value) && 
+        /[a-z]/.test(value) &&
+        /[0-9]/.test(value) && 
+        /[!@#$%^&*()_+{}\[\]:;<>,.?~\\-]/.test(value);   
   
       // set the password validation message based on the validation result
       setPasswordValidationMessage(
-        isPasswordValid ? '' : 'Password must be at least 12 characters long and contain at least 1 capital letter (A-Z), 1 number (0-9), and 1 special character (!@#$ ...)'
+        isPasswordValid ? '' : 'Password must be at least 12 characters long and contain at least 1 capital letter (A-Z), at least 1 lowercase letter (a-z), 1 number (0-9), and 1 special character (!@#$ ...)'
       );
   
       // update the error state based on validation result
@@ -161,7 +165,7 @@ export default function SignUp() {
           <h2>Online Tutoring Service</h2>
           <h2>SIGN UP</h2>
 
-          <Box component="form" onSubmit={handleSubmit} noValidate >
+          <Box component="form" onSubmit={handleSubmit}>
 
             <Grid container spacing={2}>
               <Grid item xs={12} sm={6}>
@@ -193,11 +197,14 @@ export default function SignUp() {
                   required
                   fullWidth
                   id="email"
-                  label="Email Address"
+                  label="Email Address | @utdallas.edu domain only"
                   name="email"
                   autoComplete="email"
                   value={formData.email}
                   onChange={handleChange}
+                  inputProps={{
+                    pattern: ".*@utdallas.edu",
+                  }}
                 />
               </Grid>
               <Grid item xs={12}>
@@ -205,11 +212,14 @@ export default function SignUp() {
                   required
                   fullWidth
                   id="phone"
-                  label="Phone Number"
+                  label="US Phone Number | Ex: 2133139622 | 10-digit US phone number"
                   name="phone"
                   autoComplete="phone"
                   value={formData.phone}
                   onChange={handleChange}
+                  inputProps={{
+                    pattern: "^[0-9]{10}$", // 10 digits
+                  }}
                 />
               </Grid>
               <Grid item xs={12}>
