@@ -33,6 +33,7 @@ export default function SignUp() {
   const [passwordsMatch, setPasswordsMatch] = useState(true); // check reenter password
   const [passwordValid, setPasswordValid] = useState(true); // check password
   const [passwordValidationMessage, setPasswordValidationMessage] = useState('');
+  const [allow, setAllow] = useState(false); // AND operator of all crime related questionaire boxes
 
   const [showMore, setShowMore] = useState(false);
   const [formData, setFormData] = useState({
@@ -49,7 +50,8 @@ export default function SignUp() {
     probationOrParole: false,
     sexOffenderRegistry: false,
     outstandingWarrants: false,
-    authorizationBackgroundCheck: false
+    authorizationBackgroundCheck: false,
+    allow: false
   });
 
   // get data from form
@@ -61,6 +63,9 @@ export default function SignUp() {
         ...formData,
         [name]: checked,
       });
+      if (name === 'tutor') {
+        setShowMore(checked);
+      }
     }
     else if (name === 'password') {
       // check if the password meets the validation criteria
@@ -100,13 +105,33 @@ export default function SignUp() {
     }
   };
 
+  // password matching
   useEffect(() => {
     setPasswordsMatch(formData.password === confirmPassword);
   }, [formData.password, confirmPassword]);
 
-  function handleMoreClick() {
-    setShowMore(!showMore);
-  }
+  // AND of all crime related questionaire boxes
+  useEffect(() => {
+    const {
+      criminalHistory,
+      pendingCharges,
+      probationOrParole,
+      sexOffenderRegistry,
+      outstandingWarrants,
+      authorizationBackgroundCheck,
+    } = formData;
+  
+    // update
+    setAllow(
+      criminalHistory &&
+      pendingCharges &&
+      probationOrParole &&
+      sexOffenderRegistry &&
+      outstandingWarrants &&
+      authorizationBackgroundCheck
+    );
+  }, [formData]);
+  
 
   // listen for submit event from "Sign in" Button
   const handleSubmit = async (event) => {
@@ -203,7 +228,7 @@ export default function SignUp() {
                   value={formData.email}
                   onChange={handleChange}
                   inputProps={{
-                    pattern: ".*@utdallas.edu",
+                    pattern: '^[a-zA-Z0-9]+@utdallas.edu$',
                   }}
                 />
               </Grid>
@@ -272,15 +297,6 @@ export default function SignUp() {
             </Grid>
 
             <Grid container justifyContent="flex-end"> 
-              <Button onClick={handleMoreClick} label="I want to sign up as a tutor">
-                {showMore ? 'Hide' : 'Show'} tutor account sign up
-              </Button>
-              {showMore && 
-                <Grid container justifyContent="flex-start"> 
-                  <h3>CHECKBOX IF YES</h3>
-                </Grid>
-              }
-              {showMore && 
                 <Grid container justifyContent="flex-start"> 
                   <FormControlLabel 
                     control={
@@ -290,10 +306,16 @@ export default function SignUp() {
                         onChange={handleChange} 
                       />
                     }
-                    label="I want to sign up as a tutor"
+                    label="I want to sign up as a TUTOR"
                   />
                 </Grid>
+
+              {showMore && 
+                <Grid container justifyContent="flex-start"> 
+                  <h3>Checkbox if NO for questions below</h3>
+                </Grid>
               }
+
               {showMore && 
                 <Grid container justifyContent="flex-start"> 
                   <FormControlLabel
@@ -363,6 +385,11 @@ export default function SignUp() {
                     label="Outstanding Warrants: Do you have any outstanding arrest warrants?"
                   />
                 </Grid>
+                }
+                {showMore && 
+                  <Grid container justifyContent="flex-start"> 
+                    <h3>Checkbox if YES for this question below</h3>
+                  </Grid>
                 }
                 {showMore && 
                 <Grid container justifyContent="flex-start"> 
