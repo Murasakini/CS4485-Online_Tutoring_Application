@@ -27,6 +27,7 @@ db = SQLAlchemy(app)
 
 USER_FIELDS = {"first_name", "last_name", "netID", "email", "phone_num", "password"}
 TUTOR_FIELDS = USER_FIELDS.union({"criminal"})
+APPOINTMENT_FIELDS = {"subject", "tutor", "timeSlot"}
 AUTHENTICATE_FIELDS = {"email", "password"}
 PROTECTED_ENDPOINTS = ['v1.test_protected', 'v1.subjects']
 
@@ -57,6 +58,18 @@ def user_exists(netID):
     result = db.session.execute(sql, {"netID": netID})
     return result.scalar() != 0
 
+def user_session(session_id):
+    # Fetches user_id given a session_id
+    sql = text("""
+        CALL validate_auth;
+        SELECT user_id FROM auth_table WHERE session_id = :session_id
+    """)
+
+    result = db.session.execute(sql, {"session_id": session_id}).fetchone()
+    if result != None:
+        return result[0], True
+    else:
+        return "Error: Session ID is either invalid or not for a user account.", False
 
 def insert_user(data):
     if user_exists(data['netID']):
@@ -100,6 +113,26 @@ def insert_tutor(data):
     except IntegrityError:  # Catch any IntegrityError (like unique constraint violations)
         db.session.rollback()
         return "An error occurred while inserting the user.", False
+    
+def insert_appointment(data):
+    sql = text("""
+        INSERT INTO appointments (user_id, tutor_id, class_num, department_id, meeting_time) 
+            VALUES (:user_id, :tutor_id, :class_num, :department_id, :meeting_time);
+    """)
+    try:
+        result = db.session.execute(sql, data)
+        db.session.commit()
+
+        # Check if insert was successful
+        if result.rowcount == 1:
+            # Return the inserted data. 
+            # If you need the actual row from the DB, you'll need to query it here.
+            return data, True
+        else:
+            return "The insert was unsuccessful", False
+    except IntegrityError:  # Catch any IntegrityError (like unique constraint violations)
+        db.session.rollback()
+        return "An error occurred while inserting the appointment.", False
     
 def authenticate(email, password):
     user_sql = text("""
@@ -289,8 +322,7 @@ def tutors_of_subject():
     for row in result:
         # Combine first and last name of tutors before sending
         response.append({'name': row[1] + ' ' + row[2], 'tutor_id': row[0]})
-    return jsonify(response), 201
-
+    return jsonify(response), 200
 
 
 @version.route("/subjects", methods=["POST"])
@@ -313,7 +345,7 @@ def subjects():
     response = list()
     for row in result:
         response.append({'class_name': row[0], 'class_id': row[1], 'department_id': row[2], 'department_name': row[3]})
-    return jsonify(response), 201
+    return jsonify(response), 200
 
 @version.route("/tutor_timeslots", methods=["POST"])
 def tutor_timeslots():
@@ -328,13 +360,61 @@ def tutor_timeslots():
         }
         return jsonify(response), 400
     
-    tutor_id = data.get("tutor_id")
+    tutor_id = data.get("tutor")["tutor_id"]
 
-    # placeholder SQL
+    # finds available
     sql = text("""
-            CALL validate_auth;
-            SELECT COUNT(1) FROM auth_table WHERE session_id = :session_id;
+            SELECT time_available FROM tutor_schedules WHERE tutor_id= :tutor_id;
         """)
+    
+    result = db.session.execute(sql, {"tutor_id": tutor_id})
+    # jsonify sql result
+    response = list()
+    for row in result:
+        response.append({'class_name': row[0], 'class_id': row[1], 'department_id': row[2], 'department_name': row[3]})
+    return jsonify(response), 200
+
+
+@version.route("/create/appointment", methods=["POST"])
+def create_appointment():
+    data = request.get_json()
+
+    if not validate_fields(data, APPOINTMENT_FIELDS):
+        response = {
+            'error': True,
+            'status_code': 400,
+            'message': 'Invalid or missing fields in request.'
+        }
+        return jsonify(response), 400
+    
+    # get user_id from session_id
+    session_id = request.cookies.get('session_id')
+    user_id, success = user_session(session_id)
+    formatted_data = {
+            "user_id": user_id,
+            "tutor_id": data.get("tutor").get("tutor_id"),
+            "class_num": data.get("subject").get("class_num"),
+            "department_id": data.get("subject").get("department_id"),
+            "meeting_time": data.get("timeSlot"),
+    }
+    
+     # If validation passes, you can continue with inserting the data into the database.
+    inserted_data, success = insert_appointment(formatted_data)
+
+    if success:
+        response = {
+            'error': False,
+            'status_code': 201,
+            'result': inserted_data
+        }
+        return jsonify(response), 201
+    else:
+        response = {
+            'error': True,
+            'status_code': 409, # 409 is the status code for a conflict
+            'message': inserted_data  # This will contain the error message
+        }
+        return jsonify(response), 409
 
 @version.route("/signup/tutor", methods=["POST"])
 def signup_tutor():

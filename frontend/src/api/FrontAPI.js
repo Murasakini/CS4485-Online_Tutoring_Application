@@ -177,7 +177,7 @@ const FrontAPI = {
   // create a new appointment
   createAppointment: async (formData) => {
     try {
-      const response = await axiosInstance.post('/api/appointments', {
+      const response = await axiosInstance.post('/api/v1/create/appointment', {
         subject: formData.subject,
         tutor: formData.tutor,
         timeSlot: formData.timeSlot,
