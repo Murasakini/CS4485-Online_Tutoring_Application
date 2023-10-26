@@ -110,13 +110,17 @@ export default function SignIn() {
                 required
                 fullWidth
                 id="email"
-                label="Email Address"
+                label="Email Address | @utdallas.edu domain only"
                 name="email"
                 autoComplete="email"
                 autoFocus
                 type="email"
                 value={formData.email}
                 onChange={handleChange}
+                inputProps={{
+                    pattern: '^[a-zA-Z0-9]+(\.[a-zA-Z0-9]+)?@utdallas.edu$',
+                    maxLength: 45, // Limit to 45 characters
+                }}
               />
 
               <TextField
@@ -130,6 +134,9 @@ export default function SignIn() {
                 autoComplete="current-password"
                 value={formData.password}
                 onChange={handleChange}
+                inputProps={{
+                    maxLength: 45, // Limit to 45 characters
+                }}
               />
               
               <FormControlLabel
