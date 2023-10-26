@@ -89,8 +89,7 @@ export default function SignIn() {
         setSnackbarOpen(true);
         break;
     }
-  } 
-};
+  };
   
   return (
     <React.Fragment>
