@@ -33,7 +33,7 @@ export default function SignUp() {
   const [passwordsMatch, setPasswordsMatch] = useState(true); // check reenter password
   const [passwordValid, setPasswordValid] = useState(true); // check password
   const [passwordValidationMessage, setPasswordValidationMessage] = useState('');
-  const [allow, setAllow] = useState(false); // AND operator of all crime related questionaire boxes
+  const [criminal, setCriminal] = useState(false); // AND operator of all crime related questionaire boxes
 
   const [showMore, setShowMore] = useState(false);
   const [formData, setFormData] = useState({
@@ -51,7 +51,7 @@ export default function SignUp() {
     sexOffenderRegistry: false,
     outstandingWarrants: false,
     authorizationBackgroundCheck: false,
-    allow: false
+    criminal: false,
   });
 
   // get data from form
@@ -122,14 +122,16 @@ export default function SignUp() {
     } = formData;
   
     // update
-    setAllow(
-      criminalHistory &&
-      pendingCharges &&
-      probationOrParole &&
-      sexOffenderRegistry &&
-      outstandingWarrants &&
-      authorizationBackgroundCheck
-    );
+    setCriminal(
+      !(
+        criminalHistory ||
+        pendingCharges ||
+        probationOrParole ||
+        sexOffenderRegistry ||
+        outstandingWarrants ||
+        authorizationBackgroundCheck
+      )
+    );    
   }, [formData]);
   
 
