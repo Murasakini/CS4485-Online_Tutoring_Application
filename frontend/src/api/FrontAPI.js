@@ -86,7 +86,6 @@ const FrontAPI = {
       } else {
         console.error('Error message:', error.message);
       }
-      throw error;
     }
   },
 
@@ -108,7 +107,6 @@ const FrontAPI = {
       } else {
         console.error('Error message:', error.message);
       }
-      throw error;
     }
   },
 
