@@ -153,12 +153,11 @@ const FrontAPI = {
   },
 
   // get timeslot of the subject, tutor combination
-  fetchTimeSlots: async (tutor, subject) => {
+  fetchTimeSlots: async (tutor) => {
     try {
       const response = await axiosInstance.get('/api/timeslots', {
         params: {
           tutor: tutor,
-          subject: subject,
         },
       });
       return response.data;
