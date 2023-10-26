@@ -205,6 +205,9 @@ export default function SignUp() {
                   label="First Name"
                   value={formData.firstName}
                   onChange={handleChange}
+                  inputProps={{
+                    maxLength: 45, // Limit to 45 characters
+                  }}
                 />
               </Grid>
               <Grid item xs={12} sm={6}>
@@ -217,6 +220,9 @@ export default function SignUp() {
                   autoComplete="family-name"
                   value={formData.lastName}
                   onChange={handleChange}
+                  inputProps={{
+                    maxLength: 45, // Limit to 45 characters
+                  }}
                 />
               </Grid>
               <Grid item xs={12}>
@@ -231,6 +237,7 @@ export default function SignUp() {
                   onChange={handleChange}
                   inputProps={{
                     pattern: '^[a-zA-Z0-9]+@utdallas.edu$',
+                    maxLength: 45, // Limit to 45 characters
                   }}
                 />
               </Grid>
@@ -246,6 +253,7 @@ export default function SignUp() {
                   onChange={handleChange}
                   inputProps={{
                     pattern: "^[0-9]{10}$", // 10 digits
+                    maxLength: 10, // stops when hit 10
                   }}
                 />
               </Grid>
@@ -260,6 +268,9 @@ export default function SignUp() {
                   autoComplete="netId"
                   value={formData.netId}
                   onChange={handleChange}
+                  inputProps={{
+                    maxLength: 45, // Limit to 45 characters
+                  }}
                 />
               </Grid>
               <Grid item xs={12}>
@@ -274,6 +285,9 @@ export default function SignUp() {
                   error={!passwordValid}
                   value={formData.password}
                   onChange={handleChange}
+                  inputProps={{
+                    maxLength: 45, // Limit to 45 characters
+                  }}
                 />
                 {!passwordValid && (
                   <p style={{ color: 'red' }}>{passwordValidationMessage}</p>
@@ -291,6 +305,9 @@ export default function SignUp() {
                   error={!passwordsMatch}
                   value={formData.repassword}
                   onChange={handleChange}
+                  inputProps={{
+                    maxLength: 45, // Limit to 45 characters
+                  }}
                 />
                 {!passwordsMatch && (
                   <p style={{ color: 'red' }}>Passwords do not match</p>
