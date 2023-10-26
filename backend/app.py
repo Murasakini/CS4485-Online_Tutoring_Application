@@ -365,6 +365,7 @@ def tutor_timeslots():
 
     # finds available
     sql = text("""
+            CALL clean_avail;
             SELECT time_available FROM tutor_schedules WHERE tutor_id= :tutor_id;
         """)
     
