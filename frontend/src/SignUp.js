@@ -192,7 +192,7 @@ export default function SignUp() {
                 flexDirection: 'column',
                 alignItems: 'center',
               }}> 
-            <Link to="/">
+            <Link href="https://www.utdallas.edu/">
               <Avatar sx={{ bgcolor: 'primary.main', width: 60, height: 60 }}>
                 <h4>UTD</h4>
               </Avatar>
@@ -215,9 +215,6 @@ export default function SignUp() {
                   label="First Name | ASCII only"
                   value={formData.firstName}
                   onChange={handleChange}
-                  inputProps={{
-                    maxLength: 45, // Limit to 45 characters
-                  }}
                   inputProps={{
                     pattern: '^[A-Za-z]+$', // ASCII characters
                     maxLength: 45, // Limit to 45 characters

@@ -1,9 +1,10 @@
 import * as React from 'react';
-import { Navigate, Link } from 'react-router-dom'; // Link from react-router-dom
+import { Navigate, Link } from 'react-router-dom';
 import Avatar from '@mui/material/Avatar';
 import Button from '@mui/material/Button';
 import TextField from '@mui/material/TextField';
 import FormControlLabel from '@mui/material/FormControlLabel';
+import { FormControl, InputLabel, Select, MenuItem } from '@mui/material';
 import Checkbox from '@mui/material/Checkbox';
 import Grid from '@mui/material/Grid';
 import Box from '@mui/material/Box';
@@ -40,6 +41,7 @@ export default function SignIn() {
   const [formData, setFormData] = useState({
     email: '',
     password: '',
+    userType: '',
   });
 
   // get data from the form
@@ -48,6 +50,15 @@ export default function SignIn() {
     setFormData({
       ...formData,
       [name]: value,
+    });
+  };
+
+  // pick student/tutor
+  const handleUserTypeChange = (event) => {
+    const userType = event.target.value;
+    setFormData({
+      ...formData,
+      userType,
     });
   };
 
@@ -60,6 +71,7 @@ export default function SignIn() {
     switch (response.status_code) {
       case 200:
         // success
+        localStorage.setItem('sessionCookie', response.result);
         setSuccessful(true);
         console.log('Login successful');
         break;
@@ -140,7 +152,23 @@ export default function SignIn() {
               }}
             />
 
-            <FormControlLabel
+            <FormControl fullWidth required>
+              <InputLabel>User Type</InputLabel>
+              <Select
+                label="User Type"
+                name="userType"
+                value={formData.userType}
+                onChange={handleUserTypeChange}
+              >
+                <MenuItem value="">
+                  <em>Select a user type</em>
+                </MenuItem>
+                <MenuItem value="student">Student</MenuItem>
+                <MenuItem value="tutor">Tutor</MenuItem>
+              </Select>
+            </FormControl>
+
+            <FormControlLabel 
               control={<Checkbox value="remember" />}
               label="Remember me"
             />
@@ -154,7 +182,7 @@ export default function SignIn() {
               Sign In
             </Button>
 
-            {/* CustomSnackbar component for displaying error messages */}
+            {/* CustomSnackbar for displaying error messages */}
             <CustomSnackbar
               open={snackbarOpen}
               message={snackbarMessage}

@@ -155,8 +155,8 @@ export default function AppointmentScheduler() {
 
           <Grid item xs={10}>
             <Paper>
-              <form onSubmit={handleSubmit}>
-                <FormControl fullWidth required>
+              <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                <FormControl fullWidth required style={{ textAlign: 'center' }}>
                   <InputLabel>Subject</InputLabel>
                     <Select
                       label="Subject"
@@ -168,15 +168,17 @@ export default function AppointmentScheduler() {
                       <MenuItem value="">
                         <em>Select a subject</em>
                       </MenuItem>
-                         {subjects.map((subject) => (
-                         <MenuItem key={subject.class_name} value={subject.class_num}>
-                        {subject.class_name} - {subject.class_num} - {subject.department_name}
+
+                      {subjects.map((subject) => (
+                        <MenuItem key={subject} value={subject}>
+                          {subject}
                         </MenuItem>
                       ))}
+
                     </Select>
                 </FormControl>
 
-                <FormControl fullWidth required>
+                <FormControl fullWidth required style={{ textAlign: 'center' }}>
                   <InputLabel>Tutor</InputLabel>
                     <Select
                       label="Tutor"
@@ -197,7 +199,7 @@ export default function AppointmentScheduler() {
                     </Select>
                 </FormControl>
 
-                <FormControl fullWidth required>
+                <FormControl fullWidth required style={{ textAlign: 'center' }}>
                   <InputLabel>Time Slot</InputLabel>
                     <Select
                       label="Time Slot"
@@ -216,18 +218,19 @@ export default function AppointmentScheduler() {
                           {new Date(slot.timestamp).toLocaleTimeString()}
                         </MenuItem>
                       ))}
-
                     </Select>
                 </FormControl>
 
-                <Button
-                  type="submit"
-                  variant="contained"
-                  color="primary"
-                  fullWidth
-                >
-                  Schedule
-                </Button>
+                <FormControl fullWidth required style={{ textAlign: 'center' }}>
+                  <Button
+                    type="submit"
+                    variant="contained"
+                    color="primary"
+                  >
+                    Schedule
+                  </Button>
+                </FormControl>
+
               </form>
 
               {/* CalendarDisplay component */}
