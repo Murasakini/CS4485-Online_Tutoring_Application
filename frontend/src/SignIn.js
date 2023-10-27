@@ -56,6 +56,7 @@ export default function SignIn() {
   const handleSubmit = async (event) => {
     // preventDefault() prevents a page refresh
     event.preventDefault();
+
     try {
       const response = await FrontAPI.signIn(formData);
   
