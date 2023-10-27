@@ -92,10 +92,19 @@ const FrontAPI = {
   // send sign in info for checking
   signIn: async (formData) => {
     try {
-      const response = await axiosInstance.post('/api/v1/login', {
-        email: formData.email,
-        password: SHA256(formData.password).toString(),
-      });
+      if (formData.userType === "student") {
+        const response = await axiosInstance.post('/api/v1/login/user', {
+          email: formData.email,
+          // password: SHA256(formData.password).toString(),
+          password: formData.password,
+        });
+      } else {
+          const response = await axiosInstance.post('/api/v1/login/tutor', {
+            email: formData.email,
+            // password: SHA256(formData.password).toString(),
+            password: formData.password,
+          });
+      }
       return response.data;
     } catch (error) {
       if (error.response) {
