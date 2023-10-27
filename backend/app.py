@@ -182,6 +182,77 @@ def authenticate(email, password):
     }
     
     return data, True
+
+def authenticate_user(email, password):
+    user_sql = text("""
+        SELECT users.user_id 
+        FROM users 
+        WHERE users.email = :email AND users.password = :password
+    """)
+
+    # Try to authenticate as a user
+    user_result = db.session.execute(user_sql, {"email": email, "password": password}).fetchone()
+    if user_result:
+        user_type = 'user'
+        user_id = user_result[0]
+            # Generate a unique session_id
+        session_id = uuid.uuid4().hex
+        
+        # Set an expiration time for the session
+        expire = datetime.now() + timedelta(hours=1)
+        
+        # Save the session to the database
+        a, b = save_session_to_db(session_id, user_id, user_type, expire)
+        
+        print("session result message: " + str(a), flush=True)
+        print("success in inserting session: " + str(b), flush=True)
+
+        data = {
+            "user_type": user_type,
+            "user_id": user_id,
+            "email": email,
+            "session_id": session_id
+        }
+        
+        return data, True
+    else:
+        return None, False  # Authentication failed
+
+
+def authenticate_tutor(email, password):
+    tutor_sql = text("""
+        SELECT tutors.tutor_id 
+        FROM tutors 
+        WHERE tutors.email = :email AND tutors.password = :password
+    """)
+
+    # Try to authenticate as a tutor
+    tutor_result = db.session.execute(tutor_sql, {"email": email, "password": password}).fetchone()
+    if tutor_result:
+        user_type = 'tutor'
+        user_id = tutor_result[0]
+            # Generate a unique session_id
+        session_id = uuid.uuid4().hex
+        
+        # Set an expiration time for the session
+        expire = datetime.now() + timedelta(hours=1)
+        
+        # Save the session to the database
+        a, b = save_session_to_db(session_id, user_id, user_type, expire)
+        
+        print("session result message: " + str(a), flush=True)
+        print("success in inserting session: " + str(b), flush=True)
+
+        data = {
+            "user_type": user_type,
+            "user_id": user_id,
+            "email": email,
+            "session_id": session_id
+        }
+        
+        return data, True
+    else:
+        return None, False  # Authentication failed
     
 def save_session_to_db(session_id, user_id, user_type, expire):
     # Save the session_id, user_id, and expiration to the auth_table in the database
@@ -464,6 +535,74 @@ def login():
         return jsonify(response), 400
     
     user_data, authenticated = authenticate(email, password)
+
+    if authenticated:
+        response = {
+            'error': False,
+            'status_code': 200,
+            'message': 'Login successful, cookie created.'
+        }
+        response_success = jsonify(response)
+        response_success.set_cookie('sessionCookie', user_data.session_id, expires = user_data.expire)
+        return response_success, 200
+    else:
+        response = {
+            'error': True,
+            'status_code': 401,
+            'message': 'Invalid email or password.'
+        }
+        return jsonify(response), 401
+    
+@version.route("/login/user", methods=["POST"])
+def login_user():
+    
+    data = request.get_json()
+    email = data.get("email")
+    password = data.get("password")
+
+    if not validate_fields(data, AUTHENTICATE_FIELDS):
+        response = {
+            'error': True,
+            'status_code': 400,
+            'message': 'Invalid or missing fields in request.'
+        }
+        return jsonify(response), 400
+    
+    user_data, authenticated = authenticate_user(email, password)
+
+    if authenticated:
+        response = {
+            'error': False,
+            'status_code': 200,
+            'message': 'Login successful, cookie created.'
+        }
+        response_success = jsonify(response)
+        response_success.set_cookie('sessionCookie', user_data.session_id, expires = user_data.expire)
+        return response_success, 200
+    else:
+        response = {
+            'error': True,
+            'status_code': 401,
+            'message': 'Invalid email or password.'
+        }
+        return jsonify(response), 401
+
+@version.route("/login/tutor", methods=["POST"])
+def login_tutor():
+    
+    data = request.get_json()
+    email = data.get("email")
+    password = data.get("password")
+
+    if not validate_fields(data, AUTHENTICATE_FIELDS):
+        response = {
+            'error': True,
+            'status_code': 400,
+            'message': 'Invalid or missing fields in request.'
+        }
+        return jsonify(response), 400
+    
+    user_data, authenticated = authenticate_tutor(email, password)
 
     if authenticated:
         response = {
