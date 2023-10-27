@@ -20,7 +20,7 @@ username = creds["database"]["username"]
 password = creds["database"]["password"]
 
 app = Flask(__name__)
-CORS(app)
+CORS(app, supports_credentials=True)
 app.config['SQLALCHEMY_DATABASE_URI'] = f'mysql+pymysql://{username}:{password}@online-tutoring-application.ccm0nvuvbmz8.us-east-2.rds.amazonaws.com:3306/ota_db'
 db = SQLAlchemy(app)
 
@@ -211,7 +211,8 @@ def authenticate_user(email, password):
             "user_type": user_type,
             "user_id": user_id,
             "email": email,
-            "session_id": session_id
+            "session_id": session_id,
+            "expire": expire
         }
         
         return data, True
@@ -247,7 +248,8 @@ def authenticate_tutor(email, password):
             "user_type": user_type,
             "user_id": user_id,
             "email": email,
-            "session_id": session_id
+            "session_id": session_id,
+            "expire": expire
         }
         
         return data, True
@@ -302,7 +304,7 @@ def save_session_to_db(session_id, user_id, user_type, expire):
 @app.route("/", methods=["GET"])
 def index():
     return {
-        "message": "Hello World!"
+        "message": "Hello Worldss!"
     }
 
 @version.before_request
@@ -519,6 +521,7 @@ def signup_tutor():
         }
         return jsonify(response), 409 
     
+
 @version.route("/login", methods=["POST"])
 def login():
     
@@ -540,11 +543,10 @@ def login():
         response = {
             'error': False,
             'status_code': 200,
-            'message': 'Login successful, cookie created.'
+            'message': 'Login successful, cookie created.',
+            'cookie_data': user_data
         }
-        response_success = jsonify(response)
-        response_success.set_cookie('sessionCookie', user_data.session_id, expires = user_data.expire)
-        return response_success, 200
+        return response, 200
     else:
         response = {
             'error': True,
@@ -574,11 +576,10 @@ def login_user():
         response = {
             'error': False,
             'status_code': 200,
-            'message': 'Login successful, cookie created.'
+            'message': 'Login successful, cookie created.',
+            'cookie_data': user_data
         }
-        response_success = jsonify(response)
-        response_success.set_cookie('sessionCookie', user_data.session_id, expires = user_data.expire)
-        return response_success, 200
+        return response, 200
     else:
         response = {
             'error': True,
@@ -608,11 +609,10 @@ def login_tutor():
         response = {
             'error': False,
             'status_code': 200,
-            'message': 'Login successful, cookie created.'
+            'message': 'Login successful, cookie created.',
+            'cookie_data': user_data
         }
-        response_success = jsonify(response)
-        response_success.set_cookie('sessionCookie', user_data.session_id, expires = user_data.expire)
-        return response_success, 200
+        return response, 200
     else:
         response = {
             'error': True,
@@ -632,8 +632,10 @@ def test_protected():
 # Main
 #####################
 
+app.register_blueprint(version)
+
 if __name__ == "__main__":
-    app.register_blueprint(version)
+    #app.register_blueprint(version)
     app.run(debug=True, host="0.0.0.0")
     
 

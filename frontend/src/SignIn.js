@@ -57,9 +57,11 @@ export default function SignIn() {
     event.preventDefault();
     const response = await FrontAPI.signIn(formData);
 
+    console.log(response)
     switch (response.status_code) {
       case 200:
         // success
+        document.cookie = `sessionCookie=${response.cookie_data.session_id}; max-age=3600`
         setSuccessful(true);
         console.log('Login successful');
         break;
