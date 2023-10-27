@@ -1,7 +1,7 @@
 import axios from 'axios';
 import { SHA256 } from 'crypto-js';
 
-const baseURL = 'https://7bff-64-189-201-9.ngrok-free.app/';
+const baseURL = 'http://localhost:5000';
 
 const axiosInstance = axios.create({
   baseURL,
@@ -46,13 +46,7 @@ const FrontAPI = {
           last_name: formData.lastName,
           phone_num: formData.phone,
           netID: formData.netId,
-          criminal: formData.criminal,
-          //criminal: formData.criminalHistory,
-          // pendingCharges: formData.pendingCharges,
-          // probationOrParole: formData.probationOrParole,
-          // sexOffenderRegistry: formData.sexOffenderRegistry,
-          // outstandingWarrants: formData.outstandingWarrants,
-          // authorizationBackgroundCheck: formData.authorizationBackgroundCheck,
+          criminal: formData.criminal
         });
       }
 
@@ -67,7 +61,7 @@ const FrontAPI = {
           first_name: formData.firstName,
           last_name: formData.lastName,
           phone_num: formData.phone,
-          netID: formData.netId,
+          netID: formData.netId
           // criminalHistory: formData.criminalHistory,
           // pendingCharges: formData.pendingCharges,
           // probationOrParole: formData.probationOrParole,
@@ -86,16 +80,26 @@ const FrontAPI = {
       } else {
         console.error('Error message:', error.message);
       }
+      throw error;
     }
   },
 
   // send sign in info for checking
   signIn: async (formData) => {
     try {
-      const response = await axiosInstance.post('/api/v1/login', {
-        email: formData.email,
-        password: SHA256(formData.password).toString(),
-      });
+      if (formData.userType === "student") {
+        const response = await axiosInstance.post('/api/v1/login/user', {
+          email: formData.email,
+          // password: SHA256(formData.password).toString(),
+          password: formData.password,
+        });
+      } else {
+          const response = await axiosInstance.post('/api/v1/login/tutor', {
+            email: formData.email,
+            // password: SHA256(formData.password).toString(),
+            password: formData.password,
+          });
+      }
       return response.data;
     } catch (error) {
       if (error.response) {
@@ -106,13 +110,14 @@ const FrontAPI = {
       } else {
         console.error('Error message:', error.message);
       }
+      throw error;
     }
   },
 
   //get tutors of the chosen subject
   fetchTutors: async (subject) => {
     try {
-      const response = await axiosInstance.get('/api/v1/subj_tutors', {
+      const response = await axiosInstance.get('/api/tutors', {
         params: {
           subject: subject,
         },
@@ -134,7 +139,7 @@ const FrontAPI = {
   // get available subjects
   fetchSubjects: async () => {
     try {
-      const response = await axiosInstance.get('/api/v1/subjects');
+      const response = await axiosInstance.get('/api/subjects');
       return response.data;
     } catch (error) {
       if (error.response) {
@@ -152,7 +157,7 @@ const FrontAPI = {
   // get timeslot of the subject, tutor combination
   fetchTimeSlots: async (tutor) => {
     try {
-      const response = await axiosInstance.get('/api/v1/tutor_timeslots', {
+      const response = await axiosInstance.get('/api/timeslots', {
         params: {
           tutor: tutor,
         },
@@ -174,7 +179,7 @@ const FrontAPI = {
   // create a new appointment
   createAppointment: async (formData) => {
     try {
-      const response = await axiosInstance.post('/api/v1/create/appointment', {
+      const response = await axiosInstance.post('/api/appointments', {
         subject: formData.subject,
         tutor: formData.tutor,
         timeSlot: formData.timeSlot,
