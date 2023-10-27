@@ -95,8 +95,7 @@ const FrontAPI = {
     try {
       const response = await axiosInstance.post('/api/v1/login', {
         email: formData.email,
-        // password: SHA256(formData.password).toString(),
-        password: formData.password,
+        password: SHA256(formData.password).toString(),
       });
       return response.data;
     } catch (error) {
