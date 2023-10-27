@@ -192,7 +192,7 @@ export default function SignUp() {
                 flexDirection: 'column',
                 alignItems: 'center',
               }}> 
-            <Link href="https://www.utdallas.edu/">
+            <Link to="/">
               <Avatar sx={{ bgcolor: 'primary.main', width: 60, height: 60 }}>
                 <h4>UTD</h4>
               </Avatar>
@@ -212,10 +212,14 @@ export default function SignUp() {
                   required
                   fullWidth
                   id="firstName"
-                  label="First Name"
+                  label="First Name | ASCII only"
                   value={formData.firstName}
                   onChange={handleChange}
                   inputProps={{
+                    maxLength: 45, // Limit to 45 characters
+                  }}
+                  inputProps={{
+                    pattern: '^[A-Za-z]+$', // ASCII characters
                     maxLength: 45, // Limit to 45 characters
                   }}
                 />
@@ -225,12 +229,13 @@ export default function SignUp() {
                   required
                   fullWidth
                   id="lastName"
-                  label="Last Name"
+                  label="Last Name | ASCII only"
                   name="lastName"
                   autoComplete="family-name"
                   value={formData.lastName}
                   onChange={handleChange}
                   inputProps={{
+                    pattern: '^[A-Za-z]+$', // ASCII characters
                     maxLength: 45, // Limit to 45 characters
                   }}
                 />
@@ -272,14 +277,15 @@ export default function SignUp() {
                   required
                   fullWidth
                   name="netId"
-                  label="NetID"
+                  label="NetID | Ex: abc123456"
                   type="netId"
                   id="netId"
                   autoComplete="netId"
                   value={formData.netId}
                   onChange={handleChange}
                   inputProps={{
-                    maxLength: 45, // Limit to 45 characters
+                    pattern: '^[a-z]{3}[0-9]{6}$', // 3 letters and 6 numbers
+                    maxLength: 9, // Limit to 9 characters
                   }}
                 />
               </Grid>

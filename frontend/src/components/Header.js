@@ -5,6 +5,7 @@ import Toolbar from "@mui/material/Toolbar";
 import Typography from "@mui/material/Typography";
 // import Avatar from "@mui/material/Avatar";
 import logo from '../logo/logo.png'
+import { Link } from "react-router-dom";
 // import ProfilePhoto from "../logo/profile_photo.png";
 
 function Header(props) {
@@ -12,7 +13,9 @@ function Header(props) {
     <Box sx={{ flexGrow: 1 }}>
       <AppBar position="static">
         <Toolbar>
-            <img style={{ width: 50, height: 50 }} src={logo} alt="logo" />
+            <Link to="/">
+              <img style={{ width: 50, height: 50 }} src={logo} alt="logo" />
+            </Link>
 
             <Typography variant="h6" sx={{ marginLeft:"auto" }}>
             <b>{props.title}</b>
