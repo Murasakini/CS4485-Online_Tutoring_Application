@@ -1,18 +1,20 @@
 import * as React from 'react';
-import { Navigate } from "react-router-dom";
+import { Navigate, Link } from "react-router-dom";
 import Avatar from '@mui/material/Avatar';
 import Button from '@mui/material/Button';
 import TextField from '@mui/material/TextField';
 import FormControlLabel from '@mui/material/FormControlLabel';
 import Checkbox from '@mui/material/Checkbox';
-import Link from '@mui/material/Link';
 import Grid from '@mui/material/Grid';
 import Box from '@mui/material/Box';
 import { ThemeProvider, createTheme } from '@mui/material/styles';
-import { Copyright } from './SignIn.js'
 import './App.css';
 import { useState, useEffect} from 'react';
 import FrontAPI from './api/FrontAPI.js';
+import List from '@mui/material/List';
+import ListItem from '@mui/material/ListItem';
+import ListItemText from '@mui/material/ListItemText';
+import Copyright from './components/Copyright';
 
 const theme = createTheme({
   palette: {
@@ -34,6 +36,8 @@ export default function SignUp() {
   const [passwordValid, setPasswordValid] = useState(true); // check password
   const [passwordValidationMessage, setPasswordValidationMessage] = useState('');
   const [criminal, setCriminal] = useState(false); // AND operator of all crime related questionaire boxes
+  const [snackbarOpen, setSnackbarOpen] = useState(false);      // for dialog
+  const [snackbarMessage, setSnackbarMessage] = useState('');  // for dialog msg
 
   const [showMore, setShowMore] = useState(false);
   const [formData, setFormData] = useState({
@@ -140,8 +144,7 @@ export default function SignUp() {
     // preventDefault() prevents a page refresh
     event.preventDefault();
 
-    try {
-      let isTutor = false;
+    let isTutor = false;
 
       // check if user click '
       if (formData.tutor)
@@ -150,23 +153,30 @@ export default function SignUp() {
       const response = await FrontAPI.signUp(formData, isTutor);
 
       console.log(response)
-  
-      if (response.status_code === 201) {
-        // success msg
-        console.log('Registration successful');
-
-        // set sign up status as successful
-        setSuccessful(true);
-
-      } else {
-        // fail msg
-        console.log('Registration failed');
+      switch (response.status_code) {
+              case 201:
+                // Registration success
+                console.log('Registration successful');
+                setSuccessful(true);
+                break;
+              case 400:
+                // Bad request
+                console.log(`Error ${response.status_code}: ${response.message}`);
+                setSnackbarMessage(response.message);
+                setSnackbarOpen(true);
+                break;
+              case 409:
+                // Unauthorized
+                console.log(`Error ${response.status_code}: ${response.message}`);
+                setSnackbarMessage(response.message);
+                setSnackbarOpen(true);
+                break;
+              default:
+                console.log('Registration failed');
+                setSnackbarMessage(response.message);
+                setSnackbarOpen(true);
+                break;
       }
-    } 
-    catch (error) {
-      // error msg
-      console.error('Error:', error);
-    }
   };
 
   return (
@@ -439,11 +449,13 @@ export default function SignUp() {
             {/* hyper links */}
             <Grid container justifyContent="flex-end">
               <Grid item>
-                <Link href="#" variant="body1">
-                  Sign in with account
-                </Link>
-              </Grid>
-            </Grid>
+                  <List>
+                    <ListItem disablePadding component={Link} to="/SignIn">
+                      <ListItemText primary="Sign in with account" />
+                    </ListItem>
+                  </List>
+                </Grid>
+            </Grid>    
 
           </Box>
 
