@@ -5,7 +5,6 @@ import Button from '@mui/material/Button';
 import TextField from '@mui/material/TextField';
 import FormControlLabel from '@mui/material/FormControlLabel';
 import Checkbox from '@mui/material/Checkbox';
-import LinkMui from '@mui/material/Link'; // Rename Link from @mui/material/Link to avoid conflict
 import Grid from '@mui/material/Grid';
 import Box from '@mui/material/Box';
 import CustomSnackbar from './components/CustomSnackbar.js';
@@ -96,11 +95,11 @@ export default function SignIn() {
             flexDirection: 'column',
             alignItems: 'center',
           }}>
-            <LinkMui href="https://www.utdallas.edu/">
+            <Link to="/">
               <Avatar sx={{ bgcolor: 'primary.main', width: 60, height: 60 }}>
                 <h4>UTD</h4>
               </Avatar>
-            </LinkMui>
+            </Link>
           </Box>
 
           <h2>Online Tutoring Service</h2>
