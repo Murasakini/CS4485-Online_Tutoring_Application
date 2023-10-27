@@ -92,6 +92,7 @@ const FrontAPI = {
   // send sign in info for checking
   signIn: async (formData) => {
     try {
+      let response;
       if (formData.userType === "student") {
         const response = await axiosInstance.post('/api/v1/login/user', {
           email: formData.email,
