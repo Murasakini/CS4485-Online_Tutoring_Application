@@ -9,7 +9,8 @@ import FrontAPI from './api/FrontAPI';
 import CalendarDisplay from './components/CalendarDisplay';
 import { addToDate } from './Utils'; 
 import Header from './components/Header.js';
-
+import {Box, Grid, Paper} from '@mui/material'
+import MenuList from './components/MenuList.js'
 
 export default function AppointmentScheduler() {
   const [formData, setFormData] = useState({
@@ -143,78 +144,100 @@ export default function AppointmentScheduler() {
   return (
     <div>
       <Header title="SCHEDULE APPOINTMENT" />
-      <h2>Schedule an Appointment</h2>
-      <form onSubmit={handleSubmit}>
-        <FormControl fullWidth required>
-          <InputLabel>Subject</InputLabel>
-            <Select
-              label="Subject"
-              name="subject"
-              value={formData.subject}
-              onChange={handleSubjectChange}
-            >
-              <MenuItem value="">
-                <em>Select a subject</em>
-              </MenuItem>
-              {subjects.map((subject) => (
-                <MenuItem key={subject} value={subject}>
-                  {subject}
-                </MenuItem>
-              ))}
-            </Select>
-        </FormControl>
 
-        <FormControl fullWidth required>
-          <InputLabel>Tutor</InputLabel>
-            <Select
-              label="Tutor"
-              name="tutor"
-              value={formData.tutor}
-              onChange={handleTutorChange}
-            >
-              <MenuItem value="">
-                <em>Select a tutor</em>
-              </MenuItem>
-              {tutorsList.map((tutor) => (
-                <MenuItem key={tutor.tutor_id} value={tutor.tutor_id}> {/* TODO: change key to something else*/ }
-                  {tutor.name}
-                </MenuItem>
-              ))}
-            </Select>
-        </FormControl>
+      <Box sx={{marginTop:"10px", marginLeft:"10px", marginRight:"10px", flexGrow: 1 }}>
+        <Grid container spacing={3}>
+          <Grid item xs={2}>
+            <Paper>
+              <MenuList />
+            </Paper>
+          </Grid>
 
-        <FormControl fullWidth required>
-            <InputLabel>Time Slot</InputLabel>
-            <Select
-              label="Time Slot"
-              name="timeSlot"
-              value={selectedTimeSlot}
-              onChange={handleTimeSlotChange}
-            >
-              <MenuItem value="">
-                <em>Select a time slot</em>
-              </MenuItem>
-              {/* add the available time slots as MenuItem options */}
-              {availableSlots.map((slot) => (
-                <MenuItem key={slot.id} value={slot.timestamp}>
-                  {new Date(slot.timestamp).toLocaleTimeString()}
-                </MenuItem>
-              ))}
-            </Select>
-        </FormControl>
+          <Grid item xs={10}>
+            <Paper>
+              <form onSubmit={handleSubmit}>
+                <FormControl fullWidth required>
+                  <InputLabel>Subject</InputLabel>
+                    <Select
+                      label="Subject"
+                      name="subject"
+                      value={formData.subject}
+                      onChange={handleSubjectChange}
+                    >
 
-        <Button
-          type="submit"
-          variant="contained"
-          color="primary"
-          fullWidth
-        >
-          Schedule
-        </Button>
-      </form>
+                      <MenuItem value="">
+                        <em>Select a subject</em>
+                      </MenuItem>
 
-      {/* CalendarDisplay component */}
-      <CalendarDisplay events={availableSlots} />
+                      {subjects.map((subject) => (
+                        <MenuItem key={subject} value={subject}>
+                          {subject}
+                        </MenuItem>
+                      ))}
+
+                    </Select>
+                </FormControl>
+
+                <FormControl fullWidth required>
+                  <InputLabel>Tutor</InputLabel>
+                    <Select
+                      label="Tutor"
+                      name="tutor"
+                      value={formData.tutor}
+                      onChange={handleTutorChange}
+                    >
+                      <MenuItem value="">
+                        <em>Select a tutor</em>
+                      </MenuItem>
+
+                      {tutorsList.map((tutor) => (
+                        <MenuItem key={tutor.tutor_id} value={tutor.tutor_id}> {/* TODO: change key to something else*/ }
+                          {tutor.name}
+                        </MenuItem>
+                      ))}
+
+                    </Select>
+                </FormControl>
+
+                <FormControl fullWidth required>
+                  <InputLabel>Time Slot</InputLabel>
+                    <Select
+                      label="Time Slot"
+                      name="timeSlot"
+                      value={selectedTimeSlot}
+                      onChange={handleTimeSlotChange}
+                    >
+
+                      <MenuItem value="">
+                        <em>Select a time slot</em>
+                      </MenuItem>
+
+                      {/* add the available time slots as MenuItem options */}
+                      {availableSlots.map((slot) => (
+                        <MenuItem key={slot.id} value={slot.timestamp}>
+                          {new Date(slot.timestamp).toLocaleTimeString()}
+                        </MenuItem>
+                      ))}
+
+                    </Select>
+                </FormControl>
+
+                <Button
+                  type="submit"
+                  variant="contained"
+                  color="primary"
+                  fullWidth
+                >
+                  Schedule
+                </Button>
+              </form>
+
+              {/* CalendarDisplay component */}
+              <CalendarDisplay events={availableSlots} />
+            </Paper>
+          </Grid>
+        </Grid>
+      </Box>
     </div>
   );
 }
