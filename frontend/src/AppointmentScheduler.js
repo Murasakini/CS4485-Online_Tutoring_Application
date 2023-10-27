@@ -218,8 +218,8 @@ export default function AppointmentScheduler() {
 
           <Grid item xs={10}>
             <Paper>
-              <form onSubmit={handleSubmit}>
-                <FormControl fullWidth required>
+              <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                <FormControl fullWidth required style={{ textAlign: 'center' }}>
                   <InputLabel>Subject</InputLabel>
                     <Select
                       label="Subject"
@@ -235,10 +235,11 @@ export default function AppointmentScheduler() {
                            {subject.department_name} - {subject.class_num} - {subject.class_name}
                          </MenuItem>
                       ))}
+
                     </Select>
                 </FormControl>
 
-                <FormControl fullWidth required>
+                <FormControl fullWidth required style={{ textAlign: 'center' }}>
                   <InputLabel>Tutor</InputLabel>
                     <Select
                       label="Tutor"
@@ -259,7 +260,7 @@ export default function AppointmentScheduler() {
                     </Select>
                 </FormControl>
 
-                <FormControl fullWidth required>
+                <FormControl fullWidth required style={{ textAlign: 'center' }}>
                   <InputLabel>Time Slot</InputLabel>
                     <Select
                       label="Time Slot"
