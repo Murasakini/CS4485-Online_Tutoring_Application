@@ -216,9 +216,6 @@ export default function SignUp() {
                   value={formData.firstName}
                   onChange={handleChange}
                   inputProps={{
-                    maxLength: 45, // Limit to 45 characters
-                  }}
-                  inputProps={{
                     pattern: '^[A-Za-z]+$', // ASCII characters
                     maxLength: 45, // Limit to 45 characters
                   }}
