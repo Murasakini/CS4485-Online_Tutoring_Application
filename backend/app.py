@@ -410,7 +410,7 @@ def authenticate(email, password):
     if tutor_result:
         user_type = 'tutor'
         user_id = tutor_result[0]
-        
+
         server_email.send_email_tutor(user_id)  # sends 2fa code when tutor is authenticated
     else:
         # If not a tutor, try to authenticate as a user
@@ -418,7 +418,7 @@ def authenticate(email, password):
         if user_result:
             user_type = 'user'
             user_id = user_result[0]
-
+            
             server_email.send_email_user(user_id)   # sends 2fa code when user is authenticated
         else:
             return None, False  # Authentication failed

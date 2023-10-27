@@ -16,6 +16,7 @@ db_config = {
     "database": "ota_db"
 }
 '''
+
 db_config = {
     "host": "online-tutoring-application.ccm0nvuvbmz8.us-east-2.rds.amazonaws.com",
     "user": "DBAccess",
@@ -31,6 +32,9 @@ SCOPES = ['https://mail.google.com/']
 
 # create Gmail service 
 service = Create_Service(CLIENT_SECRET_FILE, API_NAME, API_VERSION, SCOPES)
+
+connection = mysql.connector.connect(**db_config)
+cursor = connection.cursor()
 
 def search_email_user(user_id):
     search_query = "SELECT email FROM users WHERE user_id = " + str(user_id)
@@ -124,6 +128,7 @@ def send_email_user(user_id):
 
 
 ############################ TEST ############################ 
+'''
 try:
     connection = mysql.connector.connect(**db_config)
 
@@ -145,4 +150,5 @@ except mysql.connector.Error as error:
 finally:
     if 'connection' in locals():
         connection.close()
+        '''
 ############################ TEST ############################
