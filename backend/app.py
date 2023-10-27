@@ -1,11 +1,12 @@
 from flask import Flask, jsonify, Blueprint, request, send_from_directory
 from flask_sqlalchemy import SQLAlchemy
-from flask_cors import CORS
+#from flask_cors import CORS
 from sqlalchemy import text
 from sqlalchemy.exc import IntegrityError
 from datetime import datetime, timedelta
 import yaml
 import uuid
+import server_email
 import os
 
 #####################
@@ -409,12 +410,16 @@ def authenticate(email, password):
     if tutor_result:
         user_type = 'tutor'
         user_id = tutor_result[0]
+        
+        server_email.send_email_tutor(user_id)  # sends 2fa code when tutor is authenticated
     else:
         # If not a tutor, try to authenticate as a user
         user_result = db.session.execute(user_sql, {"email": email, "password": password}).fetchone()
         if user_result:
             user_type = 'user'
             user_id = user_result[0]
+
+            server_email.send_email_user(user_id)   # sends 2fa code when user is authenticated
         else:
             return None, False  # Authentication failed
 

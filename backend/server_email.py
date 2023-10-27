@@ -6,6 +6,7 @@ from email.mime.text import MIMEText
 import mysql.connector # connect method
 from datetime import datetime, timedelta
 
+
 # databse setting
 '''
 db_config = {
@@ -82,28 +83,53 @@ def send_email(email, rand):
     message = service.users().messages().send(userId='me', body={'raw': raw_string}).execute()
     print(message)
 
+def send_email_tutor(user_id):
+    try:
+        connection = mysql.connector.connect(**db_config)
+
+        if connection.is_connected():
+            cursor = connection.cursor()
+
+            email = search_email_tutor(user_id)             # search tutor's email address
+            rand = random.randint(100000,999999)            # generates 6-digit random intiger
+            send_email(email, rand)                         # send 2fa code
+            insert_2fa_tutor(rand, datetime.now(), user_id) # record 2fa to database 
+
+    except mysql.connector.Error as error:
+        print("Error: {}".format(error))
+
+    finally:
+        if 'connection' in locals():
+            connection.close()
+
+def send_email_user(user_id):
+    try:
+        connection = mysql.connector.connect(**db_config)
+
+        if connection.is_connected():
+            cursor = connection.cursor()
+
+            email = search_email_user(user_id)              # search user's email address
+            rand = random.randint(100000,999999)            # generates 6-digit random intiger
+            send_email(email, rand)                         # send 2fa code
+            insert_2fa_user(rand, datetime.now(), user_id)  # record 2fa to database 
+
+    except mysql.connector.Error as error:
+        print("Error: {}".format(error))
+
+    finally:
+        if 'connection' in locals():
+            connection.close()
+
+
+
+############################ TEST ############################ 
 try:
     connection = mysql.connector.connect(**db_config)
 
     if connection.is_connected():
         cursor = connection.cursor()
-
-        # IF VALID USER/PASSWORD:
-        '''
-            if user:
-                email = search_email_user(user_id_num)              # search user's email address
-                rand = random.randint(100000,999999)                # generates 6-digit random intiger
-                send_email(email, rand)                             # send 2fa code
-                insert_2fa_user(rand, datetime.now(), user_id_num)  # record 2fa to database
-
-            if tutor:
-                email = search_email_tutor(user_id_num)             # search tutor's email address
-                rand = random.randint(100000,999999)                # generates 6-digit random intiger
-                send_email(email, rand)                             # send 2fa code
-                insert_2fa_tutor(rand, datetime.now(), user_id_num) # record 2fa to database 
-        '''
         
-        #################### START TEST #################### 
         user_id_num = 101   # intiger number of user id
         tutor_id_num = 102    # intiger number of tutor id
         
@@ -112,7 +138,6 @@ try:
         send_email(email, rand)
         insert_2fa_tutor(rand, (datetime.now() + timedelta(minutes=10)), 102) # datetime.now() is current timestamp and timedelta adds 10 minutes to it
         #delete_expired_2fa()
-        #################### END TEST ######################
 
 except mysql.connector.Error as error:
     print("Error: {}".format(error))
@@ -120,4 +145,4 @@ except mysql.connector.Error as error:
 finally:
     if 'connection' in locals():
         connection.close()
-
+############################ TEST ############################
