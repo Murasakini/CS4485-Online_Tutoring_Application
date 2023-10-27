@@ -8,6 +8,7 @@ import 'react-big-calendar/lib/css/react-big-calendar.css';
 import FrontAPI from './api/FrontAPI';
 import CalendarDisplay from './components/CalendarDisplay';
 import { addToDate } from './Utils'; 
+import Header from './components/Header.js';
 
 
 export default function AppointmentScheduler() {
@@ -141,6 +142,7 @@ export default function AppointmentScheduler() {
 
   return (
     <div>
+      <Header title="SCHEDULE APPOINTMENT" />
       <h2>Schedule an Appointment</h2>
       <form onSubmit={handleSubmit}>
         <FormControl fullWidth required>
