@@ -574,9 +574,11 @@ def login_user():
         response = {
             'error': False,
             'status_code': 200,
-            'result': user_data
+            'message': 'Login successful, cookie created.'
         }
-        return jsonify(response), 200
+        response_success = jsonify(response)
+        response_success.set_cookie('sessionCookie', user_data.session_id, expires = user_data.expire)
+        return response_success, 200
     else:
         response = {
             'error': True,
@@ -606,9 +608,11 @@ def login_tutor():
         response = {
             'error': False,
             'status_code': 200,
-            'result': user_data
+            'message': 'Login successful, cookie created.'
         }
-        return jsonify(response), 200
+        response_success = jsonify(response)
+        response_success.set_cookie('sessionCookie', user_data.session_id, expires = user_data.expire)
+        return response_success, 200
     else:
         response = {
             'error': True,
