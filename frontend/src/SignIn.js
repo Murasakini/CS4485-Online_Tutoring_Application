@@ -60,7 +60,6 @@ export default function SignIn() {
     switch (response.status_code) {
       case 200:
         // success
-        localStorage.setItem('sessionCookie', response.result);
         setSuccessful(true);
         console.log('Login successful');
         break;

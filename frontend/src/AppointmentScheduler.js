@@ -168,13 +168,11 @@ export default function AppointmentScheduler() {
                       <MenuItem value="">
                         <em>Select a subject</em>
                       </MenuItem>
-
-                      {subjects.map((subject) => (
-                        <MenuItem key={subject} value={subject}>
-                          {subject}
+                         {subjects.map((subject) => (
+                         <MenuItem key={subject.class_name} value={subject.class_num}>
+                        {subject.class_name} - {subject.class_num} - {subject.department_name}
                         </MenuItem>
                       ))}
-
                     </Select>
                 </FormControl>
 
