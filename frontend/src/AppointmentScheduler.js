@@ -27,7 +27,8 @@ export default function AppointmentScheduler() {
 
   useEffect(() => {
     // fetch the list of subjects. unconditional 
-    FrontAPI.fetchSubjects()
+    const session_id = document.cookie.split("; ").find((row) => row.startsWith("sessionCookie="))?.split("=")[1];
+    FrontAPI.fetchSubjects(session_id)
       .then((data) => {
         setSubjects(data);
       })
@@ -115,7 +116,8 @@ export default function AppointmentScheduler() {
     event.preventDefault();
     try {
       // verify user's session before allowing them to create an appointment
-      const sessionResponse = await FrontAPI.verifySession();
+      const session_id = document.cookie.split("; ").find((row) => row.startsWith("sessionCookie="))?.split("=")[1];
+      const sessionResponse = await FrontAPI.verifySession(session_id);
 
       if (sessionResponse.error) {
         // handle invalid session
@@ -169,7 +171,7 @@ export default function AppointmentScheduler() {
                         <em>Select a subject</em>
                       </MenuItem>
                          {subjects.map((subject) => (
-                         <MenuItem key={subject.class_name} value={subject.class_num}>
+                         <MenuItem key={subject.class_name} value={`${subject.department_id}/${subject.class_num}`}>
                         {subject.class_name} - {subject.class_num} - {subject.department_name}
                         </MenuItem>
                       ))}
