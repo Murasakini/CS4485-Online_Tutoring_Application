@@ -36,7 +36,7 @@ export default function BasicList() {
             </ListItemButton>
           </ListItem>
 
-          <ListItem disablePadding>
+          <ListItem disablePadding component={Link} to="/Favorite">
             <ListItemButton>
               <ListItemIcon>
                 <StarIcon />

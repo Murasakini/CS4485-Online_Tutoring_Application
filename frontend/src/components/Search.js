@@ -2,33 +2,11 @@ import * as React from 'react';
 import Box from '@mui/material/Box';
 import TextField from '@mui/material/TextField';
 import Button from '@mui/material/Button';
-import SearchResult from './SearchResult.js';
+import { Typography, List, Grid, ListItem, ListItemAvatar, 
+         ListItemText, Avatar, IconButton } from '@mui/material';
+import AddIcon from '@mui/icons-material/Add';
 
 const Search = (props) => {
-    // // create holder for values and function to update values
-    // const [searchInfo, setSearchInfo] = useState({
-    //     instructorName: "",
-    //     subject: "",
-    //     dayOfWeek: "",
-    // })
-
-    // // update values when any changes
-    // const handleChange = (e) => {
-    //     // get input name and value
-    //     const{name, value} = e.target;
-
-    //     // update values
-    //     setSearchInfo((prev) => {
-    //         return {...prev, [name]: value};
-    //     })
-    // }
-
-    // // do something when clicking save button (submit)
-    // const handleSearchSubmit = (e) => {
-    //     e.preventDefault();
-    //     console.log(searchInfo);
-    // }
-
 
     return (
         <React.Fragment>
@@ -41,24 +19,60 @@ const Search = (props) => {
             onSubmit={props.handleSearchSubmit}
             >
                 <TextField id="instructorName" label="Instructor Name" variant="outlined" 
-                name="instructorName" value={props.searchInfo.instructorName}
+                name="instructorName" 
+                value={props.searchInfo.instructorName}
                 onChange={props.handleChange} />
 
                 <TextField id="subject" label="Subject" variant="outlined"
-                name="subject" value={props.searchInfo.subject}
+                name="subject" 
+                value={props.searchInfo.subject}
                 onChange={props.handleChange} />
 
-                <TextField id="dayOfWeek" label="Day of the Week" variant="outlined"
+                {/* <TextField id="dayOfWeek" label="Day of the Week" variant="outlined"
                 name="dayOfWeek" value={props.searchInfo.dayOfWeek}
-                onChange={props.handleChange} />
-                <br></br>
+                onChange={props.handleChange} /> */}
+                
+                <br/>
                 <Button type="Submit" variant="contained" size="large">Search</Button>
             </Box>
 
-            <SearchResult 
-            instructorName={props.searchInfo.instructorName} 
-            subjects={props.searchInfo.subject} 
-            dayOfWeek={props.searchInfo.dayOfWeek} />
+            <Box sx={{  textAlign: 'center' }}>
+            <Grid>
+                <Typography sx={{ mt: 4, mb: 2, }} variant="h6" component="div">
+                    Search Result
+                </Typography>
+
+                <List>
+                {props.searchInfo.map((info, i) => (
+                    <React.Fragment key={i}>
+                        <ListItem
+                        secondaryAction={
+                            <IconButton edge="end" aria-label="delete" 
+                            onClick={() => props.handleAddTutor(i)}>
+                                <AddIcon />
+                            </IconButton>
+                        }
+                        >
+
+                        <ListItemAvatar>
+                        <Avatar alt={info.name} src='url' />
+                        </ListItemAvatar>
+
+                        <ListItemText
+                            primary={info.name + ' ' + info.id}
+                            secondary={
+                                <React.Fragment>
+                                    <Typography component="span">{ info.subject }</Typography>
+                                    <br/>
+                                    {info.email}
+                                </React.Fragment>}
+                        />
+                        </ListItem>
+                    </React.Fragment>
+                ))}
+                </List>
+            </Grid>
+        </Box>
 
         </React.Fragment>
     );

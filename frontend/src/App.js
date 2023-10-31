@@ -10,6 +10,7 @@ import EditMyAccount from './EditMyAccount.js'
 import SignIn from './SignIn.js';
 import SignUp from './SignUp.js';
 import AppointmentScheduler from './AppointmentScheduler.js';
+import Favorite from './Favorite.js';
 
 
 function App() {
@@ -23,6 +24,7 @@ function App() {
             <Route path='/SignIn' element={<SignIn />} />
             <Route path='/MyProfile' element={<MyProfile />} />
             <Route path='/EditMyProfile' element={<EditMyProfile />} />
+            <Route path='/Favorite' element={<Favorite />} />
             <Route path='/AppointmentScheduler' element={<AppointmentScheduler />} />
             <Route path='/FindTutor' element={<FindTutor />} />
             <Route path='/MyAccount' element={<MyAccount />} />
