@@ -81,10 +81,13 @@ const FrontAPI = {
       if (error.response) {
         console.error('Error response status:', error.response.status);
         console.error('Error response data:', error.response.data);
+        return error.data.status_code;
       } else if (error.request) {
         console.error('No response received:', error.request);
+        return error.data.status_code;
       } else {
         console.error('Error message:', error.message);
+        return error.data.status_code;
       }
     }
   },
@@ -111,10 +114,13 @@ const FrontAPI = {
       if (error.response) {
         console.error('Error response status:', error.response.status);
         console.error('Error response data:', error.response.data);
+        return error.data.status_code;
       } else if (error.request) {
         console.error('No response received:', error.request);
+        return error.data.status_code;
       } else {
         console.error('Error message:', error.message);
+        return error.data.status_code;
       }
     }
   },
@@ -132,10 +138,13 @@ const FrontAPI = {
       if (error.response) {
         console.error('Error response status:', error.response.status);
         console.error('Error response data:', error.response.data);
+        return error.data.status_code;
       } else if (error.request) {
         console.error('No response received:', error.request);
+        return error.data.status_code;
       } else {
         console.error('Error message:', error.message);
+        return error.data.status_code;
       }
       throw error;
     }
@@ -150,16 +159,19 @@ const FrontAPI = {
       if (error.response) {
         console.error('Error response status:', error.response.status);
         console.error('Error response data:', error.response.data);
+        return error.data.status_code;
       } else if (error.request) {
         console.error('No response received:', error.request);
+        return error.data.status_code;
       } else {
         console.error('Error message:', error.message);
+        return error.data.status_code;
       }
       throw error;
     }
   },
 
-  // get timeslot of the subject, tutor combination
+  // get timeslot of the tutor using tutor_id. For use in AppointmentScheduler
   fetchTimeSlots: async (tutor) => {
     try {
       const response = await axiosInstance.get('/api/v1/tutor_timeslots', {
@@ -172,10 +184,13 @@ const FrontAPI = {
       if (error.response) {
         console.error('Error response status:', error.response.status);
         console.error('Error response data:', error.response.data);
+        return error.data.status_code;
       } else if (error.request) {
         console.error('No response received:', error.request);
+        return error.data.status_code;
       } else {
         console.error('Error message:', error.message);
+        return error.data.status_code;
       }
       throw error;
     }
@@ -194,16 +209,19 @@ const FrontAPI = {
       if (error.response) {
         console.error('Error response status:', error.response.status);
         console.error('Error response data:', error.response.data);
+        return error.data.status_code;
       } else if (error.request) {
         console.error('No response received:', error.request);
+        return error.data.status_code;
       } else {
         console.error('Error message:', error.message);
+        return error.data.status_code;
       }
       throw error;
     }
   },
 
-  // fetch time slots of tutor using tutorid
+  // fetch time slots of tutor using tutorid. For use in Tutor Scheduler. CHANGE THIS 
   fetchTutorTimeSlots: async (tutorId) => {
     try {
       const response = await axiosInstance.get(`/api/tutorTimeSlots/${tutorId}`);
