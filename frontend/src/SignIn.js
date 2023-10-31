@@ -109,8 +109,9 @@ export default function SignIn() {
 
   return (
     <React.Fragment>
-      {isSuccessful ?
-        // navigate to the home page
+      {isSuccessful ? 
+        // navigate to home page
+        //<Navigate to="/TwoFactorAuthentication" /> :
         <Navigate to="/" /> :
 
         // display input form
