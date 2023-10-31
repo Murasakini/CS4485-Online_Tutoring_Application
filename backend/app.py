@@ -20,7 +20,7 @@ username = creds["database"]["username"]
 password = creds["database"]["password"]
 
 app = Flask(__name__)
-CORS(app)
+CORS(app, supports_credentials=True, withCredentials=True)
 app.config['SQLALCHEMY_DATABASE_URI'] = f'mysql+pymysql://{username}:{password}@online-tutoring-application.ccm0nvuvbmz8.us-east-2.rds.amazonaws.com:3306/ota_db'
 db = SQLAlchemy(app)
 
@@ -29,7 +29,7 @@ USER_FIELDS = {"first_name", "last_name", "netID", "email", "phone_num", "passwo
 TUTOR_FIELDS = USER_FIELDS.union({"criminal"})
 APPOINTMENT_FIELDS = {"subject", "tutor", "timeSlot"}
 AUTHENTICATE_FIELDS = {"email", "password"}
-PROTECTED_ENDPOINTS = ['v1.test_protected', 'v1.subjects']
+PROTECTED_ENDPOINTS = ['v1.test_protected'] #, 'v1.subjects']
 
 
 #####################
@@ -60,8 +60,8 @@ def user_exists(netID):
 
 def user_session(session_id):
     # Fetches user_id given a session_id
+    validate_auth_table()
     sql = text("""
-        CALL validate_auth;
         SELECT user_id FROM auth_table WHERE session_id = :session_id
     """)
 
@@ -70,6 +70,18 @@ def user_session(session_id):
         return result[0], True
     else:
         return "Error: Session ID is either invalid or not for a user account.", False
+    
+def validate_auth_table():
+    sql = text("""
+               CALL validate_auth;
+    """)
+    db.session.execute(sql)
+
+def clean_avail():
+    sql = text("""
+               CALL clean_avail;
+    """)
+    db.session.execute(sql)
 
 def insert_user(data):
     if user_exists(data['netID']):
@@ -165,7 +177,7 @@ def authenticate(email, password):
     session_id = uuid.uuid4().hex
     
     # Set an expiration time for the session
-    expire = datetime.now() + timedelta(hours=1)
+    expire = datetime.utcnow() + timedelta(hours=1)
     
     # Save the session to the database
     a, b = save_session_to_db(session_id, user_id, user_type, expire)
@@ -199,7 +211,7 @@ def authenticate_user(email, password):
         session_id = uuid.uuid4().hex
         
         # Set an expiration time for the session
-        expire = datetime.now() + timedelta(hours=1)
+        expire = datetime.utcnow() + timedelta(hours=1)
         
         # Save the session to the database
         a, b = save_session_to_db(session_id, user_id, user_type, expire)
@@ -211,7 +223,8 @@ def authenticate_user(email, password):
             "user_type": user_type,
             "user_id": user_id,
             "email": email,
-            "session_id": session_id
+            "session_id": session_id,
+            "expire": expire
         }
         
         return data, True
@@ -235,7 +248,7 @@ def authenticate_tutor(email, password):
         session_id = uuid.uuid4().hex
         
         # Set an expiration time for the session
-        expire = datetime.now() + timedelta(hours=1)
+        expire = datetime.utcnow() + timedelta(hours=1)
         
         # Save the session to the database
         a, b = save_session_to_db(session_id, user_id, user_type, expire)
@@ -247,7 +260,8 @@ def authenticate_tutor(email, password):
             "user_type": user_type,
             "user_id": user_id,
             "email": email,
-            "session_id": session_id
+            "session_id": session_id,
+            "expire": expire
         }
         
         return data, True
@@ -292,6 +306,7 @@ def save_session_to_db(session_id, user_id, user_type, expire):
     except IntegrityError:  # Catch any IntegrityError (like unique constraint violations)
         db.session.rollback()
         return "An error occurred while inserting the user.", False    
+    
 
 
 
@@ -302,7 +317,7 @@ def save_session_to_db(session_id, user_id, user_type, expire):
 @app.route("/", methods=["GET"])
 def index():
     return {
-        "message": "Hello World!"
+        "message": "Hello Worldss!"
     }
 
 @version.before_request
@@ -316,8 +331,8 @@ def verify_session():
         session_id = request.cookies.get('session_id')
 
         # SQL query first deletes expired session_ids, then checks if session_id exists in table
+        validate_auth_table()
         sql = text("""
-            CALL validate_auth;
             SELECT COUNT(1) FROM auth_table WHERE session_id = :session_id;
         """)
         result = db.session.execute(sql, {"session_id": session_id}).fetchone()
@@ -369,18 +384,11 @@ def signup_user():
 
 @version.route("/subj_tutors", methods=["GET"])
 def tutors_of_subject():
-    data = request.get_json()
+    # gets subject from request, in format "department_id/class_id"
+    subject = request.args.get('subject').split('/')
 
-    if not validate_fields(data, {"class_num", "department_num"}):
-        response = {
-            'error': True,
-            'status_code': 400,
-            'message': 'Invalid or missing fields in request.'
-        }
-        return jsonify(response), 400
-    
-    class_num = data.get("class_num")
-    department_id = data.get("department_id")
+    class_num = subject[1]
+    department_id = subject[0]
     
     # recieves (tutor_id, first_name, last_name) arrays of matching tutors
     sql = text("""
@@ -389,6 +397,14 @@ def tutors_of_subject():
         """)
     
     result = db.session.execute(sql, {"class_num": class_num, "department_id": department_id})
+
+    if result == None:
+        response = {
+            'error': True,
+            'status_code': 200,
+            'message': 'No tutors found.'
+        }
+        return jsonify(response), 200
 
     response = list()
     for row in result:
@@ -400,51 +416,76 @@ def tutors_of_subject():
 @version.route("/subjects", methods=["GET"])
 def subjects():
     # pulls a user's session_id from the browser
-    session_id = request.cookies.get('session_id')
+    session_id = request.args.get('session_id')
 
     # finds available classes based on session id
+    validate_auth_table()
     sql = text("""
-            CALL validate_auth;
             SELECT user_classes_readable.class_name, user_classes_readable.class_num, user_classes_readable.department_id, user_classes_readable.department_name
-                FROM user_classes_readable 
-                LEFT JOIN auth_table ON user_classes_readable.user_id=auth_table.user_id 
-                WHERE auth_table.session_id = :session_id;
-        """)
+                FROM ota_db.user_classes_readable 
+                LEFT JOIN ota_db.auth_table ON user_classes_readable.user_id=auth_table.user_id 
+                WHERE auth_table.session_id = '{}';
+        """.format(session_id))
     
-    result = db.session.execute(sql, {"session_id": session_id})
+    result = db.session.execute(sql)
+
+    if result == None:
+        response = {
+            'error': True,
+            'status_code': 200,
+            'message': 'No subjects found.'
+        }
+        return jsonify(response), 200
 
     # jsonify sql result
     response = list()
     for row in result:
-        response.append({'class_name': row[0], 'class_id': row[1], 'department_id': row[2], 'department_name': row[3]})
+        response.append({'class_name': row[0], 'class_num': row[1], 'department_id': row[2], 'department_name': row[3], 'session_id': session_id})
     return jsonify(response), 200
 
 @version.route("/tutor_timeslots", methods=["GET"])
 def tutor_timeslots():
     
-    data = request.get_json()
+    tutor_id = request.args.get('tutor_id')
 
-    if not validate_fields(data, {"tutor_id"}):
+    if tutor_id == None:
         response = {
             'error': True,
             'status_code': 400,
             'message': 'Invalid or missing fields in request.'
         }
         return jsonify(response), 400
-    
-    tutor_id = data.get("tutor")["tutor_id"]
 
-    # finds available
+    # finds available times for a tutor
+    clean_avail()
     sql = text("""
-            CALL clean_avail;
-            SELECT time_available FROM tutor_schedules WHERE tutor_id= :tutor_id;
-        """)
+            SELECT time_available FROM ota_db.tutors_availability WHERE tutor_id= {};
+        """.format(tutor_id))
     
-    result = db.session.execute(sql, {"tutor_id": tutor_id})
+    result = db.session.execute(sql)
+
+    if result == None:
+        response = {
+            'error': True,
+            'status_code': 200,
+            'message': 'Tutor has no available times.'
+        }
+        return jsonify(response), 200
+
+    if result == None:
+        response = {
+            'error': False,
+            'status_code': 200,
+            'message': 'No subjects found.'
+        }
+        return jsonify(response), 200
+
     # jsonify sql result
     response = list()
+    i = 0
     for row in result:
-        response.append({'class_name': row[0], 'class_id': row[1], 'department_id': row[2], 'department_name': row[3]})
+        response.append({'timestamp': row[0], 'id': i})
+        i += 1
     return jsonify(response), 200
 
 
@@ -463,18 +504,29 @@ def create_appointment():
     # get user_id from session_id
     session_id = request.cookies.get('session_id')
     user_id, success = user_session(session_id)
+
+    # gets subject from request, in format "department_id/class_id"
+    subject = request.args.get('subject').split('/')
+
+    class_num = subject[1]
+    department_id = subject[0]
+
     formatted_data = {
             "user_id": user_id,
-            "tutor_id": data.get("tutor").get("tutor_id"),
-            "class_num": data.get("subject").get("class_num"),
-            "department_id": data.get("subject").get("department_id"),
-            "meeting_time": data.get("timeSlot"),
+            "tutor_id": request.args.get("tutor"),
+            "class_num": class_num,
+            "department_id": department_id,
+            "meeting_time": request.args.get("timeSlot"),
     }
     
      # If validation passes, you can continue with inserting the data into the database.
     inserted_data, success = insert_appointment(formatted_data)
 
     if success:
+        # remove tutor's availability from the database
+        sql = text("""
+                DROP * FROM ota_db.tutors_availability WHERE time_available = "{}";
+        """.format(data))
         response = {
             'error': False,
             'status_code': 201,
@@ -519,6 +571,7 @@ def signup_tutor():
         }
         return jsonify(response), 409 
     
+
 @version.route("/login", methods=["POST"])
 def login():
     
@@ -540,11 +593,10 @@ def login():
         response = {
             'error': False,
             'status_code': 200,
-            'message': 'Login successful, cookie created.'
+            'message': 'Login successful, cookie created.',
+            'cookie_data': user_data
         }
-        response_success = jsonify(response)
-        response_success.set_cookie('sessionCookie', user_data.session_id, expires = user_data.expire)
-        return response_success, 200
+        return response, 200
     else:
         response = {
             'error': True,
@@ -574,11 +626,10 @@ def login_user():
         response = {
             'error': False,
             'status_code': 200,
-            'message': 'Login successful, cookie created.'
+            'message': 'Login successful, cookie created.',
+            'cookie_data': user_data
         }
-        response_success = jsonify(response)
-        response_success.set_cookie('sessionCookie', user_data.session_id, expires = user_data.expire)
-        return response_success, 200
+        return response, 200
     else:
         response = {
             'error': True,
@@ -608,11 +659,10 @@ def login_tutor():
         response = {
             'error': False,
             'status_code': 200,
-            'message': 'Login successful, cookie created.'
+            'message': 'Login successful, cookie created.',
+            'cookie_data': user_data
         }
-        response_success = jsonify(response)
-        response_success.set_cookie('sessionCookie', user_data.session_id, expires = user_data.expire)
-        return response_success, 200
+        return response, 200
     else:
         response = {
             'error': True,
@@ -632,8 +682,10 @@ def test_protected():
 # Main
 #####################
 
+app.register_blueprint(version)
+
 if __name__ == "__main__":
-    app.register_blueprint(version)
+    #app.register_blueprint(version)
     app.run(debug=True, host="0.0.0.0")
     
 

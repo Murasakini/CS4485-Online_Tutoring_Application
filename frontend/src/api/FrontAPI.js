@@ -1,7 +1,7 @@
 import axios from 'axios';
 import { SHA256 } from 'crypto-js';
 
-const baseURL = 'https://7bff-64-189-201-9.ngrok-free.app/';
+const baseURL = 'http://127.0.0.1:5000';
 
 const axiosInstance = axios.create({
   baseURL,
@@ -115,8 +115,11 @@ const FrontAPI = {
       const response = await axiosInstance.get('/api/v1/subj_tutors', {
         params: {
           subject: subject,
-        },
+        },  data:{
+          message: 'dummy'
+        }
       });
+      console.log(response);
       return response.data;
     } catch (error) {
       if (error.response) {
@@ -132,9 +135,16 @@ const FrontAPI = {
   },
 
   // get available subjects
-  fetchSubjects: async () => {
+  fetchSubjects: async (session_id) => {
     try {
-      const response = await axiosInstance.get('/api/v1/subjects');
+      const response = await axiosInstance.get('/api/v1/subjects', {
+        params: {
+          session_id: session_id
+        }, data:{
+          message: 'dummy'
+        }
+      });
+      console.log(response)
       return response.data;
     } catch (error) {
       if (error.response) {
@@ -154,8 +164,10 @@ const FrontAPI = {
     try {
       const response = await axiosInstance.get('/api/v1/tutor_timeslots', {
         params: {
-          tutor: tutor,
-        },
+          tutor_id: tutor,
+        },  data:{
+          message: 'dummy'
+        }
       });
       return response.data;
     } catch (error) {
@@ -172,9 +184,10 @@ const FrontAPI = {
   },
   
   // create a new appointment
-  createAppointment: async (formData) => {
+  createAppointment: async (formData, session_id) => {
     try {
       const response = await axiosInstance.post('/api/v1/create/appointment', {
+        session_id: session_id,
         subject: formData.subject,
         tutor: formData.tutor,
         timeSlot: formData.timeSlot,
@@ -193,29 +206,15 @@ const FrontAPI = {
     }
   },
 
-  // fetch time slots of tutor using tutorid
-  fetchTutorTimeSlots: async (tutorId) => {
-    try {
-      const response = await axiosInstance.get(`/api/tutorTimeSlots/${tutorId}`);
-      return response.data;
-    } catch (error) {
-      if (error.response) {
-        console.error('Error response status:', error.response.status);
-        console.error('Error response data:', error.response.data);
-      } else if (error.request) {
-        console.error('No response received:', error.request);
-      } else {
-        console.error('Error message:', error.message);
-      }
-      throw error;
-    }
-  },
-
   // verify session is valid
-  verifySession: async () => {
+  verifySession: async (session_id) => {
     try {
       // POST request to /verify_session endpoint
-      const response = await axiosInstance.post('/verify_session');
+      const response = await axiosInstance.post('/verify_session', {
+        params: {
+          session_id: session_id
+        }
+      });
       return response.data;
     } catch (error) {
       if (error.response) {
