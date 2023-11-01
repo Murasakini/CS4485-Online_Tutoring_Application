@@ -703,7 +703,7 @@ def get_favorite_tutors():
     response = {
         'error': False,
         'status_code': 200,
-        'message': 'Retrieve favorite tutors list successful.'
+        'message': 'Retrieve favorite tutors list successfully.'
     }
     
 
