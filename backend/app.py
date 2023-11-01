@@ -677,6 +677,45 @@ def test_protected():
         "message": "This is a protected endpoint."
     }
 
+# favorite tutor list endpoint
+@version.route("/favorite_tutors", methods=["GET"])
+def get_favorite_tutors():
+    
+    # pulls a user's session_id from the browser
+    session_id = request.args.get('session_id')
+
+    # retrieve list of favorite tutors
+    validate_auth_table()
+    sql = text("""
+            SELECT ota_db.user_favorites_readable.tutor_id, ota_db.user_favorites_readable.first_name, 
+                   ota_db.user_favorites_readable.last_name 
+            FROM ota_db.user_favorites_readable LEFT JOIN ota_db.auth_table ON user_favorites_readable.user_id=auth_table.user_id 
+            WHERE auth_table.session_id = '{}';
+        """.format(session_id))
+    
+    # execute query
+    result = db.session.execute(sql)
+    
+    # TODO: handle errors
+
+
+    # initialize response with empty list
+    response = {
+        'error': False,
+        'status_code': 200,
+        'message': 'Retrieve favorite tutors list successful.'
+    }
+    
+
+    # append each returned row into response
+    fav_list = list()
+    for row in result:
+        fav_list.append({'name': row[1] + ' ' + row[2], 'tutor_id': row[0]})
+
+    response['result'] = fav_list
+
+    return jsonify(response), 200
+    
 
 #####################
 # Main
