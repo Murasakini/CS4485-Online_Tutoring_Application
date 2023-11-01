@@ -3,6 +3,7 @@ import Body from './components/Body.js';
 import FavortieTutor from './components/FavoriteTutors.js';
 import { useEffect, useState } from 'react';
 import Axios from 'axios';
+import FrontAPI from './api/FrontAPI.js';
 
 const Favorite = () => {
         // hold json data from db and function to store data
@@ -10,19 +11,33 @@ const Favorite = () => {
 
         // retrieve data from db
         const getTutorList = async () => {
-            // api GET
-            try {
-            const response = await Axios.get('http://localhost:3006/favoriteTutors/');
-            return response.data;
+            // api GET to get list of favorite tutors
+            const session_id = 'bc5fddbc24c7434a94d4c9f2ee217e23'
+            const response = await FrontAPI.getFavoriteTutors(session_id);
 
-            } catch(err) {
-                if (err.response) {
-                    console.log(err.data);
-                    console.log(err.status);
-                    console.log(err.header);
-                }
-                else console.log(`Error:${err.message}`);
+            switch(response.status_code) {
+                case 200:  // success
+                    console.log('Retrieve favorite list successful');
+                    return response.result;
+
+                default:
+                    console.log('some error happened')
             }
+
+            
+            // // api GET
+            // try {
+            // const response = await Axios.get('http://localhost:3006/favoriteTutors/');
+            // return response.data;
+
+            // } catch(err) {
+            //     if (err.response) {
+            //         console.log(err.data);
+            //         console.log(err.status);
+            //         console.log(err.header);
+            //     }
+            //     else console.log(`Error:${err.message}`);
+            // }
 
             // TODO: add error handling
         };
@@ -63,6 +78,7 @@ const Favorite = () => {
             }
 
             storeTutorList();
+            console.log(tutorList);
         }, []);
 
     return (
