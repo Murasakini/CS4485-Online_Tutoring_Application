@@ -333,8 +333,8 @@ def verify_session():
         # SQL query first deletes expired session_ids, then checks if session_id exists in table
         validate_auth_table()
         sql = text("""
-            SELECT COUNT(1) FROM auth_table WHERE session_id = :session_id;
-        """)
+            SELECT COUNT(1) FROM auth_table WHERE session_id = '{}';
+        """.format(session_id))
         result = db.session.execute(sql, {"session_id": session_id}).fetchone()
         print(result, flush=True)
 
@@ -349,29 +349,42 @@ def verify_session():
             return jsonify(response), 401
 
 
-@version.route("/verify_session", methods=["POST"])
+@version.route("/verify_session", methods=["GET"])
 def verify_session_manual():
+
+    if not validate_fields(request.args, {'session_id'}):
+        response = {
+            'error': True,
+            'status_code': 400,
+            'message': 'Invalid or missing fields in request.'
+        }
+        return jsonify(response), 400
+    
     session_id = request.args.get('session_id')
     # SQL query first deletes expired session_ids, then checks if session_id exists in table
     validate_auth_table()
     sql = text("""
-        SELECT COUNT(1) FROM auth_table WHERE session_id = :session_id;
-    """)
+        SELECT COUNT(1) FROM auth_table WHERE session_id = '{}';
+    """.format(session_id))
     result = db.session.execute(sql, {"session_id": session_id}).fetchone()
     print(result, flush=True)
 
-    if result == 1:
+    if result[0] == 1:
         response = {
             'error': False,
             'status_code': 201,
             'message': 'session_id exists and is valid.'
         }
-        return jsonify(response), 401
+        return jsonify(response), 201
     else:
         response = {
             'error': True,
             'status_code': 401,
-            'message': 'Invalid or expired session.'
+            'message': 'Invalid or expired session.',
+            'sql': """
+                SELECT COUNT(1) FROM auth_table WHERE session_id = '{}';
+            """.format(session_id),
+            'result': result[0]
         }
         return jsonify(response), 401
 
@@ -409,6 +422,15 @@ def signup_user():
 
 @version.route("/subj_tutors", methods=["GET"])
 def tutors_of_subject():
+
+    if not validate_fields(request.args, {'subject'}):
+        response = {
+            'error': True,
+            'status_code': 400,
+            'message': 'Invalid or missing fields in request.'
+        }
+        return jsonify(response), 400
+
     # gets subject from request, in format "department_id/class_id"
     subject = request.args.get('subject').split('/')
 
@@ -440,6 +462,15 @@ def tutors_of_subject():
 
 @version.route("/subjects", methods=["GET"])
 def subjects():
+
+    if not validate_fields(request.args, {'session_id'}):
+        response = {
+            'error': True,
+            'status_code': 400,
+            'message': 'Invalid or missing fields in request.'
+        }
+        return jsonify(response), 400
+    
     # pulls a user's session_id from the browser
     session_id = request.args.get('session_id')
 
@@ -471,15 +502,15 @@ def subjects():
 @version.route("/tutor_timeslots", methods=["GET"])
 def tutor_timeslots():
     
-    tutor_id = request.args.get('tutor_id')
-
-    if tutor_id == None:
+    if not validate_fields(request.args, {'tutor_id'}):
         response = {
             'error': True,
             'status_code': 400,
             'message': 'Invalid or missing fields in request.'
         }
         return jsonify(response), 400
+    
+    tutor_id = request.args.get('tutor_id')
 
     # finds available times for a tutor
     clean_avail()
@@ -527,21 +558,21 @@ def create_appointment():
         return jsonify(response), 400
     
     # get user_id from session_id
-    session_id = request.cookies.get('session_id')
+    session_id = data.get('session_id')
     user_id, success = user_session(session_id)
 
     # gets subject from request, in format "department_id/class_id"
-    subject = request.args.get('subject').split('/')
+    subject = data.get('subject').split('/')
 
     class_num = subject[1]
     department_id = subject[0]
 
     formatted_data = {
             "user_id": user_id,
-            "tutor_id": request.args.get("tutor"),
+            "tutor_id": data.get("tutor"),
             "class_num": class_num,
             "department_id": department_id,
-            "meeting_time": request.args.get("timeSlot"),
+            "meeting_time": data.get("timeSlot"),
     }
     
      # If validation passes, you can continue with inserting the data into the database.
