@@ -349,6 +349,31 @@ def verify_session():
             return jsonify(response), 401
 
 
+@version.route("/verify_session", methods=["POST"])
+def verify_session_manual():
+    session_id = request.args.get('session_id')
+    # SQL query first deletes expired session_ids, then checks if session_id exists in table
+    validate_auth_table()
+    sql = text("""
+        SELECT COUNT(1) FROM auth_table WHERE session_id = :session_id;
+    """)
+    result = db.session.execute(sql, {"session_id": session_id}).fetchone()
+    print(result, flush=True)
+
+    if result == 1:
+        response = {
+            'error': False,
+            'status_code': 201,
+            'message': 'session_id exists and is valid.'
+        }
+        return jsonify(response), 401
+    else:
+        response = {
+            'error': True,
+            'status_code': 401,
+            'message': 'Invalid or expired session.'
+        }
+        return jsonify(response), 401
 
 @version.route("/signup/user", methods=["POST"])
 def signup_user():
