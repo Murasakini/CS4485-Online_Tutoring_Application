@@ -9,12 +9,12 @@ import FrontAPI from './api/FrontAPI';
 import CalendarDisplay from './components/CalendarDisplay';
 import { addToDate } from './Utils'; 
 import Header from './components/Header.js';
-import {Box, Grid, Paper} from '@mui/material'
-import MenuList from './components/MenuList.js'
+import {Box, Grid, Paper} from '@mui/material';
+import MenuList from './components/MenuList.js';
+import CustomSnackbar from './components/CustomSnackbar.js';
 
 export default function AppointmentScheduler() {
   const [formData, setFormData] = useState({
-    date: null,
     subject: '',
     tutor: '',    // this is tutor_id
     timeSlot: '',
@@ -23,19 +23,31 @@ export default function AppointmentScheduler() {
   const [subjects, setSubjects] = useState([]); // subjects
   const [tutorsList, setTutorsList] = useState([]);     // tutors
   const [availableSlots, setAvailableSlots] = useState([]); // time slots
-  const [selectedTimeSlot, setSelectedTimeSlot] = useState('');
+  const [selectedTimeSlot] = useState('');
 
-  useEffect(() => {
-    // fetch the list of subjects. unconditional 
-    const session_id = document.cookie.split("; ").find((row) => row.startsWith("sessionCookie="))?.split("=")[1];
-    FrontAPI.fetchSubjects(session_id)
-      .then((data) => {
-        setSubjects(data);
-      })
-      .catch((error) => {
-        console.error('Failed to fetch subjects:', error);
-      });
-  }, []);
+    // display error msg to the user
+    const [snackbarOpen, setSnackbarOpen] = useState(false);
+    const [snackbarMessage, setSnackbarMessage] = useState('');
+
+    useEffect(() => {
+      // fetch the list of subjects. unconditional 
+      const session_id = document.cookie.split("; ").find((row) => row.startsWith("sessionCookie="))?.split("=")[1];
+      FrontAPI.fetchSubjects(session_id)
+        .then((data) => {
+          if (data.error) {
+            // custom error handling
+            setSnackbarMessage(data.message);
+            setSnackbarOpen(true);
+          } else {
+            setSubjects(data);
+          }
+        })
+        .catch((error) => {
+          // network error
+          setSnackbarMessage('Failed to fetch subjects. Please try again.'); // Set the error message
+          setSnackbarOpen(true); // Open the snackbar to display the error
+        });
+    }, []);
   
   // handle when user change selected subject
   const handleSubjectChange = (event) => {
@@ -52,10 +64,18 @@ export default function AppointmentScheduler() {
       // fetch tutors for selected subject
       FrontAPI.fetchTutors(selectedSubject)
         .then((data) => {
-          setTutorsList(data);
+          if (data.error) {
+            // custom error handling
+            setSnackbarMessage(data.message);
+            setSnackbarOpen(true);
+          } else {
+            setTutorsList(data);
+          }
         })
         .catch((error) => {
-          console.error('Failed to fetch tutors:', error);
+          // network error
+          setSnackbarMessage('Failed to fetch tutors. Please try again.'); 
+          setSnackbarOpen(true); 
         });
     } else {
       // reset
@@ -76,12 +96,20 @@ export default function AppointmentScheduler() {
     if (selectedTutor) {
       // fetch available time slots for selected tutor and subject
       FrontAPI.fetchTimeSlots(selectedTutor)
-        .then((data) => {
+      .then((data) => {
+        if (data.error) {
+          // custom error handling
+          setSnackbarMessage(data.message);
+          setSnackbarOpen(true);
+        } else {
           setAvailableSlots(data);
-        })
-        .catch((error) => {
-          console.error('Failed to fetch available time slots:', error);
-        });
+        }
+      })
+      .catch((error) => {
+        // network error
+        setSnackbarMessage('Failed to fetch time slots. Please try again.'); 
+        setSnackbarOpen(true); 
+      });
     } else {
       // reset
       setAvailableSlots([]);
@@ -95,26 +123,11 @@ export default function AppointmentScheduler() {
       ...formData,
       timeSlot: selectedTimeSlot,
     });
-
-    if (selectedTimeSlot) {
-      // convert selected timestamp to Date object
-      const start = new Date(selectedTimeSlot);
-
-      // get end property
-      const end = addToDate(start, 1, 'hour'); 
-
-      const event = {
-        title: `Appointment with ${formData.subject} - ${formData.tutor}`,
-        start,
-        end,
-      };
-    }
   };
   
   // handle when user click submit button
   const handleSubmit = async (event) => {
     event.preventDefault();
-    try {
       // verify user's session before allowing them to create an appointment
       const session_id = document.cookie.split("; ").find((row) => row.startsWith("sessionCookie="))?.split("=")[1];
       const sessionResponse = await FrontAPI.verifySession(session_id);
@@ -124,24 +137,54 @@ export default function AppointmentScheduler() {
         console.log('User is not logged in or the session is invalid. Redirect to login or show a message.');
         return;
       }
-      // send form
-      console.log('Appointment data submitted:', {
-        date: formData.date,
-        subject: formData.subject,
-        tutor: formData.tutor,
-        timeSlot: selectedTimeSlot,
-      });
+      // createAppointment function from FrontAPI
+      const response = await FrontAPI.createAppointment(formData, session_id);
+
+      console.log(response)
+      switch (response.status_code) {
+        case 201:
+          // success. 
+          console.log('Successfully created appointment!');
+          setSnackbarMessage('Successfully created appointment!');
+          setSnackbarOpen(true);
+          break;
+        case 400:
+          // Invalid fields
+          console.log(`Error ${response.status_code}: ${response.message}`);
+          setSnackbarMessage(response.message);
+          setSnackbarOpen(true);
+          break;
+        case 409:
+          // conflict?
+          console.log(`Error ${response.status_code}: ${response.message}`);
+          setSnackbarMessage(response.message);
+          setSnackbarOpen(true);
+          break;
+        default:
+          console.log(`Error ${response.status_code}: ${response.message}`);
+          setSnackbarMessage(response.message);
+          setSnackbarOpen(true);
+          break;
+      }
       // reset form fields after submission
       setFormData({
-        date: null,
         subject: '',
         tutor: '',
+        timeSlot: '',
       });
-      setSelectedTimeSlot('');
-    } catch (error) {
-      console.error('Error:', error);
-    }
   };  
+
+  // convert timestamps to events
+  const events = availableSlots.map(slot => {
+    const start = new Date(slot);
+    const end = addToDate(start, 1);
+
+    return {
+      start,
+      end,
+      title: '', // TODO: figure out what to put here. start and class name?
+    };
+  });
 
   return (
     <div>
@@ -171,9 +214,9 @@ export default function AppointmentScheduler() {
                         <em>Select a subject</em>
                       </MenuItem>
                          {subjects.map((subject) => (
-                         <MenuItem key={subject.class_name} value={`${subject.department_id}/${subject.class_num}`}>
-                        {subject.class_name} - {subject.class_num} - {subject.department_name}
-                        </MenuItem>
+                         <MenuItem key={subject.class_name} value={subject.department_id}> {/* TODO: change value field to what subject means in backend*/}
+                           {subject.department_name} - {subject.class_num} - {subject.class_name}
+                         </MenuItem>
                       ))}
                     </Select>
                 </FormControl>
@@ -213,12 +256,15 @@ export default function AppointmentScheduler() {
                       </MenuItem>
 
                       {/* add the available time slots as MenuItem options */}
-                      {availableSlots.map((slot) => (
-                        <MenuItem key={slot.id} value={slot.timestamp}>
-                          {new Date(slot.timestamp).toLocaleTimeString()}
-                        </MenuItem>
-                      ))}
-
+                      {availableSlots.map((slot) => {
+                        const startTime = new Date(slot.timestamp);
+                        const endTime = addToDate(startTime, 1);
+                        return (
+                          <MenuItem key={slot.id} value={slot.timestamp}>
+                            {`${startTime.toLocaleTimeString()} - ${endTime.toLocaleTimeString()}`}
+                          </MenuItem>
+                        );
+                      })}
                     </Select>
                 </FormControl>
 
@@ -230,10 +276,18 @@ export default function AppointmentScheduler() {
                 >
                   Schedule
                 </Button>
+
+                {/* CustomSnackbar for displaying error messages */}
+                <CustomSnackbar
+                  open={snackbarOpen}
+                  message={snackbarMessage}
+                  onClose={() => setSnackbarOpen(false)}
+                />
+
               </form>
 
-              {/* CalendarDisplay component */}
-              <CalendarDisplay events={availableSlots} />
+              {/* CalendarDisplay component --------  TODO: how to get title for events*/}
+              <CalendarDisplay events={events} />
             </Paper>
           </Grid>
         </Grid>
