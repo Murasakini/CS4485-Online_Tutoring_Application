@@ -183,7 +183,7 @@ export default function AppointmentScheduler() {
     return {
       start,
       end,
-      title: '', // TODO: figure out what to put here. start and class name?
+      title: `${start.toLocaleTimeString()} - ${end.toLocaleTimeString()}`,
     };
   });
 
