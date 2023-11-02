@@ -29,6 +29,9 @@ export default function AppointmentScheduler() {
     const [snackbarOpen, setSnackbarOpen] = useState(false);
     const [snackbarMessage, setSnackbarMessage] = useState('');
 
+    // disable submit if empty field
+    const isSubmitDisabled = !formData.subject || !formData.tutor || !formData.timeSlot;
+
     useEffect(() => {
       // fetch the list of subjects. unconditional 
       const session_id = document.cookie.split("; ").find((row) => row.startsWith("sessionCookie="))?.split("=")[1];
@@ -274,6 +277,7 @@ export default function AppointmentScheduler() {
                   variant="contained"
                   color="primary"
                   fullWidth
+                  disabled={isSubmitDisabled} //not allow empty
                 >
                   Schedule
                 </Button>
