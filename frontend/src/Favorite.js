@@ -15,13 +15,13 @@ const Favorite = () => {
             const session_id = 'bc5fddbc24c7434a94d4c9f2ee217e23'
             const response = await FrontAPI.getFavoriteTutors(session_id);
 
-            switch(response.status_code) {
+            switch(response?.status_code) {
                 case 200:  // success
                     console.log('Retrieve favorite list successful');
-                    return response.result;
+                    return response?.result;
 
                 default:
-                    console.log('some error happened')
+                    console.log('Some error happened')
             }
 
             

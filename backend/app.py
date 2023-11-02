@@ -306,9 +306,25 @@ def save_session_to_db(session_id, user_id, user_type, expire):
     except IntegrityError:  # Catch any IntegrityError (like unique constraint violations)
         db.session.rollback()
         return "An error occurred while inserting the user.", False    
+
+'''
+This function checks whether the tutor already in the list associated to the user.
+:param session_id: user session_id
+:param tutor_id: tutor id 
+:return: none if the tutor is not existed in the user's favorite list; otherwise, a row from db favorite list
+'''
+def is_existed(session_id, tutor_id):
+    # define query
+    query = text('''
+            SELECT F.user_id, F.tutor_id 
+            FROM ota_db.user_favorites as F, ota_db.auth_table as A 
+            WHERE A.user_id = F.user_id AND F.tutor_id = '{}' AND A.session_id = '{}';
+            '''.format(tutor_id, session_id))
     
+    # execute query
+    result = db.session.execute(query)
 
-
+    return result.fetchone()
 
 #####################
 # Routes
@@ -677,15 +693,16 @@ def test_protected():
         "message": "This is a protected endpoint."
     }
 
-# favorite tutor list endpoint
+# get favorite tutor list endpoint
 @version.route("/favorite_tutors", methods=["GET"])
 def get_favorite_tutors():
     
     # pulls a user's session_id from the browser
-    session_id = request.args.get('session_id')
-
+    # session_id = request.args.get('session_id')
+    session_id = '2197a0f29a3f40afa956bf8c286ca026'
+    
     # retrieve list of favorite tutors
-    validate_auth_table()
+    # TODO: validate_auth_table()
     sql = text("""
             SELECT ota_db.user_favorites_readable.tutor_id, ota_db.user_favorites_readable.first_name, 
                    ota_db.user_favorites_readable.last_name 
@@ -695,27 +712,70 @@ def get_favorite_tutors():
     
     # execute query
     result = db.session.execute(sql)
-    
+    rows = result.fetchall()
     # TODO: handle errors
 
 
     # initialize response with empty list
-    response = {
-        'error': False,
-        'status_code': 200,
-        'message': 'Retrieve favorite tutors list successfully.'
-    }
+    
     
 
     # append each returned row into response
     fav_list = list()
-    for row in result:
+    for row in rows:
         fav_list.append({'name': row[1] + ' ' + row[2], 'tutor_id': row[0]})
 
-    response['result'] = fav_list
+    response = {
+        'error': False,
+        'status_code': 200,
+        'message': 'Retrieve favorite tutors list successfully.',
+        'result': fav_list
+    }
+    #response['result'] = fav_list
 
     return jsonify(response), 200
     
+# endpoint to add a tutor into favorite list
+@version.route("/add_favorite_tutors", methods=["GET"])
+def add_favorite_tutors():
+    session_id = '2197a0f29a3f40afa956bf8c286ca026'
+    tutor_id = 106
+
+    # TODO: validate_auth_table()
+
+    # check if the tutor already existed in the favorite list
+    result = is_existed(session_id=session_id, tutor_id=tutor_id)
+    
+    if result == None:  # tutor not existed
+        query = text('''
+                        INSERT INTO ota_db.user_favorites (user_id, tutor_id) 
+                        VALUES ((SELECT user_id FROM ota_db.auth_table 
+                                 WHERE auth_table.session_id = '{}'), {});
+                    '''.format(session_id, tutor_id))
+        
+        # execute query
+        result = db.session.execute(query)
+        db.session.commit()
+        
+        if result.rowcount == 1:
+            response = {
+                'error': False,
+                'status_code': 200,
+                'message': 'Add tutor to the list successfully.'
+            }
+
+            status_code = 200
+
+    else:  # tutor existed
+        response = response = {
+            'error': True,
+            'status_code': 403,
+            'message': 'The tutor is already in the list.'
+        }
+        status_code = 403
+
+    return response, status_code
+
 
 #####################
 # Main
