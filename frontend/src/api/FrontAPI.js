@@ -97,16 +97,14 @@ const FrontAPI = {
     try {
       let response;
       if (formData.userType === "student") {
-        const response = await axiosInstance.post('/api/v1/login/user', {
+        response = await axiosInstance.post('/api/v1/login/user', {
           email: formData.email,
-          // password: SHA256(formData.password).toString(),
-          password: formData.password,
+          password: SHA256(formData.password).toString(),
         });
       } else {
-          const response = await axiosInstance.post('/api/v1/login/tutor', {
+          response = await axiosInstance.post('/api/v1/login/tutor', {
             email: formData.email,
-            // password: SHA256(formData.password).toString(),
-            password: formData.password,
+            password: SHA256(formData.password).toString(),
           });
       }
       return response.data;
@@ -162,7 +160,7 @@ const FrontAPI = {
           message: 'dummy'
         }
       });
-      console.log(response)
+      console.log(response);
       return response.data;
     } catch (error) {
       if (error.response) {
@@ -189,6 +187,7 @@ const FrontAPI = {
           message: 'dummy'
         }
       });
+      console.log(response);
       return response.data;
     } catch (error) {
       if (error.response) {
