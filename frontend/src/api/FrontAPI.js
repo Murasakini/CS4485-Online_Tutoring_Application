@@ -1,8 +1,8 @@
 import axios from 'axios';
 import { SHA256 } from 'crypto-js';
 
-const baseURL = '';
-// const baseURL = 'http://localhost:5000';
+//const baseURL = 'https://7bff-64-189-201-9.ngrok-free.app/';
+const baseURL = 'http://localhost:5000/';
 
 const axiosInstance = axios.create({
   baseURL,
@@ -85,6 +85,7 @@ const FrontAPI = {
   signIn: async (formData) => {
     try {
       let response;
+      let response_2fa; // for 2fa reponse
       if (formData.userType === "student") {
         response = await axiosInstance.post('/api/v1/login/user', {
           email: formData.email,
@@ -96,6 +97,13 @@ const FrontAPI = {
             password: SHA256(formData.password).toString(),
           });
       }
+      ////// 2FA call //////
+      if (response.status === 200) {
+        response_2fa = await axiosInstance.post('/api/v1/TwoFactorAuthentication/SendEmail', {
+          userType: formData.userType, 
+          email: formData.email
+        }); // dont know what to do with response_2fa
+      }
       return response.data;
     } catch (error) {
       if (error.response) {
@@ -104,10 +112,10 @@ const FrontAPI = {
         return error.response.data;
       } else if (error.request) {
         console.error('No response received:', error.request);
-        return { status_code: -1, message: 'Network error occurred' };
+        return error.response.data;
       } else {
         console.error('Error message:', error.message);
-        return { status_code: -1, message: 'Network error occurred' };
+        return error.response.data;
       }
     }
   },

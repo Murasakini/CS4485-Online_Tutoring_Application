@@ -6,8 +6,15 @@ from sqlalchemy.exc import IntegrityError
 from datetime import datetime, timedelta
 import yaml
 import uuid
-import server_email
-import os
+################# FOR 2FA & Sending Email #################
+import base64 
+import random 
+from email.mime.multipart import MIMEMultipart 
+from email.mime.text import MIMEText 
+from Google import Create_Service 
+from flask import * 
+###########################################################
+
 
 #####################
 # Global Variables and Setup
@@ -36,6 +43,17 @@ PROTECTED_ENDPOINTS = ['v1.test_protected'] #, 'v1.subjects']
 SEARCH_FIELDS = {"first_name", "last_name", "subject"}
 UPLOAD_FOLDER = 'static/profile_image'
 ALLOWED_EXTENSIONS = set(['png', 'jpg', 'jpeg','svg'])
+PROTECTED_ENDPOINTS = ['v1.test_protected', 'v1.subjects']
+
+# Gmail setting 
+CLIENT_SECRET_FILE = 'client_secret.json'
+API_NAME = 'gmail'
+API_VERSION = 'v1'
+SCOPES = ['https://mail.google.com/']
+
+# Create Gmail service 
+service = Create_Service(CLIENT_SECRET_FILE, API_NAME, API_VERSION, SCOPES)
+
 
 #####################
 # Helper Functions
@@ -46,7 +64,6 @@ def datetime_to_str(expire_datetime):
     Converts a datetime object to a string in the format 'YYYY-MM-DD HH:MM:SS'.
     """
     return expire_datetime.strftime('%Y-%m-%d %H:%M:%S')
-
 
 def str_to_datetime(expire_str):
     """
@@ -479,7 +496,6 @@ def authenticate_user(email, password):
     else:
         return None, False  # Authentication failed
 
-
 def authenticate_tutor(email, password):
     tutor_sql = text("""
         SELECT tutors.tutor_id 
@@ -554,6 +570,139 @@ def save_session_to_db(session_id, account_id, account_type, expire):
     except IntegrityError:  # Catch any IntegrityError (like unique constraint violations)
         db.session.rollback()
         return "An error occurred while inserting the user.", False    
+
+#####################
+# 2FA Functions 
+#####################
+
+def search_email_user(user_id):
+    sql = text("""
+               SELECT users.email 
+               FROM users 
+               WHERE user_id = :user_id
+               """)
+    result = db.session.execute(sql, {"user_id": user_id})
+    user_email_address = result.first()[0]
+
+    return user_email_address
+
+def search_email_tutor(tutor_id):
+    sql = text("""
+               SELECT tutors.email 
+               FROM tutors 
+               WHERE tutor_id = :tutor_id
+               """)
+    result = db.session.execute(sql, {"tutor_id": tutor_id})
+    tutor_email_address = result.first()[0]
+
+    return tutor_email_address
+
+def search_id_user(email):
+    sql = text("""
+               SELECT users.user_id 
+               FROM users 
+               WHERE email = :email
+               """)
+    
+    result = db.session.execute(sql, {"email": email})
+    user_id_num = result.first()[0]
+    
+    return user_id_num
+
+def search_id_tutor(email):
+    sql = text("""
+               SELECT tutors.tutor_id 
+               FROM tutors 
+               WHERE email = :email
+               """)
+    
+    result = db.session.execute(sql, {"email": email})
+    tutor_id_num = result.first()[0]
+
+    return tutor_id_num
+
+def insert_2fa_user(rand, exp_time, user_id):
+    sql = text("""
+            INSERT INTO 2fa_table (2fa_code, expire, user_id, tutor_id)
+            VALUES (:2fa_code, :expire, :user_id, NULL)
+                """)
+    data_to_insert = {
+        '2fa_code': rand,
+        'expire': exp_time,
+        'user_id': user_id
+    }
+
+    result = db.session.execute(sql, data_to_insert)
+    db.session.commit()
+
+    if result.rowcount == 1:
+        print(result.rowcount, "record inserted.")
+
+def insert_2fa_tutor(rand, exp_time, tutor_id):
+    sql = text("""
+            INSERT INTO 2fa_table (2fa_code, expire, user_id, tutor_id)
+            VALUES (:2fa_code, :expire, NULL, :tutor_id)
+                """)
+    
+    data_to_insert = {
+        '2fa_code': rand,
+        'expire': exp_time,
+        'tutor_id': tutor_id
+    }
+
+    result = db.session.execute(sql, data_to_insert)
+    db.session.commit()
+
+    if result.rowcount == 1:
+        print(result.rowcount, "record inserted.")
+
+def delete_expired_2fa():
+    procedure = "validate_2fa"
+    sql = text("CALL " + procedure)
+
+    result = db.session.execute(sql)
+    db.session.commit()
+
+def send_email(email, rand):
+    emailMsg = 'You have requested a secure verification code to log into your account.\n\nPlease enter this secure verification code: ' \
+        + str(rand) + '\n\nIf you are not attempting to log into your account, please reset your password.\nPLEASE DO NOT REPLY TO THIS MESSAGE'
+    mimeMessage = MIMEMultipart()
+    mimeMessage['to'] = email
+    #mimeMessage['to'] = email[0][0]
+    #mimeMessage['to'] = 'jxp163630@utdallas.edu'   # testing utd email address
+    mimeMessage['subject'] = 'Secure two-step verification notification'
+    mimeMessage.attach(MIMEText(emailMsg, 'plain'))
+    raw_string = base64.urlsafe_b64encode(mimeMessage.as_bytes()).decode()
+
+    message = service.users().messages().send(userId='me', body={'raw': raw_string}).execute()
+    print(message)
+
+def send_email_user(user_id):
+
+    email = search_email_user(user_id)             # search user's email address
+    rand = random.randint(100000,999999)           # generates 6-digit random integer
+    send_email(email, rand)                        # send 2fa code
+
+    # record 2fa to database 
+    # timedelta adds 10 minutes to datetime.now()
+    insert_2fa_user(rand, (datetime.now() + timedelta(minutes=10)), user_id)
+    delete_expired_2fa()
+
+    return True
+
+def send_email_tutor(tutor_id):
+
+    email = search_email_tutor(tutor_id)           # search tutor's email address
+    rand = random.randint(100000,999999)           # generates 6-digit random integer
+    send_email(email, rand)                        # send 2fa code
+
+    # record 2fa to database 
+    # timedelta adds 10 minutes to datetime.now()
+    insert_2fa_user(rand, (datetime.now() + timedelta(minutes=10)), tutor_id)
+    delete_expired_2fa()
+
+    return True
+
 
 '''
 This function checks whether the tutor already in the list associated to the user.
@@ -1084,8 +1233,6 @@ def signup_user():
         }
         return jsonify(response), 409 
 
-    
-
 @version.route("/subj_tutors", methods=["GET"])
 def subj_tutors():
     if not validate_fields(request.args, {'subject'}):
@@ -1418,7 +1565,10 @@ def login_user():
             'message': 'Login successful, cookie created.',
             'cookie_data': user_data
         }
-        return response, 200
+        response_success = jsonify(response)
+        #response_success.set_cookie('sessionCookie', user_data.session_id, expires = user_data.expire) # cookie should be created after 2FA authentication
+
+        return response_success, 200
     else:
         response = {
             'error': True,
@@ -1451,7 +1601,9 @@ def login_tutor():
             'message': 'Login successful, cookie created.',
             'cookie_data': user_data
         }
-        return response, 200
+        response_success = jsonify(response)
+        #response_success.set_cookie('sessionCookie', user_data.session_id, expires = user_data.expire)
+        return response_success, 200
     else:
         response = {
             'error': True,
@@ -1466,68 +1618,36 @@ def test_protected():
         "message": "This is a protected endpoint."
     }
 
-#------------favorite tutors and search tutors------------
-# get favorite tutor list endpoint
-@version.route("/favorite_tutors", methods=["GET"])
-def get_favorite_tutors():
-    
-    # pulls a user's session_id from the browser
-    session_id = request.args.get('session_id')
-    
-    # get list of user favorites
-    fav_list = user_favorite_query(session_id)
+@version.route("/TwoFactorAuthentication/SendEmail", methods=["POST"])
+def send_2fa():
 
-    response = {
-        'error': False,
-        'status_code': 201,
-        'message': 'Retrieve favorite tutors list successfully.',
-        'result': fav_list
-    }
-
-    return jsonify(response), 201
-    
-# endpoint to add a tutor into favorite list
-@version.route("/add_favorite_tutors", methods=["POST"])
-def add_favorite_tutors():
-
-    # get data sent along with the request
     data = request.get_json()
-    session_id = data.get("session_id")  
-    tutor_id = data.get("tutor_id")
+    userType= data.get("userType")
+    email = data.get("email")
+    sent = False
 
-    formatted_data = {
-        "session_id": session_id,
-        "tutor_id": tutor_id
-    }
-    # session_id = 'bc5fddbc24c7434a94d4c9f2ee217e23'
-    # tutor_id = 106
+    if userType == 'student':
+        user_id = search_id_user(email)
+        sent = send_email_user(user_id)
+    elif userType == 'tutor':
+        tutor_id = search_id_tutor(email)
+        sent = send_email_tutor(tutor_id)
 
-    # check if the tutor is already in user's favorite list
-    if not in_favorites_list(session_id=session_id, tutor_id=tutor_id):  # tutor wasn't in list
-        inserted_data, success = insert_user_favorite(formatted_data)
-        if success:
-                response = {
-                    'error': False,
-                    'status_code': 201,
-                    'message': 'Added tutor to the list successfully.'
-                }
-                status_code = 201
-        else:
-            response = {
-                'error': True,
-                'status_code': 409,
-                'message': inserted_data
-            }
-            status_code = 409
-    else:  # tutor existed
-        response = response = {
+    if sent:
+        response = {
             'error': False,
-            'status_code': 403,
-            'message': 'The tutor is already in the list.'
+            'status_code': 200,
+            'message': '2FA email sent successfully.'
         }
-        status_code = 403
+        return jsonify(response)
+    else:
+        response = {
+            'error': True,
+            'status_code': 400,
+            'message': 'Unable to sent 2FA email.'
+        }
+        return jsonify(response)
 
-    return jsonify(response), status_code
 
 # endpoint to remove a tutor from the favorite list
 @version.route("/remove_favorite_tutor", methods=["POST"])
@@ -1570,6 +1690,7 @@ def remove_favorite_tutor():
         status_code = 403
 
     return jsonify(response), status_code
+
 
 # endpoint to find tutors
 @version.route("/find_tutors", methods=["POST"])
@@ -1788,15 +1909,7 @@ def media_upload():
       
     # check if file is alongs with the request
     if 'file' not in request.files:  # file not in the request
-        response = {
-            'error': True,
-            'status_code': 400,
-            'message': 'An image is not provided.'
-        }
-
-        status_code = 400
-
-        return jsonify(response), status_code
+        return jsonify(response)
     
     # file in the request
     file = request.files['file']  # store file 
@@ -2091,7 +2204,7 @@ def update_subject():
 app.register_blueprint(version)
 
 if __name__ == "__main__":
-    #app.register_blueprint(version)
+    app.register_blueprint(version)
     app.run(debug=True, host="0.0.0.0")
     
 

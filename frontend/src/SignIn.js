@@ -107,10 +107,9 @@ export default function SignIn() {
 
   return (
     <React.Fragment>
-      {isSuccessful ? 
-        // navigate to home page
-        //<Navigate to="/TwoFactorAuthentication" /> :
-        <Navigate to="/" /> :
+      {isSuccessful ?
+        // navigate to the home page
+        <Navigate to="/TwoFactorAuthentication" /> : // If ID&PW is correct, go to 2FA page 
 
         // display input form
         <ThemeProvider theme={theme}>

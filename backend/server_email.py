@@ -7,9 +7,15 @@ import mysql.connector # connect method
 from datetime import datetime, timedelta
 from flask import *
 import json
+from flask_cors import CORS ################################################################################
 
-#app = Flask(___name__)
-# version = Blueprint('v1', __name__, url_prefix='/api/v1')
+#####################
+# Global Variables and Setup
+#####################
+
+version = Blueprint('v1', __name__, url_prefix='/api/v1') ################################################################################
+app = Flask(__name__) ################################################################################
+CORS(app, resources={r"/api/*": {"origins": ["https://7bff-64-189-201-9.ngrok-free.app/", "http://localhost:3000"]}}) ################################################################################
 
 # databse setting
 '''
@@ -27,6 +33,8 @@ db_config = {
     "password": "4485Project",
     "database": "ota_db"
 }
+connection = mysql.connector.connect(**db_config)
+cursor = connection.cursor()
 
 # Gmail setting
 CLIENT_SECRET_FILE = 'client_secret.json'
@@ -37,8 +45,10 @@ SCOPES = ['https://mail.google.com/']
 # create Gmail service 
 service = Create_Service(CLIENT_SECRET_FILE, API_NAME, API_VERSION, SCOPES)
 
-connection = mysql.connector.connect(**db_config)
-cursor = connection.cursor()
+
+#####################
+# Helper Functions
+#####################
 
 def search_email_user(user_id):
     search_query = "SELECT email FROM users WHERE user_id = " + str(user_id)
@@ -129,8 +139,8 @@ def send_email_user(user_id):
         if 'connection' in locals():
             connection.close()
 
-############################ TEST ############################ 
-
+############################ TEST ############################
+'''
 try:
     connection = mysql.connector.connect(**db_config)
 
@@ -152,8 +162,50 @@ except mysql.connector.Error as error:
 finally:
     if 'connection' in locals():
         connection.close()
+'''
+############################ TEST ############################ 
+
+#####################
+# Routes
+#####################
+
+@app.route("/TwoFactorAuthentication/SendMail", methods=["POST"])
+def send_2fa():
+    data = request.get_json
+    user_type = data.get("userType")
+    #user_id_num = data.get("user_id")
+    email = data.get("email")
+
+    if user_type == "student":
+        try:
+            connection = mysql.connector.connect(**db_config)
+
+            if connection.is_connected():
+                cursor = connection.cursor()
         
-############################ TEST ############################
+                #email = search_email_user(user_id_num)
+                rand = random.randint(100000,999999)
+                send_email(email, rand)
+                insert_2fa_user(rand, (datetime.now() + timedelta(minutes=10)), 102) # datetime.now() is current timestamp and timedelta adds 10 minutes to it
+                delete_expired_2fa()
+
+        except mysql.connector.Error as error:
+            print("Error: {}".format(error))
+
+        finally:
+            if 'connection' in locals():
+                connection.close()
+    return 
+
+
+#####################
+# Main
+#####################
+
+if __name__ == "__main__":
+    app.register_blueprint(version)
+    app.run(debug=True, host="0.0.0.0")
+    
 
 '''
 @app.route('/TwoFactorAuthentication', methods=['POST'])
