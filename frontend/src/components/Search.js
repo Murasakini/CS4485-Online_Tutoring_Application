@@ -18,14 +18,19 @@ const Search = (props) => {
             textAlign="center"
             onSubmit={props.handleSearchSubmit}
             >
-                <TextField id="instructorName" label="Instructor Name" variant="outlined" 
-                name="instructorName" 
-                value={props.searchInfo.instructorName}
+                <TextField id="first_name" label="First Name" variant="outlined" 
+                name="first_name" 
+                value={props.searchInfo.first_name}
                 onChange={props.handleChange} />
 
-                <TextField id="subject" label="Subject" variant="outlined"
-                name="subject" 
-                value={props.searchInfo.subject}
+                <TextField id="last_name" label="Last Name" variant="outlined" 
+                name="last_name" 
+                value={props.searchInfo.last_name}
+                onChange={props.handleChange} />
+
+                <TextField id="class_name" label="Subject" variant="outlined"
+                name="class_name" 
+                value={props.searchInfo.class_name}
                 onChange={props.handleChange} />
 
                 {/* <TextField id="dayOfWeek" label="Day of the Week" variant="outlined"
@@ -36,41 +41,48 @@ const Search = (props) => {
                 <Button type="Submit" variant="contained" size="large">Search</Button>
             </Box>
 
+            {/* display search results */}
             <Box sx={{  textAlign: 'center' }}>
             <Grid>
                 <Typography sx={{ mt: 4, mb: 2, }} variant="h6" component="div">
                     Search Result
                 </Typography>
 
-                <List>
-                {props.searchInfo.map((info, i) => (
-                    <React.Fragment key={i}>
-                        <ListItem
-                        secondaryAction={
-                            <IconButton edge="end" aria-label="delete" 
-                            onClick={() => props.handleAddTutor(i)}>
-                                <AddIcon />
-                            </IconButton>
-                        }
-                        >
+                {props.searchInfo.length === 0 ? 
+                    <Typography sx={{ mt: 4, mb: 2, }} variant="h6" component="div">
+                        No Result
+                    </Typography> :
 
-                        <ListItemAvatar>
-                        <Avatar alt={info.name} src='url' />
-                        </ListItemAvatar>
+                    <List>
+                    {props.searchInfo.map((info) => (
+                        <React.Fragment key={info.tutor_id}>
+                            <ListItem
+                            secondaryAction={
+                                <IconButton edge="end" aria-label="delete" 
+                                onClick={() => props.handleAddTutor(info.tutor_id)}>
+                                    <AddIcon />
+                                </IconButton>
+                            }
+                            >
 
-                        <ListItemText
-                            primary={info.name + ' ' + info.id}
-                            secondary={
-                                <React.Fragment>
-                                    <Typography component="span">{ info.subject }</Typography>
-                                    <br/>
-                                    {info.email}
-                                </React.Fragment>}
-                        />
-                        </ListItem>
-                    </React.Fragment>
-                ))}
-                </List>
+                            <ListItemAvatar>
+                            <Avatar alt={info.name} src='url' />
+                            </ListItemAvatar>
+
+                            <ListItemText
+                                primary={info.name}
+                                secondary={
+                                    <React.Fragment>
+                                        <Typography component="span">{ info.subject }</Typography>
+                                        {/* <br/>
+                                        {info.email} */}
+                                    </React.Fragment>}
+                            />
+                            </ListItem>
+                        </React.Fragment>
+                    ))}
+                    </List>
+                }
             </Grid>
         </Box>
 

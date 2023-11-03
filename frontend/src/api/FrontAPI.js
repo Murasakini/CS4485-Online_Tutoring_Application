@@ -230,7 +230,6 @@ const FrontAPI = {
   },
 
   // get favorite tutors list
-  // get available subjects
   getFavoriteTutors: async (session_id) => {
     try {
       // access endpoint and get data
@@ -242,7 +241,7 @@ const FrontAPI = {
         }
       });
 
-      console.log(response)
+      //console.log(response)
       return response.data;
 
       // handle errors
@@ -257,7 +256,31 @@ const FrontAPI = {
 
       } else {
         console.error('Error message:', error.message);
+      }
+    }
+  },
 
+  // get favorite tutors list
+  findTutors: async (search_data) => {
+    try {
+      // access endpoint and get data
+      const response = await axiosInstance.post('/api/v1/find_tutors', search_data);
+
+      //console.log(response)
+      return response.data;
+
+      // handle errors
+    } catch (error) {
+      if (error.response) {
+        console.error('Error response status:', error.response.status);
+        console.error('Error response data:', error.response.data);
+        return error.response.data
+
+      } else if (error.request) {
+        console.error('No response received:', error.request);
+
+      } else {
+        console.error('Error message:', error.message);
       }
     }
   },

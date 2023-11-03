@@ -30,7 +30,7 @@ TUTOR_FIELDS = USER_FIELDS.union({"criminal"})
 APPOINTMENT_FIELDS = {"subject", "tutor", "timeSlot"}
 AUTHENTICATE_FIELDS = {"email", "password"}
 PROTECTED_ENDPOINTS = ['v1.test_protected'] #, 'v1.subjects']
-
+SEARCH_FIELDS = {"first_name", "last_name", "subject"}
 
 #####################
 # Helper Functions
@@ -693,13 +693,14 @@ def test_protected():
         "message": "This is a protected endpoint."
     }
 
+#------------favorite tutors and search tutors------------
 # get favorite tutor list endpoint
 @version.route("/favorite_tutors", methods=["GET"])
 def get_favorite_tutors():
     
     # pulls a user's session_id from the browser
-    # session_id = request.args.get('session_id')
-    session_id = 'bc5fddbc24c7434a94d4c9f2ee217e23'
+    session_id = request.args.get('session_id')
+    # session_id = 'bc5fddbc24c7434a94d4c9f2ee217e23'
     
     # retrieve list of favorite tutors
     # TODO: validate_auth_table()
@@ -808,8 +809,63 @@ def add_favorite_tutors():
         }
         status_code = 403
 
-    return response, status_code
+    return jsonify(response), status_code
 
+# endpoint to find tutors
+@version.route("/find_tutors", methods=["POST"])
+def find_tutors():
+    # pulls a user's session_id from the browser
+    # get data sent along with the request
+    data = request.get_json()
+
+    # define conditions in where clause
+    where_conditions = ''
+    for key, value in data.items():
+        if key == 'session_id' or len(value) == 0:
+            continue
+        
+        where_conditions += ' AND ' + str(key) + ' = :' + str(key)
+
+    # retrieve list of tutors based on search fields
+    # TODO: validate_auth_table()
+    sql = text("""
+            SELECT tutor_id, first_name, last_name, class_name
+            FROM ota_db.tutor_classes_readable
+            WHERE EXISTS (SELECT * FROM ota_db.auth_table WHERE session_id = :session_id)
+        """ + where_conditions + ';')
+    
+    # execute query
+    result = db.session.execute(sql, data)
+    rows = result.fetchall()
+
+    # create list of tutors returned from db 
+    tutor_list = list()
+    for row in rows:
+        tutor_list.append({
+            'name': row[1] + ' ' + row[2], 
+            'subject': row[3],
+            'tutor_id': row[0]
+        })
+
+    if len(tutor_list) == 0:
+        response = {
+            'error': False,
+            'status_code': 201,
+            'message': 'No data found.',
+            'result': tutor_list
+        }
+        status_code = 201
+
+    else:
+        response = {
+            'error': False,
+            'status_code': 201,
+            'message': 'Found tutors.',
+            'result': tutor_list
+        }
+        status_code = 201
+
+    return jsonify(response), status_code
 
 #####################
 # Main
