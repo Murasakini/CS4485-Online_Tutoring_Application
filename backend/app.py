@@ -699,14 +699,18 @@ def get_favorite_tutors():
     
     # pulls a user's session_id from the browser
     # session_id = request.args.get('session_id')
-    session_id = '2197a0f29a3f40afa956bf8c286ca026'
+    session_id = 'bc5fddbc24c7434a94d4c9f2ee217e23'
     
     # retrieve list of favorite tutors
     # TODO: validate_auth_table()
     sql = text("""
             SELECT ota_db.user_favorites_readable.tutor_id, ota_db.user_favorites_readable.first_name, 
-                   ota_db.user_favorites_readable.last_name 
-            FROM ota_db.user_favorites_readable LEFT JOIN ota_db.auth_table ON user_favorites_readable.user_id=auth_table.user_id 
+                   ota_db.user_favorites_readable.last_name, ota_db.classes.class_name  
+            FROM ota_db.user_favorites_readable 
+            LEFT JOIN ota_db.auth_table ON user_favorites_readable.user_id=auth_table.user_id
+	        LEFT JOIN ota_db.tutor_classes ON ota_db.user_favorites_readable.tutor_id = ota_db.tutor_classes.tutor_id
+            LEFT JOIN ota_db.classes ON ota_db.tutor_classes.class_num = ota_db.classes.class_num 
+							AND ota_db.tutor_classes.department_id = ota_db.classes.department_id
             WHERE auth_table.session_id = '{}';
         """.format(session_id))
     
@@ -715,31 +719,39 @@ def get_favorite_tutors():
     rows = result.fetchall()
     # TODO: handle errors
 
-
-    # initialize response with empty list
-    
-    
-
     # append each returned row into response
     fav_list = list()
     for row in rows:
-        fav_list.append({'name': row[1] + ' ' + row[2], 'tutor_id': row[0]})
+        fav_list.append({
+            'name': row[1] + ' ' + row[2], 
+            'subject': row[3],
+            'tutor_id': row[0]
+        })
 
     response = {
         'error': False,
-        'status_code': 200,
+        'status_code': 201,
         'message': 'Retrieve favorite tutors list successfully.',
         'result': fav_list
     }
-    #response['result'] = fav_list
 
-    return jsonify(response), 200
+    return jsonify(response), 201
     
 # endpoint to add a tutor into favorite list
-@version.route("/add_favorite_tutors", methods=["GET"])
+@version.route("/add_favorite_tutors", methods=["POST"])
 def add_favorite_tutors():
-    session_id = '2197a0f29a3f40afa956bf8c286ca026'
-    tutor_id = 106
+
+    # get data sent along with the request
+    data = request.get_json()
+    session_id = data.get("session_id")  
+    tutor_id = data.get("tutor_id")
+
+    formatted_data = {
+        "session_id": session_id,
+        "tutor_id": tutor_id
+    }
+    # session_id = 'bc5fddbc24c7434a94d4c9f2ee217e23'
+    # tutor_id = 106
 
     # TODO: validate_auth_table()
 
@@ -750,25 +762,47 @@ def add_favorite_tutors():
         query = text('''
                         INSERT INTO ota_db.user_favorites (user_id, tutor_id) 
                         VALUES ((SELECT user_id FROM ota_db.auth_table 
-                                 WHERE auth_table.session_id = '{}'), {});
-                    '''.format(session_id, tutor_id))
+                                 WHERE auth_table.session_id = :session_id), :tutor_id);
+                    ''')
         
-        # execute query
-        result = db.session.execute(query)
-        db.session.commit()
+        try:
+            # execute query
+            result = db.session.execute(query, formatted_data)
+            db.session.commit()
         
-        if result.rowcount == 1:
-            response = {
-                'error': False,
-                'status_code': 200,
-                'message': 'Add tutor to the list successfully.'
-            }
+            if result.rowcount == 1:
+                response = {
+                    'error': False,
+                    'status_code': 201,
+                    'message': 'Added tutor to the list successfully.'
+                }
+                status_code = 201
 
-            status_code = 200
+            else:
+                response = {
+                    'error': True,
+                    'status_code': 409,
+                    'message': 'Failed to add tutor to the list.'
+                }
+                status_code = 409
+
+        # catch integrity error
+        except IntegrityError:
+            # return to previous 
+            db.session.rollback()
+
+            response = {
+                'error': True,
+                'status_code': 409,
+                'message': 'An error occurred while adding the tutor into the favorite list.'
+            }
+            status_code = 409
+
+            return response, status_code
 
     else:  # tutor existed
         response = response = {
-            'error': True,
+            'error': False,
             'status_code': 403,
             'message': 'The tutor is already in the list.'
         }

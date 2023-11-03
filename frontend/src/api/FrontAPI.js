@@ -254,11 +254,10 @@ const FrontAPI = {
 
       } else if (error.request) {
         console.error('No response received:', error.request);
-        return error.request
 
       } else {
         console.error('Error message:', error.message);
-        return error.message
+
       }
     }
   },

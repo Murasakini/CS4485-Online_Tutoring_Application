@@ -16,7 +16,7 @@ const Favorite = () => {
             const response = await FrontAPI.getFavoriteTutors(session_id);
 
             switch(response?.status_code) {
-                case 200:  // success
+                case 201:  // success
                     console.log('Retrieve favorite list successful');
                     return response?.result;
 

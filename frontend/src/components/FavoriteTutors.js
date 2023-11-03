@@ -40,12 +40,11 @@ const FavortieTutor = (props) => {
                             primary={info.name}
                             secondary={
                                 <React.Fragment>
-                                    <Typography component="span">subject</Typography>
-                                    {/* <Typography component="span">{ info.subject }</Typography> */}
-                                    <br/>
+                                    <Typography component="span">{ info.subject }</Typography>
+                                    {/* <br/>
                                     email
                                     <br/>
-                                    about me
+                                    about me */}
                                 </React.Fragment>}
                         />
                         </ListItem>
