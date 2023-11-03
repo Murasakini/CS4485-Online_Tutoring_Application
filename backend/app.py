@@ -663,6 +663,20 @@ def delete_expired_2fa():
     result = db.session.execute(sql)
     db.session.commit()
 
+    if result.rowcount:
+        print(result.rowcount, "expired 2FA code(s) deleted.")
+
+def delete_2fa(code):
+    sql = text("""
+            DELETE FROM 2fa_table
+            WHERE 2fa_code = :code
+            """)
+    result = db.session.execute(sql, {"code": code})
+    db.session.commit()
+
+    if result.rowcount == 1:
+        print(result.rowcount, "2FA code deleted.")
+
 def send_email(email, rand):
     emailMsg = 'You have requested a secure verification code to log into your account.\n\nPlease enter this secure verification code: ' \
         + str(rand) + '\n\nIf you are not attempting to log into your account, please reset your password.\nPLEASE DO NOT REPLY TO THIS MESSAGE'
@@ -698,11 +712,28 @@ def send_email_tutor(tutor_id):
 
     # record 2fa to database 
     # timedelta adds 10 minutes to datetime.now()
-    insert_2fa_user(rand, (datetime.now() + timedelta(minutes=10)), tutor_id)
+    insert_2fa_tutor(rand, (datetime.now() + timedelta(minutes=10)), tutor_id)
     delete_expired_2fa()
 
     return True
 
+def check_2fa_code(code):
+    sql = text("""
+            SELECT 2fa_table.2fa_code
+            FROM 2fa_table
+            WHERE 2fa_table.2fa_code = :code
+        """)
+    
+    validated = db.session.execute(sql, {"code": code}).fetchone()
+
+    if validated:
+        # Validation success
+        return True
+    else:
+        # Validation failed
+        return False 
+
+    return
 
 '''
 This function checks whether the tutor already in the list associated to the user.
@@ -1648,6 +1679,28 @@ def send_2fa():
         }
         return jsonify(response)
 
+@version.route("/TwoFactorAuthentication/validate", methods=["POST"])
+def validate_2fa():
+    data = request.get_json()
+    code = data.get("code")
+    delete_expired_2fa()
+    authenticated = check_2fa_code(code)
+
+    if authenticated:
+        response = {
+            'error': False,
+            'status_code': 200,
+            'message': '2FA code found.'
+        }
+        delete_2fa(code)
+        return jsonify(response), 200
+    else:
+        response = {
+            'error': True,
+            'status_code': 401,
+            'message': 'Invalid 2FA code.'
+        }
+        return jsonify(response), 401
 
 # endpoint to remove a tutor from the favorite list
 @version.route("/remove_favorite_tutor", methods=["POST"])

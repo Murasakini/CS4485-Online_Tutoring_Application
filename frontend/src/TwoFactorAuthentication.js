@@ -1,11 +1,12 @@
-import React, { useState } from 'react';
-import { Navigate, Link } from 'react-router-dom';
+import { useState } from 'react';
 import Button from '@mui/material/Button';
 import { ThemeProvider, createTheme } from '@mui/material/styles';
 import './App.css';
-//import axios from 'axios';
 import FrontAPI from './api/FrontAPI.js';
 import './TwoFactorAuthentication.css'; // Import a separate CSS file for styling
+import * as React from 'react';
+import { Navigate, Link } from 'react-router-dom';
+import CustomSnackbar from './components/CustomSnackbar.js';
 
 const theme = createTheme({
     palette: {
@@ -18,21 +19,62 @@ const theme = createTheme({
     },
   });
 
-function TwoFactorAuthentication() {
-    const [code, setCode] = useState('');
+export default function TwoFactorAuthentication() {
+  // keep track if 2FA is successfull
+  const [isSuccessful, setSuccessful] = useState(false);
+
+  // display error message to the user
+  const [snackbarOpen, setSnackbarOpen] = useState(false);
+  const [snackbarMessage, setSnackbarMessage] = useState('');
+
+  // 2FA code as a state
+  const [code, setCode] = useState('');
   
-    const handleCodeChange = (event) => {
-      setCode(event.target.value);
-    };
+  // get 2FA code
+  const handleCodeChange = (event) => {
+    setCode(event.target.value);
+  };
   
-    const handleSubmit = (event) => {
-      event.preventDefault();
-      // You can add your code to submit and verify the 2FA code here
-      console.log('Entered 2FA Code:', code);
-    };
+  const handleSubmit = async (event) => {
+    event.preventDefault();
+    
+    const response = await FrontAPI.validate2FA(code);
+    console.log('Entered 2FA Code:', code);
+      
+    // Copied from handleSubmit in Signin.js 
+    switch (response.status_code) { 
+      case 200:
+        // success
+        setSuccessful(true);
+        console.log('2FA successful');
+        break;
+      case 400:
+        console.log(`Error ${response.status_code}: ${response.message}`);
+        setSnackbarMessage(response.message);
+        setSnackbarOpen(true);
+        break;
+      case 401:
+        console.log(`Error ${response.status_code}: ${response.message}`);
+        setSnackbarMessage(response.message);
+        setSnackbarOpen(true);
+        break;
+      default:
+        console.log('2FA failed');
+        setSnackbarMessage(response.message);
+        setSnackbarOpen(true);
+        break;
+    }
+  };
   
-    return (
-      <ThemeProvider theme={theme}>
+  return (
+    <React.Fragment>
+      {isSuccessful ?
+
+        // navigate to home page
+        <Navigate to= "/" /> :
+        
+        // display input form  
+        <ThemeProvider theme={theme}>
         <div className="two-factor-authentication">
           <h2>Enter your verification code</h2>
           <p>A verification code has been sent to your email address. Please enter the code that you received:</p>
@@ -47,17 +89,26 @@ function TwoFactorAuthentication() {
             />
 
           <Button
-              type="submit"
-              fullWidth
-              variant="contained"
-              sx={{ mt: 2, mb: 2 }}
-            >
-              Sign In
-            </Button>
+            type="submit"
+            fullWidth
+            variant="contained"
+            sx={{ mt: 2, mb: 2 }}
+          >
+            Sign In
+          </Button>
+
+          {/* CustomSnackbar for displaying error messages */}
+          <CustomSnackbar
+            open={snackbarOpen}
+            message={snackbarMessage}
+            onClose={() => setSnackbarOpen(false)}
+          />
+
           </form>
         </div>
-      </ThemeProvider>
-    );
-  }
-  
-  export default TwoFactorAuthentication;
+        </ThemeProvider>
+      }
+    </React.Fragment>
+  );
+}
+

@@ -120,6 +120,29 @@ const FrontAPI = {
     }
   },
 
+  validate2FA: async (code) => {
+    try {
+      const response = await axiosInstance.post('/api/v1/TwoFactorAuthentication/validate', {
+        code: code
+      });
+
+      return response.data;
+    } catch (error) {
+      // Copied from signIn
+      if (error.response) { 
+        console.error('Error response status:', error.response.status);
+        console.error('Error response data:', error.response.data);
+        return error.response.data;
+      } else if (error.request) {
+        console.error('No response received:', error.request);
+        return error.response.data;
+      } else {
+        console.error('Error message:', error.message);
+        return error.response.data;
+      }
+    }
+  },
+
   //get tutors of the chosen subject
   fetchTutors: async (subject) => {
     try {
