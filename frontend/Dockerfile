@@ -1,18 +1,39 @@
-FROM node:latest
+# Stage 1: Build
+FROM node:16-slim AS builder
 
 WORKDIR /user/src/app
 
-COPY ./package.json ./
+ARG AWS_ACCESS_KEY_ID
+ARG AWS_SECRET_ACCESS_KEY
+ARG AWS_DEFAULT_REGION
 
-COPY ./package-lock.json ./
+ENV AWS_ACCESS_KEY_ID=$AWS_ACCESS_KEY_ID
+ENV AWS_SECRET_ACCESS_KEY=$AWS_SECRET_ACCESS_KEY
+ENV AWS_DEFAULT_REGION=$AWS_DEFAULT_REGION
 
-RUN npm install react-router-dom
-RUN npm install @mui/material @emotion/react @emotion/styled
-RUN npm install axios
+# Copy package.json and package-lock.json
+COPY frontend/package.json ./
+COPY frontend/package-lock.json ./
 
-COPY . .
+# Install all dependencies listed in package.json
+RUN npm install
 
-EXPOSE 3000
+COPY nginx.conf /etc/nginx/conf.d/default.conf
 
-CMD [ "npm", "start" ]
+# Copy the rest of the code
+COPY ./frontend .
 
+# Build the project
+RUN npm run build
+
+# Stage 2: Serve with Nginx
+FROM nginx:stable-alpine
+
+# Copy build artifacts from the builder stage
+COPY --from=builder /user/src/app/build /usr/share/nginx/html
+
+# Expose port 80
+EXPOSE 80
+
+# Start Nginx and serve the static files
+CMD ["nginx", "-g", "daemon off;"]
