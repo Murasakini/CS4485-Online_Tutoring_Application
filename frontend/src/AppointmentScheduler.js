@@ -138,7 +138,7 @@ export default function AppointmentScheduler() {
 
       if (sessionResponse.error) {
         // handle invalid session
-        console.log('User is not logged in or the session is invalid. Redirect to login or show a message.');
+        console.log('User is not logged in or the session is invalid. Redirect to login.');
         return;
       }
       // createAppointment function from FrontAPI
@@ -178,7 +178,7 @@ export default function AppointmentScheduler() {
       });
   };  
 
-  // convert timestamps to events
+  // convert timestamps to events to fit data structure of big-calendar
   const events = availableSlots.map(slot => {
     const start = new Date(slot);
     const end = addToDate(start, 1);
