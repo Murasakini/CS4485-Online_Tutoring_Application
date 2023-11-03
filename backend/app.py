@@ -693,6 +693,13 @@ def send_email(email, rand):
 
 def send_email_user(user_id):
 
+    sql = text("""
+            DELETE FROM 2fa_table
+            WHERE user_id = :user_id
+            """)
+    result = db.session.execute(sql, {"user_id": user_id})
+    db.session.commit()
+
     email = search_email_user(user_id)             # search user's email address
     rand = random.randint(100000,999999)           # generates 6-digit random integer
     send_email(email, rand)                        # send 2fa code
@@ -705,6 +712,13 @@ def send_email_user(user_id):
     return True
 
 def send_email_tutor(tutor_id):
+
+    sql = text("""
+            DELETE FROM 2fa_table
+            WHERE tutor_id = :tutor_id
+            """)
+    result = db.session.execute(sql, {"tutor_id": tutor_id})
+    db.session.commit()
 
     email = search_email_tutor(tutor_id)           # search tutor's email address
     rand = random.randint(100000,999999)           # generates 6-digit random integer
