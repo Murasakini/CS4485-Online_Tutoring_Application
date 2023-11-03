@@ -44,26 +44,26 @@ const Favorite = () => {
 
         // delete a tutor
         const handleDeleteTutor = async (id) => {
-            try {
-                // api DELETE with id
-                await Axios.delete(`http://localhost:3006/favoriteTutors/${id}`);
+            // try {
+            //     // api DELETE with id
+            //     await Axios.delete(`http://localhost:3006/favoriteTutors/${id}`);
 
-            } catch(err) {
-                if (err.response) {
-                    console.log(err.data);
-                    console.log(err.status);
-                    console.log(err.header);
-                }
-                else console.log(`Error:${err.message}`);
-            }
+            // } catch(err) {
+            //     if (err.response) {
+            //         console.log(err.data);
+            //         console.log(err.status);
+            //         console.log(err.header);
+            //     }
+            //     else console.log(`Error:${err.message}`);
+            // }
 
-            // create new list without deleted tutor
-            const newTutorList = tutorList.filter((tutor) => {
-                return tutor.id !== id;
-            })
+            // // create new list without deleted tutor
+            // const newTutorList = tutorList.filter((tutor) => {
+            //     return tutor.id !== id;
+            // })
 
-            // store new list
-            setTutorList(newTutorList);
+            // // store new list
+            // setTutorList(newTutorList);
         };
 
         // store tutor list retrieved

@@ -67,18 +67,18 @@ const FindTutor = () => {
 
     // add tutor into favorit list
     const handleAddTutor = async (i) => {
-        try {
-            // api POST to add tutor into favorite list 
-            const response = await Axios.post("http://localhost:3006/favoriteTutors/", searchResult[i]);
-            console.log(response.data);
-        } catch(err) {
-            if (err.response) {
-                console.log(err.data);
-                console.log(err.status);
-                console.log(err.header);
-            }
-            else console.log(`Error: ${err.message}`);
-        }
+        // try {
+        //     // api POST to add tutor into favorite list 
+        //     const response = await Axios.post("http://localhost:3006/favoriteTutors/", searchResult[i]);
+        //     console.log(response.data);
+        // } catch(err) {
+        //     if (err.response) {
+        //         console.log(err.data);
+        //         console.log(err.status);
+        //         console.log(err.header);
+        //     }
+        //     else console.log(`Error: ${err.message}`);
+        // }
     }
 
     // do something when clicking save button (submit)
