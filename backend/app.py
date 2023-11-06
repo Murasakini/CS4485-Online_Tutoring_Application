@@ -540,7 +540,7 @@ def tutor_timeslots():
     response = list()
     i = 0
     for row in result:
-        response.append({'timestamp': row[0], 'id': i})
+        response.append({'timestamp': datetime_to_str(row[0]), 'id': i})
         i += 1
     return jsonify(response), 200
 
