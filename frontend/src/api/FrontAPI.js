@@ -207,6 +207,12 @@ const FrontAPI = {
   // create a new appointment
   createAppointment: async (formData, session_id) => {
     try {
+      console.log({
+        session_id: session_id,
+        subject: formData.subject,
+        tutor: formData.tutor,
+        timeSlot: formData.timeSlot,
+      });
       const response = await axiosInstance.post('/api/v1/create/appointment', {
         session_id: session_id,
         subject: formData.subject,
@@ -233,9 +239,9 @@ const FrontAPI = {
   verifySession: async (session_id) => {
     try {
       // POST request to /verify_session endpoint
-      const response = await axiosInstance.post('/verify_session', {
+      const response = await axiosInstance.get('/api/v1/verify_session', {
         params: {
-          session_id: session_id
+          session_id: session_id,
         }
       });
       return response.data;
