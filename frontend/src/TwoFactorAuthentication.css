@@ -1,3 +1,5 @@
+
+
 .two-factor-authentication {
     text-align: center;
     max-width: 300px;
@@ -21,7 +23,7 @@
   }
   
   .two-factor-authentication form {
-    margin-top: 20px;
+    margin-top: 10px;
   }
   
   .two-factor-authentication input {
@@ -32,4 +34,43 @@
     border-radius: 5px;
     font-size: 16px;
   }
-  
+
+  label.control-label {
+    font-family: SourceSansProSemibold, sans-serif, sans-serif;
+    line-height: 20px;
+    text-align: left;
+    display: block;
+    color: #000000;
+    margin-top: 20px;
+    margin-bottom: 8px;
+    font-weight: 550;
+    font-size: 14px;
+}
+
+.disclaimer-basic {
+  font-family: inherit;
+  font-weight: 300;
+  font-size: 14px;
+  height: auto;
+  line-height: 18px;
+  color: #000000;
+  position: relative;
+  text-align: left;
+  margin: auto;
+  padding-top: 5px;
+  padding-bottom: 10px
+}
+
+.disclaimer-basic.required {
+  font-family: inherit;
+  font-weight: 300;
+  font-size: 14px;
+  height: auto;
+  line-height: 18px;
+  position: relative;
+  text-align: left;
+  margin: auto;
+  padding-top: 5px;
+  padding-bottom: 10px;
+  color: #d40303;
+}

@@ -11,12 +11,13 @@ import Box from '@mui/material/Box';
 import CustomSnackbar from './components/CustomSnackbar.js';
 import { ThemeProvider, createTheme } from '@mui/material/styles';
 import './App.css';
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import FrontAPI from './api/FrontAPI.js';
 import List from '@mui/material/List';
 import ListItem from '@mui/material/ListItem';
 import ListItemText from '@mui/material/ListItemText';
 import Copyright from './components/Copyright';
+import TwoFactorAuthentication from './TwoFactorAuthentication.js'; ///////////////////////////////////////////////////////////
 
 const theme = createTheme({
   palette: {
@@ -38,6 +39,9 @@ export default function SignIn() {
   const [snackbarMessage, setSnackbarMessage] = useState('');
   const [cooldown, setCooldown] = useState(false);
 
+  // pass email to TwoFactorAuthentication.js //////////////////////////////////////////////
+  //const [email, setEmail] = useState('');/////////////////////////////////////////////////
+
   // form as a state
   const [formData, setFormData] = useState({
     email: '',
@@ -52,7 +56,11 @@ export default function SignIn() {
       ...formData,
       [name]: value,
     });
+    //if (name === 'email') { //////////////////////////////////////////////////////////
+      //setEmail(value);} // Store the email input value/////////////////////////////////
   };
+
+  //const myvar = useRef(email) ///////////////////////////////////////////////////////
 
   // pick student/tutor
   const handleUserTypeChange = (event) => {
@@ -86,6 +94,9 @@ export default function SignIn() {
         // success
         setSuccessful(true);
         console.log('Login successful');
+        //TwoFactorAuthentication('hello!')   ////////////////////////////////////////////////////////////////
+        //console.log(formData.email);//////////////////////////////////////////////////////////////////////////
+        //return <TwoFactorAuthentication email={formData.email} />;////////////////////////////////////////////
         break;
       case 400:
         console.log(`Error ${response.status_code}: ${response.message}`);
@@ -109,7 +120,8 @@ export default function SignIn() {
     <React.Fragment>
       {isSuccessful ?
         // navigate to the home page
-        <Navigate to="/TwoFactorAuthentication" /> : // If ID&PW is correct, go to 2FA page 
+        <Navigate to={`/TwoFactorAuthentication?email=${formData.email}&userType=${formData.userType}`} /> :
+        //<Navigate to="/TwoFactorAuthentication" /> : // If id&pw is correct, go to 2FA page 
 
         // display input form
         <ThemeProvider theme={theme}>

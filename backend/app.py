@@ -666,7 +666,7 @@ def delete_expired_2fa():
     if result.rowcount:
         print(result.rowcount, "expired 2FA code(s) deleted.")
 
-def delete_2fa(code):
+def delete_2fa_by_code(code):
     sql = text("""
             DELETE FROM 2fa_table
             WHERE 2fa_code = :code
@@ -676,6 +676,28 @@ def delete_2fa(code):
 
     if result.rowcount == 1:
         print(result.rowcount, "2FA code deleted.")
+
+def delete_2fa_by_userid(user_id):
+    sql = text("""
+            DELETE FROM 2fa_table
+            WHERE user_id = :user_id
+            """)
+    result = db.session.execute(sql, {"user_id": user_id})
+    db.session.commit()
+
+    if result:
+        print(result.rowcount, "2FA code(s) deleted.")
+
+def delete_2fa_by_tutorid(tutor_id):
+    sql = text("""
+            DELETE FROM 2fa_table
+            WHERE tutor_id = :tutor_id
+            """)
+    result = db.session.execute(sql, {"tutor_id": tutor_id})
+    db.session.commit()
+
+    if result:
+        print(result.rowcount, "2FA code(s) deleted.")
 
 def send_email(email, rand):
     emailMsg = 'You have requested a secure verification code to log into your account.\n\nPlease enter this secure verification code: ' \
@@ -1706,7 +1728,7 @@ def validate_2fa():
             'status_code': 200,
             'message': '2FA code found.'
         }
-        delete_2fa(code)
+        delete_2fa_by_code(code)
         return jsonify(response), 200
     else:
         response = {
@@ -1715,6 +1737,21 @@ def validate_2fa():
             'message': 'Invalid 2FA code.'
         }
         return jsonify(response), 401
+    
+@version.route("/TwoFactorAuthentication/ResendCode", methods=["POST"])
+def resend_2fa():
+    data = request.get_json()
+    email = data.get("email")
+    userType = data.get("userType")
+
+    if userType == 'student':
+        user_id = search_id_user(email)
+        if delete_2fa_by_userid(user_id):
+            return jsonify(True)
+    elif userType == 'tutor':
+        tutor_id = search_id_tutor(email)
+        if delete_2fa_by_userid(user_id):
+            return jsonify(True)
 
 # endpoint to remove a tutor from the favorite list
 @version.route("/remove_favorite_tutor", methods=["POST"])
@@ -2263,6 +2300,7 @@ def update_subject():
         status_code = 409
 
         return jsonify(response), status_code
+    
 
 #####################
 # Main
