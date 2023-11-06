@@ -1747,11 +1747,28 @@ def resend_2fa():
     if userType == 'student':
         user_id = search_id_user(email)
         if delete_2fa_by_userid(user_id):
-            return jsonify(True)
+            response = {
+                'error': False,
+                'status_code': 200,
+                'message': 'Student 2FA code resent.'
+            }
+            return jsonify(response), 200
     elif userType == 'tutor':
         tutor_id = search_id_tutor(email)
         if delete_2fa_by_userid(user_id):
-            return jsonify(True)
+            response = {
+                'error': False,
+                'status_code': 200,
+                'message': 'Tutor 2FA code resent.'
+            }
+            return jsonify(response), 200
+    else:
+        response = {
+                'error': True,
+                'status_code': 400,
+                'message': 'Failed to resent 2FA code.'
+            }
+        return jsonify(response), 400
 
 # endpoint to remove a tutor from the favorite list
 @version.route("/remove_favorite_tutor", methods=["POST"])

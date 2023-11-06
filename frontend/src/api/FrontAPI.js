@@ -143,6 +143,19 @@ const FrontAPI = {
     }
   },
 
+  resend2FA: async (email, userType) => {
+    try {
+      const response = await axiosInstance.post('/api/v1/TwoFactorAuthentication/ResendCode', {
+        email: email,
+        userType: userType
+      });
+
+      return response.data
+    } catch (error) {
+
+    }
+  },
+
   //get tutors of the chosen subject
   fetchTutors: async (subject) => {
     try {
