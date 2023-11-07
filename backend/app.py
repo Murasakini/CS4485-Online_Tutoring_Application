@@ -210,6 +210,53 @@ def insert_appointment(data):
         db.session.rollback()
         return "An error occurred while inserting the appointment.", False
     
+def insert_user_favorite(data):
+    validate_auth_table()
+    query = text('''
+        INSERT INTO ota_db.user_favorites (user_id, tutor_id) 
+        VALUES ((SELECT user_id FROM ota_db.auth_table 
+                 WHERE auth_table.session_id = '{}'), :tutor_id);
+    '''.format(data.get('session_id')))
+        
+    try:
+        # execute query
+        result = db.session.execute(query, data)
+        db.session.commit()
+    
+        if result.rowcount == 1:
+            return data, True
+        else:
+            return 'Failed to add tutor to the list.', False
+    # catch integrity error
+    except IntegrityError:
+        # return to previous 
+        db.session.rollback()
+        return 'An error occurred while adding the tutor into the favorite list.', False
+    
+def delete_user_favorite(data):
+    validate_auth_table()
+    query = text('''
+        DELETE FROM ota_db.user_favorites 
+            WHERE user_id = (SELECT user_id FROM ota_db.auth_table 
+                WHERE auth_table.session_id = '{}') 
+                AND tutor_id = :tutor_id;
+    '''.format(data.get('session_id')))
+
+    try:
+        # execute query
+        result = db.session.execute(query, data)
+        db.session.commit()
+    
+        if result.rowcount == 1:
+            return data, True
+        else:
+            return 'Failed to remove tutor from the list.', False
+    # catch integrity error
+    except IntegrityError:
+        # return to previous 
+        db.session.rollback()
+        return 'An error occurred while removing the tutor from the favorite list.', False
+    
 def authenticate(email, password):
     user_sql = text("""
         SELECT users.user_id 
@@ -598,7 +645,7 @@ def create_appointment():
         sql = text("""
                 DROP * FROM ota_db.tutors_availability WHERE time_available = "{}" AND tutor_id = :tutor_id;
         """.format(request.args.get("timeSlot")))
-        db.session.execute(sql, data)
+        db.session.execute(sql, formatted_data)
 
         response = {
             'error': False,
@@ -787,51 +834,23 @@ def add_favorite_tutors():
     # session_id = 'bc5fddbc24c7434a94d4c9f2ee217e23'
     # tutor_id = 106
 
-    validate_auth_table()
-
     # check if the tutor is already in user's favorite list
     if not in_favorites_list(session_id=session_id, tutor_id=tutor_id):  # tutor wasn't in list
-        query = text('''
-                        INSERT INTO ota_db.user_favorites (user_id, tutor_id) 
-                        VALUES ((SELECT user_id FROM ota_db.auth_table 
-                                 WHERE auth_table.session_id = '{}'), :tutor_id);
-                    '''.format(session_id))
-        
-        try:
-            # execute query
-            result = db.session.execute(query, formatted_data)
-            db.session.commit()
-        
-            if result.rowcount == 1:
+        inserted_data, success = insert_user_favorite(formatted_data)
+        if success:
                 response = {
                     'error': False,
                     'status_code': 201,
                     'message': 'Added tutor to the list successfully.'
                 }
                 status_code = 201
-
-            else:
-                response = {
-                    'error': True,
-                    'status_code': 409,
-                    'message': 'Failed to add tutor to the list.'
-                }
-                status_code = 409
-
-        # catch integrity error
-        except IntegrityError:
-            # return to previous 
-            db.session.rollback()
-
+        else:
             response = {
                 'error': True,
                 'status_code': 409,
-                'message': 'An error occurred while adding the tutor into the favorite list.'
+                'message': inserted_data
             }
             status_code = 409
-
-            return response, status_code
-
     else:  # tutor existed
         response = response = {
             'error': False,
@@ -843,8 +862,8 @@ def add_favorite_tutors():
     return jsonify(response), status_code
 
 # endpoint to add a tutor into favorite list
-@version.route("/delete_favorite_tutor", methods=["POST"])
-def delete_favorite_tutor():
+@version.route("/remove_favorite_tutor", methods=["POST"])
+def remove_favorite_tutor():
 
     # get data sent along with the request
     data = request.get_json()
@@ -858,43 +877,23 @@ def delete_favorite_tutor():
     # session_id = 'bc5fddbc24c7434a94d4c9f2ee217e23'
     # tutor_id = 106
 
-    validate_auth_table()
-
     # check if the tutor is actually in user's favorite list
     if in_favorites_list(session_id=session_id, tutor_id=tutor_id):  
-        query = text('''
-                        DELETE FROM ota_db.user_favorites 
-                            WHERE user_id = (SELECT user_id FROM ota_db.auth_table 
-                                WHERE auth_table.session_id = '{}') 
-                     AND tutor_id = :tutor_id;
-                    '''.format(session_id))
-        
-        try:
-            # execute query
-            result = db.session.execute(query, formatted_data)
-            db.session.commit()
-
-            response = {
-                'error': False,
-                'status_code': 201,
-                'message': 'Removed tutor to the list successfully.'
-            }
-            status_code = 201
-
-        # catch integrity error
-        except IntegrityError:
-            # return to previous 
-            db.session.rollback()
-
+        inserted_data, success = insert_user_favorite(formatted_data)
+        if success:
+                response = {
+                    'error': False,
+                    'status_code': 201,
+                    'message': 'Removed tutor from the list successfully.'
+                }
+                status_code = 201
+        else:
             response = {
                 'error': True,
                 'status_code': 409,
-                'message': 'An error occurred while removing the tutor from the favorite list.'
+                'message': inserted_data
             }
             status_code = 409
-
-            return response, status_code
-
     else:  # tutor wasn't in list
         response = response = {
             'error': False,
