@@ -143,6 +143,7 @@ const FrontAPI = {
     }
   },
 
+  // resends 2FA code 
   resend2FA: async (formData) => {
     try {
       const response = await axiosInstance.post('/api/v1/TwoFactorAuthentication/ResendCode', {

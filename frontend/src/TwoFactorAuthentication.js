@@ -2,13 +2,11 @@ import { useState } from 'react';
 import Button from '@mui/material/Button';
 import { ThemeProvider, createTheme } from '@mui/material/styles';
 //import './App.css';
-//import './TwoFactorAuthentication.css'; // Import a separate CSS file for styling
 import FrontAPI from './api/FrontAPI.js';
 import * as React from 'react';
 import { Navigate } from 'react-router-dom';
 import CustomSnackbar from './components/CustomSnackbar.js';
-import SignIn from './SignIn.js';////////////////////////////////////////////////////////////////////////
-import { useLocation } from 'react-router-dom'; /////////////////////////////////////////////////////////
+import { useLocation } from 'react-router-dom'; /////////////
 
 const theme = createTheme({
     palette: {
@@ -50,16 +48,13 @@ const theme = createTheme({
   };
 
 export default function TwoFactorAuthentication() {
-  //const myVariable = SignIn().myvar.current;////////////////////////////////////////////////////////
-  //console.log(myVariable);//////////////////////////////////////////////////////////////////////////
   
-  const location = useLocation(); ////////////////////////////////////////////////////////////////////
-  const queryParams = new URLSearchParams(location.search); //////////////////////////////////////////
-  const email = queryParams.get('email'); ////////////////////////////////////////////////////////////
+  // parse the query parameters from the URL and get email & userType
+  const location = useLocation(); 
+  const queryParams = new URLSearchParams(location.search); 
+  const email = queryParams.get('email'); 
   const userType = queryParams.get('userType');
 
-  console.log('Email in TwoFactorAuthentication:', email)/////////////////////////////////////////////
-  console.log('userType in TwoFactorAuthentication: ', userType)//////////////////////////////////////
   // keep track if 2FA is successfull
   const [isSuccessful, setSuccessful] = useState(false);
 
@@ -68,7 +63,7 @@ export default function TwoFactorAuthentication() {
   const [snackbarMessage, setSnackbarMessage] = useState('');
 
   // set response from Resend 2FA
-  const [response, setResponse] = useState(null); ///////////////////////////////////////////////////
+  const [response, setResponse] = useState(null);
 
   // 2FA code as a state
   const [code, setCode] = useState('');
@@ -175,9 +170,9 @@ export default function TwoFactorAuthentication() {
             </a>
           </p>
 
-          <label class="control-label required" for="code" style={labelStyle}>
+          <label class="control-label required" htmlfor="code" style={labelStyle}>
             Secure verification code 
-            <abbr class="required disclaimer-basic" style={disclaimerRequiredStyle}> *</abbr>
+            <abbr className="required disclaimer-basic" style={disclaimerRequiredStyle}> *</abbr>
           </label>
 
           <form onSubmit={handleSubmit}>
@@ -191,7 +186,7 @@ export default function TwoFactorAuthentication() {
                 width: '90%',
                 padding: '10px',
                 marginBottom: '10px',
-                border: '1px solid #ccc',
+                border: '1px solid #ccc', 
                 borderRadius: '5px',
                 fontSize: '16px',
               }}
