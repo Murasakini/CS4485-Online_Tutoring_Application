@@ -323,7 +323,7 @@ This function checks whether the tutor already in the list associated to the use
 :param tutor_id: tutor id 
 :return: none if the tutor is not existed in the user's favorite list; otherwise, a row from db favorite list
 '''
-def is_existed(session_id, tutor_id):
+def in_favorites_list(session_id, tutor_id):
     # define query
     query = text('''
             SELECT F.user_id, F.tutor_id 
@@ -333,8 +333,8 @@ def is_existed(session_id, tutor_id):
     
     # execute query
     result = db.session.execute(query)
-
-    return result.fetchone()
+    # True if found, False if not found
+    return result.fetchone() != None
 
 #####################
 # Routes
@@ -713,7 +713,7 @@ def get_favorite_tutors():
     # session_id = 'bc5fddbc24c7434a94d4c9f2ee217e23'
     
     # retrieve list of favorite tutors
-    # TODO: validate_auth_table()
+    validate_auth_table()
     sql = text("""
             SELECT ota_db.user_favorites_readable.tutor_id, ota_db.user_favorites_readable.first_name, 
                    ota_db.user_favorites_readable.last_name
@@ -761,12 +761,10 @@ def add_favorite_tutors():
     # session_id = 'bc5fddbc24c7434a94d4c9f2ee217e23'
     # tutor_id = 106
 
-    # TODO: validate_auth_table()
+    validate_auth_table()
 
-    # check if the tutor already existed in the favorite list
-    result = is_existed(session_id=session_id, tutor_id=tutor_id)
-    
-    if result == None:  # tutor not existed
+    # check if the tutor already in user's favorite list
+    if not in_favorites_list(session_id=session_id, tutor_id=tutor_id):  # tutor not existed
         query = text('''
                         INSERT INTO ota_db.user_favorites (user_id, tutor_id) 
                         VALUES ((SELECT user_id FROM ota_db.auth_table 
