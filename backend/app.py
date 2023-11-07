@@ -71,6 +71,71 @@ def user_session(session_id):
     else:
         return "Error: Session ID is either invalid or not for a user account.", False
     
+def tutor_session(session_id):
+    # Fetches user_id given a session_id
+    validate_auth_table()
+    sql = text("""
+        SELECT tutor_id FROM auth_table WHERE session_id = :session_id
+    """)
+
+    result = db.session.execute(sql, {"session_id": session_id}).fetchone()
+    if result != None:
+        return result[0], True
+    else:
+        return "Error: Session ID is either invalid or not for a tutor account.", False
+    
+# Returns number of hours for given account using session_id
+def total_hours(session_id):
+    # Check if session id is for user account or tutor account
+    user_id, isUser = user_session(session_id)
+    tutor_id, isTutor = tutor_session(session_id)
+
+    if isUser:
+        sql = text("""
+               SELECT num_hours FROM ota_db.user_leaderboard WHERE user_id = :user_id;
+        """)
+        result = db.session.execute(sql, {"user_id": user_id})
+        if result != None:
+            return result[0], True
+        else:
+            return 0, True
+    elif isTutor:
+        sql = text("""
+               SELECT num_hours FROM ota_db.tutor_leaderboard WHERE tutor_id = :tutor_id;
+        """)
+        result = db.session.execute(sql, {"tutor_id": tutor_id})
+        if result != None:
+            return result[0], True
+        else:
+            return 0, True
+    else:
+        return "Error: Session ID is invalid, please log in.", False
+        
+
+# Returns sorted leaderboard of tutor hours
+def tutor_hours_leaderboard():
+    sql = text("""
+               SELECT * FROM ota_db.tutor_leaderboard;
+    """)
+    result = db.session.execute(sql)
+    response = list()
+    for row in result:
+        # Combine first and last name of tutors before sending
+        response.append({'name': row[1] + ' ' + row[0], 'tutor_id': row[2], 'num_hours': row[3]})
+    return response, True
+
+# Returns sorted leaderboard of user hours
+def user_hours_leaderboard():
+    sql = text("""
+               SELECT * FROM ota_db.user_leaderboard;
+    """)
+    result = db.session.execute(sql)
+    response = list()
+    for row in result:
+        # Combine first and last name of tutors before sending
+        response.append({'name': row[1] + ' ' + row[0], '_id': userrow[2], 'num_hours': row[3]})
+    return response, True
+    
 def validate_auth_table():
     sql = text("""
                CALL validate_auth;
