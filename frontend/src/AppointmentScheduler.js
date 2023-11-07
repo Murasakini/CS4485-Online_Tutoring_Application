@@ -126,7 +126,7 @@ export default function AppointmentScheduler() {
       ...formData,
       timeSlot: selectedTimeSlot,
     });
-    setSelectedTimeSlot(selectedTimeSlot);
+    // setSelectedTimeSlot(selectedTimeSlot);
   };
   
   // handle when user click submit button
