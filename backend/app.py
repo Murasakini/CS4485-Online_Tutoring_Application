@@ -687,6 +687,7 @@ def delete_2fa_by_userid(user_id):
 
     if result:
         print(result.rowcount, "2FA code(s) deleted.")
+        return True
 
 def delete_2fa_by_tutorid(tutor_id):
     sql = text("""
@@ -698,6 +699,7 @@ def delete_2fa_by_tutorid(tutor_id):
 
     if result:
         print(result.rowcount, "2FA code(s) deleted.")
+        return True
 
 def send_email(email, rand):
     emailMsg = 'You have requested a secure verification code to log into your account.\n\nPlease enter this secure verification code: ' \
@@ -1747,28 +1749,30 @@ def resend_2fa():
     if userType == 'student':
         user_id = search_id_user(email)
         if delete_2fa_by_userid(user_id):
+            send_email_user(user_id)
             response = {
                 'error': False,
                 'status_code': 200,
                 'message': 'Student 2FA code resent.'
             }
-            return jsonify(response), 200
+            return jsonify(response)
     elif userType == 'tutor':
         tutor_id = search_id_tutor(email)
-        if delete_2fa_by_userid(user_id):
+        if delete_2fa_by_tutorid(tutor_id):
+            send_email_tutor(tutor_id)
             response = {
                 'error': False,
                 'status_code': 200,
                 'message': 'Tutor 2FA code resent.'
             }
-            return jsonify(response), 200
+            return jsonify(response)
     else:
         response = {
-                'error': True,
-                'status_code': 400,
-                'message': 'Failed to resent 2FA code.'
-            }
-        return jsonify(response), 400
+            'error': True,
+            'status_code': 400,
+            'message': 'Failed to resent 2FA code.'
+        }
+        return jsonify(response)
 
 # endpoint to remove a tutor from the favorite list
 @version.route("/remove_favorite_tutor", methods=["POST"])

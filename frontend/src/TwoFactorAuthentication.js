@@ -67,12 +67,30 @@ export default function TwoFactorAuthentication() {
   const [snackbarOpen, setSnackbarOpen] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState('');
 
+  // set response from Resend 2FA
+  const [response, setResponse] = useState(null); ///////////////////////////////////////////////////
+
   // 2FA code as a state
   const [code, setCode] = useState('');
   
-  // get 2FA code
+  // read 2FA code
   const handleCodeChange = (event) => {
     setCode(event.target.value);
+  };
+
+  // call resend2FA API
+  const handleResend2FAClick = async () => {
+    const formData = {
+      email: email,
+      userType: userType,
+    };
+
+    try {
+      const apiResponse = await FrontAPI.resend2FA(formData);
+      setResponse(apiResponse);
+    } catch (error) {
+      console.error('API call failed:', error);
+    }
   };
   
   const handleSubmit = async (event) => {
@@ -146,9 +164,17 @@ export default function TwoFactorAuthentication() {
               color: '#666',
               fontSize: '14px',
             }}
-          >Please enter the code that you received. If you do not receivee the code in 10 minutes, please request a new verification code.</p>
-          
-          
+          >Please enter the code that you received. If you do not receive the code in 10 minutes, please&nbsp;
+            <a href="#" onClick={handleResend2FAClick} 
+              style={{
+                textDecoration: 'underline',
+                color: 'blue',
+                cursor: 'pointer',
+              }}>
+              request a new verification code.
+            </a>
+          </p>
+
           <label class="control-label required" for="code" style={labelStyle}>
             Secure verification code 
             <abbr class="required disclaimer-basic" style={disclaimerRequiredStyle}> *</abbr>

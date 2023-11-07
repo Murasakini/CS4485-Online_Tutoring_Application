@@ -143,16 +143,26 @@ const FrontAPI = {
     }
   },
 
-  resend2FA: async (email, userType) => {
+  resend2FA: async (formData) => {
     try {
       const response = await axiosInstance.post('/api/v1/TwoFactorAuthentication/ResendCode', {
-        email: email,
-        userType: userType
+        email: formData.email,
+        userType: formData.userType
       });
 
-      return response.data
+      return response
     } catch (error) {
-
+      if (error.response) { 
+        console.error('Error response status:', error.response.status);
+        console.error('Error response data:', error.response.data);
+        return error.response;
+      } else if (error.request) {
+        console.error('No response received:', error.request);
+        return error.response;
+      } else {
+        console.error('Error message:', error.message);
+        return error.response;
+      }
     }
   },
 

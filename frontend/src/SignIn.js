@@ -120,7 +120,7 @@ export default function SignIn() {
     <React.Fragment>
       {isSuccessful ?
         // navigate to the home page
-        <Navigate to={`/TwoFactorAuthentication?email=${formData.email}&userType=${formData.userType}`} /> :
+        <Navigate to={`/TwoFactorAuthentication?email=${formData.email}&userType=${formData.userType}`} /> : /////////////////////////////////////////
         //<Navigate to="/TwoFactorAuthentication" /> : // If id&pw is correct, go to 2FA page 
 
         // display input form
