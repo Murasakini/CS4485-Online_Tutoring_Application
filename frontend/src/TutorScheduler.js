@@ -9,7 +9,7 @@ import FrontAPI from './api/FrontAPI';
 import CalendarDisplay from './components/CalendarDisplay';
 import TextField from '@mui/material/TextField';
 import {generateAllPossibleTimeSlots, calculateAvailableTimeSlots, addToDate} from './Utils';
-import CustomSnackbar from './components/CustomSnackbar.js';
+import CustomSnackbar from './components/CustomSnackbar';
 
 export default function TutorAppointmentScheduler() {
   // start date (rounded up to the next hour). used for determining possible time slots
