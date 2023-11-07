@@ -5,7 +5,7 @@ import InputLabel from '@mui/material/InputLabel';
 import Select from '@mui/material/Select';
 import MenuItem from '@mui/material/MenuItem';
 import 'react-big-calendar/lib/css/react-big-calendar.css';
-import FrontAPI from './FrontAPI';
+import FrontAPI from './api/FrontAPI';
 import CalendarDisplay from './components/CalendarDisplay';
 import TextField from '@mui/material/TextField';
 import {generateAllPossibleTimeSlots, calculateAvailableTimeSlots, addToDate} from './Utils';
