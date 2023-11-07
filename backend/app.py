@@ -763,13 +763,13 @@ def add_favorite_tutors():
 
     validate_auth_table()
 
-    # check if the tutor already in user's favorite list
-    if not in_favorites_list(session_id=session_id, tutor_id=tutor_id):  # tutor not existed
+    # check if the tutor is already in user's favorite list
+    if not in_favorites_list(session_id=session_id, tutor_id=tutor_id):  # tutor wasn't in list
         query = text('''
                         INSERT INTO ota_db.user_favorites (user_id, tutor_id) 
                         VALUES ((SELECT user_id FROM ota_db.auth_table 
-                                 WHERE auth_table.session_id = :session_id), :tutor_id);
-                    ''')
+                                 WHERE auth_table.session_id = '{}'), :tutor_id);
+                    '''.format(session_id))
         
         try:
             # execute query
@@ -811,6 +811,69 @@ def add_favorite_tutors():
             'error': False,
             'status_code': 403,
             'message': 'The tutor is already in the list.'
+        }
+        status_code = 403
+
+    return jsonify(response), status_code
+
+# endpoint to add a tutor into favorite list
+@version.route("/delete_favorite_tutor", methods=["POST"])
+def delete_favorite_tutor():
+
+    # get data sent along with the request
+    data = request.get_json()
+    session_id = data.get("session_id")  
+    tutor_id = data.get("tutor_id")
+
+    formatted_data = {
+        "session_id": session_id,
+        "tutor_id": tutor_id
+    }
+    # session_id = 'bc5fddbc24c7434a94d4c9f2ee217e23'
+    # tutor_id = 106
+
+    validate_auth_table()
+
+    # check if the tutor is actually in user's favorite list
+    if in_favorites_list(session_id=session_id, tutor_id=tutor_id):  
+        query = text('''
+                        DELETE FROM ota_db.user_favorites 
+                            WHERE user_id = (SELECT user_id FROM ota_db.auth_table 
+                                WHERE auth_table.session_id = '{}') 
+                     AND tutor_id = :tutor_id;
+                    '''.format(session_id))
+        
+        try:
+            # execute query
+            result = db.session.execute(query, formatted_data)
+            db.session.commit()
+
+            response = {
+                'error': False,
+                'status_code': 201,
+                'message': 'Removed tutor to the list successfully.'
+            }
+            status_code = 201
+
+        # catch integrity error
+        except IntegrityError:
+            # return to previous 
+            db.session.rollback()
+
+            response = {
+                'error': True,
+                'status_code': 409,
+                'message': 'An error occurred while removing the tutor from the favorite list.'
+            }
+            status_code = 409
+
+            return response, status_code
+
+    else:  # tutor wasn't in list
+        response = response = {
+            'error': False,
+            'status_code': 403,
+            'message': 'The tutor is not in your favorites.'
         }
         status_code = 403
 
