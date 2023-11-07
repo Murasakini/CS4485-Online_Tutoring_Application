@@ -83,15 +83,41 @@ def clean_avail():
     """)
     db.session.execute(sql)
 
+# finds list of subjects given tutor_id
 def subjects_of_tutor(tutor_id):
     sql = text("""
                SELECT class_name FROM ota_db.tutor_classes_readable WHERE tutor_id = {}
-    """.format(tutor_id))
+        """.format(tutor_id))
     result = db.session.execute(sql)
     class_list = list()
     for row in result:
         class_list.append(row[0])
     return class_list
+
+# finds list of tutors given class_num, department_id
+def tutors_of_subject(class_num, department_id):
+    # recieves (tutor_id, first_name, last_name) arrays of matching tutors
+    sql = text("""
+            SELECT tutor_id, first_name, last_name FROM tutor_classes_readable 
+            WHERE class_num = :class_num AND department_id = :department_id;
+        """)
+    
+    result = db.session.execute(sql, {"class_num": class_num, "department_id": department_id})
+
+    if result == None:
+        response = {
+            'error': True,
+            'status_code': 200,
+            'message': 'No tutors found.'
+        }
+        return response
+
+    response = list()
+    for row in result:
+        # Combine first and last name of tutors before sending
+        response.append({'name': row[1] + ' ' + row[2], 'tutor_id': row[0]})
+
+    return response
 
 def insert_user(data):
     if user_exists(data['netID']):
@@ -336,6 +362,36 @@ def in_favorites_list(session_id, tutor_id):
     # True if found, False if not found
     return result.fetchone() != None
 
+"""
+This function takes a session_id to determine a user, and returns a readable version of the user's list of tutors and their subjects.
+"""
+def user_favorite_query(session_id):
+    # retrieve list of favorite tutors
+    validate_auth_table()
+    sql = text("""
+            SELECT ota_db.user_favorites_readable.tutor_id, ota_db.user_favorites_readable.first_name, 
+                   ota_db.user_favorites_readable.last_name
+            FROM ota_db.user_favorites_readable 
+            LEFT JOIN ota_db.auth_table ON user_favorites_readable.user_id=auth_table.user_id
+            WHERE auth_table.session_id = '{}';
+        """.format(session_id))
+    
+    # execute query
+    result = db.session.execute(sql)
+    rows = result.fetchall()
+    # TODO: handle errors
+
+    # append each returned row into response
+    fav_list = list()
+    for row in rows:
+        fav_list.append({
+            'name': row[1] + ' ' + row[2], 
+            'subject': subjects_of_tutor(row[0]),
+            'tutor_id': row[0]
+        })
+
+
+
 #####################
 # Routes
 #####################
@@ -409,33 +465,15 @@ def signup_user():
     
 
 @version.route("/subj_tutors", methods=["GET"])
-def tutors_of_subject():
+def subj_tutors():
     # gets subject from request, in format "department_id/class_id"
     subject = request.args.get('subject').split('/')
 
     class_num = subject[1]
     department_id = subject[0]
     
-    # recieves (tutor_id, first_name, last_name) arrays of matching tutors
-    sql = text("""
-            SELECT tutor_id, first_name, last_name FROM tutor_classes_readable 
-            WHERE class_num = :class_num AND department_id = :department_id;
-        """)
+    response = subjects_of_tutor(class_num, department_id)
     
-    result = db.session.execute(sql, {"class_num": class_num, "department_id": department_id})
-
-    if result == None:
-        response = {
-            'error': True,
-            'status_code': 200,
-            'message': 'No tutors found.'
-        }
-        return jsonify(response), 200
-
-    response = list()
-    for row in result:
-        # Combine first and last name of tutors before sending
-        response.append({'name': row[1] + ' ' + row[2], 'tutor_id': row[0]})
     return jsonify(response), 200
 
 
@@ -712,29 +750,8 @@ def get_favorite_tutors():
     session_id = request.args.get('session_id')
     # session_id = 'bc5fddbc24c7434a94d4c9f2ee217e23'
     
-    # retrieve list of favorite tutors
-    validate_auth_table()
-    sql = text("""
-            SELECT ota_db.user_favorites_readable.tutor_id, ota_db.user_favorites_readable.first_name, 
-                   ota_db.user_favorites_readable.last_name
-            FROM ota_db.user_favorites_readable 
-            LEFT JOIN ota_db.auth_table ON user_favorites_readable.user_id=auth_table.user_id
-            WHERE auth_table.session_id = '{}';
-        """.format(session_id))
-    
-    # execute query
-    result = db.session.execute(sql)
-    rows = result.fetchall()
-    # TODO: handle errors
-
-    # append each returned row into response
-    fav_list = list()
-    for row in rows:
-        fav_list.append({
-            'name': row[1] + ' ' + row[2], 
-            'subject': subjects_of_tutor(row[0]),
-            'tutor_id': row[0]
-        })
+    # get list of user favorites
+    fav_list = user_favorite_query(session_id)
 
     response = {
         'error': False,
