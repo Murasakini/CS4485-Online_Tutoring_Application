@@ -83,6 +83,8 @@ def clean_avail():
     """)
     db.session.execute(sql)
 
+# Getters:
+
 # finds list of subjects given tutor_id
 def subjects_of_tutor(tutor_id):
     sql = text("""
@@ -117,6 +119,32 @@ def tutors_of_subject(class_num, department_id):
         # Combine first and last name of tutors before sending
         response.append({'name': row[1] + ' ' + row[2], 'tutor_id': row[0]})
 
+    return response
+
+def subjects_of_user(session_id):
+    # finds available classes based on session id
+    validate_auth_table()
+    sql = text("""
+            SELECT user_classes_readable.class_name, user_classes_readable.class_num, user_classes_readable.department_id, user_classes_readable.department_name
+                FROM ota_db.user_classes_readable 
+                LEFT JOIN ota_db.auth_table ON user_classes_readable.user_id=auth_table.user_id 
+                WHERE auth_table.session_id = '{}';
+        """.format(session_id))
+    
+    result = db.session.execute(sql)
+
+    if result == None:
+        response = {
+            'error': True,
+            'status_code': 200,
+            'message': 'No subjects found.'
+        }
+        return response
+
+    # jsonify sql result
+    response = list()
+    for row in result:
+        response.append({'class_name': row[0], 'class_num': row[1], 'department_id': row[2], 'department_name': row[3], 'session_id': session_id})
     return response
 
 def insert_user(data):
@@ -482,29 +510,8 @@ def subjects():
     # pulls a user's session_id from the browser
     session_id = request.args.get('session_id')
 
-    # finds available classes based on session id
-    validate_auth_table()
-    sql = text("""
-            SELECT user_classes_readable.class_name, user_classes_readable.class_num, user_classes_readable.department_id, user_classes_readable.department_name
-                FROM ota_db.user_classes_readable 
-                LEFT JOIN ota_db.auth_table ON user_classes_readable.user_id=auth_table.user_id 
-                WHERE auth_table.session_id = '{}';
-        """.format(session_id))
+    response = subjects_of_user(session_id)
     
-    result = db.session.execute(sql)
-
-    if result == None:
-        response = {
-            'error': True,
-            'status_code': 200,
-            'message': 'No subjects found.'
-        }
-        return jsonify(response), 200
-
-    # jsonify sql result
-    response = list()
-    for row in result:
-        response.append({'class_name': row[0], 'class_num': row[1], 'department_id': row[2], 'department_name': row[3], 'session_id': session_id})
     return jsonify(response), 200
 
 @version.route("/tutor_timeslots", methods=["GET"])
@@ -589,8 +596,10 @@ def create_appointment():
     if success:
         # remove tutor's availability from the database
         sql = text("""
-                DROP * FROM ota_db.tutors_availability WHERE time_available = "{}";
-        """.format(data))
+                DROP * FROM ota_db.tutors_availability WHERE time_available = "{}" AND tutor_id = :tutor_id;
+        """.format(request.args.get("timeSlot")))
+        db.session.execute(sql, data)
+
         response = {
             'error': False,
             'status_code': 201,
