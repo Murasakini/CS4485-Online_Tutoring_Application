@@ -83,6 +83,16 @@ def clean_avail():
     """)
     db.session.execute(sql)
 
+def subjects_of_tutor(tutor_id):
+    sql = text("""
+               SELECT class_name FROM ota_db.tutor_classes_readable WHERE tutor_id = {}
+    """.format(tutor_id))
+    result = db.session.execute(sql)
+    class_list = list()
+    for row in result:
+        class_list.append(row[0])
+    return class_list
+
 def insert_user(data):
     if user_exists(data['netID']):
             return "User with that netID already exists", False
@@ -349,7 +359,7 @@ def verify_session():
         # SQL query first deletes expired session_ids, then checks if session_id exists in table
         validate_auth_table()
         sql = text("""
-            SELECT COUNT(1) FROM auth_table WHERE session_id = :session_id;
+            SELECT COUNT(1) FROM auth_table WHERE session_id = ':session_id';
         """)
         result = db.session.execute(sql, {"session_id": session_id}).fetchone()
         print(result, flush=True)
@@ -706,12 +716,9 @@ def get_favorite_tutors():
     # TODO: validate_auth_table()
     sql = text("""
             SELECT ota_db.user_favorites_readable.tutor_id, ota_db.user_favorites_readable.first_name, 
-                   ota_db.user_favorites_readable.last_name, ota_db.classes.class_name  
+                   ota_db.user_favorites_readable.last_name
             FROM ota_db.user_favorites_readable 
             LEFT JOIN ota_db.auth_table ON user_favorites_readable.user_id=auth_table.user_id
-	        LEFT JOIN ota_db.tutor_classes ON ota_db.user_favorites_readable.tutor_id = ota_db.tutor_classes.tutor_id
-            LEFT JOIN ota_db.classes ON ota_db.tutor_classes.class_num = ota_db.classes.class_num 
-							AND ota_db.tutor_classes.department_id = ota_db.classes.department_id
             WHERE auth_table.session_id = '{}';
         """.format(session_id))
     
@@ -725,7 +732,7 @@ def get_favorite_tutors():
     for row in rows:
         fav_list.append({
             'name': row[1] + ' ' + row[2], 
-            'subject': row[3],
+            'subject': subjects_of_tutor(row[0]),
             'tutor_id': row[0]
         })
 
@@ -824,15 +831,15 @@ def find_tutors():
         if key == 'session_id' or len(value) == 0:
             continue
         
-        where_conditions += ' AND ' + str(key) + ' = :' + str(key)
+        where_conditions += ' AND ' + str(key) + ' = \'' + data.get(str(key)) + '\''
 
     # retrieve list of tutors based on search fields
-    # TODO: validate_auth_table()
+    validate_auth_table()
     sql = text("""
-            SELECT tutor_id, first_name, last_name, class_name
-            FROM ota_db.tutor_classes_readable
-            WHERE EXISTS (SELECT * FROM ota_db.auth_table WHERE session_id = :session_id)
-        """ + where_conditions + ';')
+            SELECT tutor_id, first_name, last_name
+            FROM ota_db.tutors
+            WHERE EXISTS (SELECT * FROM ota_db.auth_table WHERE session_id = '{}')
+        """.format(data.get('session_id')) + where_conditions + ';')
     
     # execute query
     result = db.session.execute(sql, data)
@@ -843,7 +850,7 @@ def find_tutors():
     for row in rows:
         tutor_list.append({
             'name': row[1] + ' ' + row[2], 
-            'subject': row[3],
+            'subject': subjects_of_tutor(row[0]),
             'tutor_id': row[0]
         })
 
