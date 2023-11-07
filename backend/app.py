@@ -863,6 +863,56 @@ def tutor_timeslots():
         i += 1
     return jsonify(response), 200
 
+@version.route("/total_hours", methods=["GET"])
+def get_total_hours():
+    if not validate_fields(request.args, {'session_id'}):
+        response = {
+            'error': True,
+            'status_code': 400,
+            'message': 'Invalid or missing fields in request.'
+        }
+        return jsonify(response), 400
+    
+    session_id = request.args.get('session_id')
+
+    data, success = total_hours(session_id)
+
+    if success:
+        response = {
+            'error': False,
+            'status_code': 200,
+            'message': data
+        }
+        return jsonify(response), 200
+    else:
+        response = {
+            'error': True,
+            'status_code': 400,
+            'message': data  # This will contain the error message
+        }
+        return jsonify(response), 400
+    
+@version.route("/tutor_leaderboard", methods=["GET"])
+def get_tutor_leaderboard():
+    leaderboard = tutor_hours_leaderboard()
+    response = {
+            'error': False,
+            'status_code': 200,
+            'message': leaderboard
+        }
+    return jsonify(response), 200
+
+@version.route("/user_leaderboard", methods=["GET"])
+def get_user_leaderboard():
+    leaderboard = user_hours_leaderboard()
+    response = {
+            'error': False,
+            'status_code': 200,
+            'message': leaderboard
+        }
+    return jsonify(response), 200
+
+
 
 @version.route("/create/appointment", methods=["POST"])
 def create_appointment():
