@@ -133,7 +133,7 @@ def user_hours_leaderboard():
     response = list()
     for row in result:
         # Combine first and last name of tutors before sending
-        response.append({'name': row[1] + ' ' + row[0], '_id': userrow[2], 'num_hours': row[3]})
+        response.append({'name': row[1] + ' ' + row[0], 'user_id': row[2], 'num_hours': row[3]})
     return response, True
     
 def validate_auth_table():
