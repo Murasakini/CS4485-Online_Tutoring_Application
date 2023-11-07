@@ -9,7 +9,6 @@ import FrontAPI from './FrontAPI';
 import CalendarDisplay from './components/CalendarDisplay';
 import TextField from '@mui/material/TextField';
 import {generateAllPossibleTimeSlots, calculateAvailableTimeSlots, addToDate} from './Utils';
-import SuccessDialog from './SuccessDialog';
 import CustomSnackbar from './components/CustomSnackbar.js';
 
 export default function TutorAppointmentScheduler() {
