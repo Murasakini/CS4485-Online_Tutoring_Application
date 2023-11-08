@@ -442,7 +442,7 @@ This function takes a session_id to determine a user, and returns a readable ver
 """
 def user_favorite_query(session_id):
     # retrieve list of favorite tutors
-    validate_auth_table()
+    #validate_auth_table()
     sql = text("""
             SELECT ota_db.user_favorites_readable.tutor_id, ota_db.user_favorites_readable.first_name, 
                    ota_db.user_favorites_readable.last_name
@@ -454,7 +454,6 @@ def user_favorite_query(session_id):
     # execute query
     result = db.session.execute(sql)
     rows = result.fetchall()
-    # TODO: handle errors
 
     # append each returned row into response
     fav_list = list()
@@ -464,6 +463,8 @@ def user_favorite_query(session_id):
             'subject': subjects_of_tutor(row[0]),
             'tutor_id': row[0]
         })
+
+    return fav_list
 
 
 
@@ -804,7 +805,6 @@ def get_favorite_tutors():
     
     # pulls a user's session_id from the browser
     session_id = request.args.get('session_id')
-    # session_id = 'bc5fddbc24c7434a94d4c9f2ee217e23'
     
     # get list of user favorites
     fav_list = user_favorite_query(session_id)
@@ -861,7 +861,7 @@ def add_favorite_tutors():
 
     return jsonify(response), status_code
 
-# endpoint to add a tutor into favorite list
+# endpoint to remove a tutor from the favorite list
 @version.route("/remove_favorite_tutor", methods=["POST"])
 def remove_favorite_tutor():
 
@@ -874,12 +874,10 @@ def remove_favorite_tutor():
         "session_id": session_id,
         "tutor_id": tutor_id
     }
-    # session_id = 'bc5fddbc24c7434a94d4c9f2ee217e23'
-    # tutor_id = 106
 
     # check if the tutor is actually in user's favorite list
     if in_favorites_list(session_id=session_id, tutor_id=tutor_id):  
-        inserted_data, success = insert_user_favorite(formatted_data)
+        deleted_data, success = delete_user_favorite(formatted_data)
         if success:
                 response = {
                     'error': False,
@@ -891,14 +889,15 @@ def remove_favorite_tutor():
             response = {
                 'error': True,
                 'status_code': 409,
-                'message': inserted_data
+                'message': deleted_data
             }
             status_code = 409
+
     else:  # tutor wasn't in list
         response = response = {
             'error': False,
             'status_code': 403,
-            'message': 'The tutor is not in your favorites.'
+            'message': 'The tutor is not in your favorite list.'
         }
         status_code = 403
 

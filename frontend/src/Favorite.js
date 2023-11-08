@@ -2,7 +2,6 @@ import Header from './components/Header.js'
 import Body from './components/Body.js';
 import FavortieTutor from './components/FavoriteTutors.js';
 import { useEffect, useState } from 'react';
-import Axios from 'axios';
 import FrontAPI from './api/FrontAPI.js';
 
 const Favorite = () => {
@@ -23,23 +22,6 @@ const Favorite = () => {
                 default:
                     console.log('Some error happened')
             }
-
-            
-            // // api GET
-            // try {
-            // const response = await Axios.get('http://localhost:3006/favoriteTutors/');
-            // return response.data;
-
-            // } catch(err) {
-            //     if (err.response) {
-            //         console.log(err.data);
-            //         console.log(err.status);
-            //         console.log(err.header);
-            //     }
-            //     else console.log(`Error:${err.message}`);
-            // }
-
-            // TODO: add error handling
         };
 
         // delete a tutor

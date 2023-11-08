@@ -3,7 +3,6 @@ import * as React from 'react';
 import Header from './components/Header.js'
 import Body from './components/Body.js'
 import Search from './components/Search.js'
-import Axios from 'axios';
 import FrontAPI from './api/FrontAPI.js';
 
 const FindTutor = () => {
@@ -27,6 +26,7 @@ const FindTutor = () => {
         // api GET to get list of favorite tutors
         const session_id = 'bc5fddbc24c7434a94d4c9f2ee217e23'
 
+        // add session id to the search request
         searchInfo['session_id'] = session_id;
         const response = await FrontAPI.findTutors(searchInfo);
 
@@ -42,31 +42,27 @@ const FindTutor = () => {
             default:
                 console.log('Some error happened')
         }
-
-        
-        // try { 
-        //     let query = '';
-        //     if (searchInfo.instructorName)  query += `name=${searchInfo.instructorName}`;
-        //     if (searchInfo.subject) query += `&subject=${searchInfo.subject}`;
-
-        //     // api GET
-        //     const response = await Axios.get(`http://localhost:3006/tutor?${query}`)
-
-        //     if (response.data) setSearchResult(response.data);
-
-        // } catch(err) {
-        //     if (err.response) {
-        //         console.log(err.data);
-        //         console.log(err.status);
-        //         console.log(err.header);
-        //     }
-        //     else console.log(`Error:${err.message}`);
-        // }
-        
     };
 
     // add tutor into favorit list
-    const handleAddTutor = async (i) => {
+    const handleAddTutor = async (tutor_id) => {
+        
+        // api POST to add user to the favorite list
+        const session_id = 'bc5fddbc24c7434a94d4c9f2ee217e23'
+        const response = await FrontAPI.addUserFavorite(session_id, tutor_id);
+
+        switch(response?.status_code) {
+            case 201:  // add successfully
+                console.log(response);
+                break;
+            
+            case 409:  // error adding tutor
+                console.log(response)
+                break;
+
+            default:
+                console.log('Some errors happened while making api call for adding')
+        }
         // try {
         //     // api POST to add tutor into favorite list 
         //     const response = await Axios.post("http://localhost:3006/favoriteTutors/", searchResult[i]);
