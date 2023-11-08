@@ -42,7 +42,7 @@ const Favorite = () => {
                     console.log(response);
                     setSnackbarMessage(response?.message);
                     setSnackbarOpen(true);
-                    setSeverity('success')  // set level of severity of message
+                    setSeverity('success');  // set level of severity of message
 
                     // create new list without deleted tutor
                     const newTutorList = tutorList.filter((tutor) => {
@@ -96,7 +96,7 @@ const Favorite = () => {
                     open={snackbarOpen}
                     message={snackbarMessage}
                     onClose={() => setSnackbarOpen(false)}
-                    setSeverity={severity}/>
+                    severity={severity}/>
                 </React.Fragment>
             }/>
         </React.Fragment>
