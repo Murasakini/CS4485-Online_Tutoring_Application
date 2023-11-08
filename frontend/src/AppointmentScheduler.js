@@ -19,7 +19,8 @@ export default function AppointmentScheduler() {
     tutor: '',    // this is tutor_id
     timeSlot: '',
   });
-
+  
+  const [cooldown, setCooldown] = useState(false);
   const [subjects, setSubjects] = useState([]); // subjects
   const [tutorsList, setTutorsList] = useState([]);     // tutors
   const [availableSlots, setAvailableSlots] = useState([]); // time slots
@@ -132,6 +133,18 @@ export default function AppointmentScheduler() {
   // handle when user click submit button
   const handleSubmit = async (event) => {
     event.preventDefault();
+
+    if (cooldown) {
+      // on cd
+      return;
+    }
+    // cd is on
+    setCooldown(true);
+    // 5 sec timer
+    setTimeout(() => {
+      setCooldown(false);
+    }, 5000);
+
       // verify user's session before allowing them to create an appointment
       const session_id = document.cookie.split("; ").find((row) => row.startsWith("sessionCookie="))?.split("=")[1];
       const sessionResponse = await FrontAPI.verifySession(session_id);
@@ -279,7 +292,7 @@ export default function AppointmentScheduler() {
                   fullWidth
                   disabled={isSubmitDisabled} //not allow empty
                 >
-                  Schedule
+                  {cooldown ? 'Cooldown (5s)' : 'Schedule'}
                 </Button>
 
                 {/* CustomSnackbar for displaying error messages */}
