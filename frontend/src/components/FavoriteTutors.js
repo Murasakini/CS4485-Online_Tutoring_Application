@@ -40,11 +40,13 @@ const FavortieTutor = (props) => {
                             primary={info.name}
                             secondary={
                                 <React.Fragment>
-                                    <Typography component="span">{ info.subject }</Typography>
-                                    {/* <br/>
-                                    email
-                                    <br/>
-                                    about me */}
+                                    {/* multiple subjects */}
+                                    {info.subject.map((subj, i) => (
+                                        <span key={i}>
+                                            <Typography component="span">{ subj }</Typography>
+                                            <br/>
+                                        </span>
+                                    ))}
                                 </React.Fragment>}
                         />
                         </ListItem>

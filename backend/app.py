@@ -961,6 +961,11 @@ def remove_favorite_tutor():
 # endpoint to find tutors
 @version.route("/find_tutors", methods=["POST"])
 def find_tutors():
+    ###
+    # Due to multiple classes can a tutor register, if class name is included in the search field, 
+    # we use different SQL query to retrieve data 
+    ###
+
     # pulls a user's session_id from the browser
     # get data sent along with the request
     data = request.get_json()
@@ -973,44 +978,90 @@ def find_tutors():
         
         where_conditions += ' AND ' + str(key) + ' = \'' + data.get(str(key)) + '\''
 
-    # retrieve list of tutors based on search fields
-    validate_auth_table()
-    sql = text("""
-            SELECT tutor_id, first_name, last_name
-            FROM ota_db.tutors
-            WHERE EXISTS (SELECT * FROM ota_db.auth_table WHERE session_id = '{}')
-        """.format(data.get('session_id')) + where_conditions + ';')
-    
-    # execute query
-    result = db.session.execute(sql, data)
-    rows = result.fetchall()
+    # case 1: class name is not included
+    if data.get('class_name') == None or data.get('class_name') == '':
+        
+        # retrieve list of tutors based on search fields
+        validate_auth_table()
+        sql = text("""
+                SELECT tutor_id, first_name, last_name
+                FROM ota_db.tutors
+                WHERE EXISTS (SELECT * FROM ota_db.auth_table WHERE session_id = '{}')
+            """.format(data.get('session_id')) + where_conditions + ';')
+        
+        # execute query
+        result = db.session.execute(sql)
+        rows = result.fetchall()
 
-    # create list of tutors returned from db 
-    tutor_list = list()
-    for row in rows:
-        tutor_list.append({
-            'name': row[1] + ' ' + row[2], 
-            'subject': subjects_of_tutor(row[0]),
-            'tutor_id': row[0]
-        })
+        # create list of tutors returned from db 
+        tutor_list = list()
+        for row in rows:
+            tutor_list.append({
+                'name': row[1] + ' ' + row[2], 
+                'subject': subjects_of_tutor(row[0]),
+                'tutor_id': row[0]
+            })
 
-    if len(tutor_list) == 0:
-        response = {
-            'error': False,
-            'status_code': 201,
-            'message': 'No data found.',
-            'result': tutor_list
-        }
-        status_code = 201
+        if len(tutor_list) == 0:
+            response = {
+                'error': False,
+                'status_code': 201,
+                'message': 'No data found.',
+                'result': tutor_list
+            }
+            status_code = 201
 
+        else:
+            response = {
+                'error': False,
+                'status_code': 201,
+                'message': 'Found tutors.',
+                'result': tutor_list
+            }
+            status_code = 201
+    # end of case 1
+
+    # case 2: class name is included       
     else:
-        response = {
-            'error': False,
-            'status_code': 201,
-            'message': 'Found tutors.',
-            'result': tutor_list
-        }
-        status_code = 201
+        # retrieve list of tutors based on search fields
+        validate_auth_table()
+        sql = text("""
+                SELECT tutor_id, first_name, last_name, class_name
+                FROM ota_db.tutor_classes_readable
+                WHERE EXISTS (SELECT * FROM ota_db.auth_table WHERE session_id = '{}')
+            """.format(data.get('session_id')) + where_conditions + ';')
+        
+        # execute query
+        result = db.session.execute(sql)
+        rows = result.fetchall()
+
+        if len(rows) == 0:  # no data found
+            response = {
+                'error': False,
+                'status_code': 201,
+                'message': 'No data found.',
+                'result': tutor_list
+            }
+            status_code = 201
+
+        else:   # at least 1 data found
+            # create list of tutors returned from db 
+            tutor_list = list()
+            for row in rows:
+                subject_list = [row[3]]  # put subject into a list
+                tutor_list.append({
+                    'name': row[1] + ' ' + row[2], 
+                    'subject': subject_list,
+                    'tutor_id': row[0]
+                })
+            
+            response = {
+                'error': False,
+                'status_code': 201,
+                'message': 'Found tutors.',
+                'result': tutor_list
+            }
+            status_code = 201
 
     return jsonify(response), status_code
 
