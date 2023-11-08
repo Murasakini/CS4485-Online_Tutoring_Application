@@ -69,14 +69,12 @@ export default function SignIn() {
     event.preventDefault();
 
     if (cooldown) {
-      // Button is on cooldown, do nothing
+      // on cd
       return;
     }
-
-    // Set the cooldown to true
+    // cd is on
     setCooldown(true);
-
-    // Set a timeout to reset the cooldown after 5 seconds
+    // 5 sec timer
     setTimeout(() => {
       setCooldown(false);
     }, 5000);
