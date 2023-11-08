@@ -1007,7 +1007,7 @@ def find_tutors():
                 'error': False,
                 'status_code': 201,
                 'message': 'No data found.',
-                'result': tutor_list
+                'result': []
             }
             status_code = 201
 
@@ -1040,7 +1040,7 @@ def find_tutors():
                 'error': False,
                 'status_code': 201,
                 'message': 'No data found.',
-                'result': tutor_list
+                'result': []
             }
             status_code = 201
 
