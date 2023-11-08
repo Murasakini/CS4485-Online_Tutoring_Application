@@ -60,21 +60,9 @@ const FindTutor = () => {
                 console.log(response)
                 break;
 
-            default:
+            default: 
                 console.log('Some errors happened while making api call for adding')
         }
-        // try {
-        //     // api POST to add tutor into favorite list 
-        //     const response = await Axios.post("http://localhost:3006/favoriteTutors/", searchResult[i]);
-        //     console.log(response.data);
-        // } catch(err) {
-        //     if (err.response) {
-        //         console.log(err.data);
-        //         console.log(err.status);
-        //         console.log(err.header);
-        //     }
-        //     else console.log(`Error: ${err.message}`);
-        // }
     }
 
     // do something when clicking save button (submit)

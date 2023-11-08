@@ -25,7 +25,32 @@ const Favorite = () => {
         };
 
         // delete a tutor
-        const handleDeleteTutor = async (id) => {
+        const handleDeleteTutor = async (tutor_id) => {
+            // api POST to add user to the favorite list
+            const session_id = 'bc5fddbc24c7434a94d4c9f2ee217e23'
+            const response = await FrontAPI.deleteUserFavorite(session_id, tutor_id);
+
+            switch(response?.status_code) {
+                case 201:  // add successfully
+                    console.log(response);
+
+                    // create new list without deleted tutor
+                    const newTutorList = tutorList.filter((tutor) => {
+                        return tutor.tutor_id !== tutor_id;
+                    })
+
+                    // store new list
+                    setTutorList(newTutorList);
+
+                    break;
+                
+                case 409:  // error adding tutor
+                    console.log(response)
+                    break;
+
+                default: 
+                    console.log('Some errors happened while making api call for adding')
+            }
             // try {
             //     // api DELETE with id
             //     await Axios.delete(`http://localhost:3006/favoriteTutors/${id}`);
