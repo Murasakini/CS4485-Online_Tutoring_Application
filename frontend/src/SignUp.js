@@ -158,6 +158,8 @@ export default function SignUp() {
                 // Registration success
                 console.log('Registration successful');
                 setSuccessful(true);
+                setSnackbarMessage('Registration successful! Please navigate to Sign In page.');
+                setSnackbarOpen(true);
                 break;
               case 400:
                 // Bad request
