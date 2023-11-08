@@ -1,12 +1,18 @@
 import Header from './components/Header.js'
 import Body from './components/Body.js';
 import FavortieTutor from './components/FavoriteTutors.js';
-import { useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import FrontAPI from './api/FrontAPI.js';
+import CustomSnackbar from './components/CustomSnackbar.js';
 
 const Favorite = () => {
         // hold json data from db and function to store data
         const [tutorList, setTutorList] = useState([]);
+
+        // display error msg to the user
+        const [severity, setSeverity] = useState('error');
+        const [snackbarOpen, setSnackbarOpen] = useState(false);
+        const [snackbarMessage, setSnackbarMessage] = useState('');
 
         // retrieve data from db
         const getTutorList = async () => {
@@ -32,7 +38,11 @@ const Favorite = () => {
 
             switch(response?.status_code) {
                 case 201:  // add successfully
+                    // display messsage
                     console.log(response);
+                    setSnackbarMessage(response?.message);
+                    setSnackbarOpen(true);
+                    setSeverity('success')  // set level of severity of message
 
                     // create new list without deleted tutor
                     const newTutorList = tutorList.filter((tutor) => {
@@ -43,9 +53,14 @@ const Favorite = () => {
                     setTutorList(newTutorList);
 
                     break;
-                
+
                 case 409:  // error adding tutor
-                    console.log(response)
+                    // display messsage
+                    console.log(response?.message);
+                    setSeverity('error');
+                    setSnackbarMessage(response?.message);
+                    setSnackbarOpen(true);
+
                     break;
 
                 default: 
@@ -69,12 +84,22 @@ const Favorite = () => {
         }, []);
 
     return (
-        <div>
+        <React.Fragment>
             <Header title='FAVORITE' />       
-            <Body content={<FavortieTutor tutorList={tutorList}
-            handleDeleteTutor={handleDeleteTutor}/>}>
-            </Body>
-        </div>
+            <Body content={
+                <React.Fragment>
+                    <FavortieTutor tutorList={tutorList}
+                    handleDeleteTutor={handleDeleteTutor}/>
+
+                    {/* CustomSnackbar for displaying error messages */}
+                    <CustomSnackbar
+                    open={snackbarOpen}
+                    message={snackbarMessage}
+                    onClose={() => setSnackbarOpen(false)}
+                    setSeverity={severity}/>
+                </React.Fragment>
+            }/>
+        </React.Fragment>
     )
 }
 

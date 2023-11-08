@@ -4,11 +4,17 @@ import Header from './components/Header.js'
 import Body from './components/Body.js'
 import Search from './components/Search.js'
 import FrontAPI from './api/FrontAPI.js';
+import CustomSnackbar from './components/CustomSnackbar.js';
 
 const FindTutor = () => {
     // create holder for values and function to update values
     const [searchInfo, setSearchInfo] = useState({});
     const [searchResult, setSearchResult] = useState([]);
+
+    // display error msg to the user
+    const [severity, setSeverity] = useState('error');
+    const [snackbarOpen, setSnackbarOpen] = useState(false);
+    const [snackbarMessage, setSnackbarMessage] = useState('');
 
     // update values when any changes
     const handleChange = (e) => {
@@ -31,7 +37,11 @@ const FindTutor = () => {
 
         switch(response?.status_code) {
             case 201:  // found
+                // display messsage
                 console.log(response);
+                setSeverity('success');
+                setSnackbarMessage(response?.message);
+                setSnackbarOpen(true);
 
                 // store the search result
                 setSearchResult([]);
@@ -39,7 +49,11 @@ const FindTutor = () => {
                 break;
 
             default:
-                console.log('Some error happened')
+                // display messsage
+                console.log('Some error happened');
+                setSeverity('error');
+                setSnackbarMessage(response?.status_code + ": " + response?.message);
+                setSnackbarOpen(true);
         }
     };
 
@@ -52,15 +66,39 @@ const FindTutor = () => {
 
         switch(response?.status_code) {
             case 201:  // add successfully
+                // display messsage
                 console.log(response);
+                setSnackbarMessage(response?.message);
+                setSnackbarOpen(true);
+
+                // set level of severity of message
+                setSeverity('success');
+
+                break;
+
+            case 403:  // duplicate adding
+                // display messsage
+                console.log(response?.message);
+                setSeverity('warning');  // set level of severity of message
+                setSnackbarMessage(response?.message);
+                setSnackbarOpen(true);
                 break;
             
             case 409:  // error adding tutor
-                console.log(response)
+                // display messsage
+                console.log('Some error happened');
+                setSeverity('error');  // set level of severity of message
+                setSnackbarMessage(response?.status_code + ": " + response?.message);
+                setSnackbarOpen(true);
+
                 break;
 
             default: 
-                console.log('Some errors happened while making api call for adding')
+                // display messsage
+                setSeverity('error');  // set level of severity of message
+                setSnackbarMessage(response?.status_code + ": " + response?.message);
+                setSnackbarOpen(true);
+                console.log('Some errors happened while adding the tutor')
         }
     }
 
@@ -80,11 +118,21 @@ const FindTutor = () => {
     return (
         <React.Fragment>
             <Header title="FIND A TUTOR"/>
-            <Body content={<Search searchInfo={searchResult}
-            handleChange={handleChange} 
-            handleSearchSubmit={handleSearchSubmit}
-            handleAddTutor={handleAddTutor}/>} 
-            />
+            <Body content={
+                <React.Fragment>
+                    <Search searchInfo={searchResult}
+                    handleChange={handleChange} 
+                    handleSearchSubmit={handleSearchSubmit}
+                    handleAddTutor={handleAddTutor}/>
+
+                    {/* CustomSnackbar for displaying error messages */}
+                    <CustomSnackbar
+                    open={snackbarOpen}
+                    message={snackbarMessage}
+                    onClose={() => setSnackbarOpen(false)}
+                    severity={severity}/>
+                </React.Fragment>
+            }/>
         </React.Fragment>
     );
 }
