@@ -19,11 +19,12 @@ export default function AppointmentScheduler() {
     tutor: '',    // this is tutor_id
     timeSlot: '',
   });
-
+  
+  const [cooldown, setCooldown] = useState(false);
   const [subjects, setSubjects] = useState([]); // subjects
   const [tutorsList, setTutorsList] = useState([]);     // tutors
   const [availableSlots, setAvailableSlots] = useState([]); // time slots
-  const [selectedTimeSlot, setSelectedTimeSlot] = useState('');
+  //const [selectedTimeSlot, setSelectedTimeSlot] = useState('');
 
     // display error msg to the user
     const [snackbarOpen, setSnackbarOpen] = useState(false);
@@ -32,25 +33,25 @@ export default function AppointmentScheduler() {
     // disable submit if empty field
     const isSubmitDisabled = !formData.subject || !formData.tutor || !formData.timeSlot;
 
-    useEffect(() => {
-      // fetch the list of subjects. unconditional 
-      const session_id = document.cookie.split("; ").find((row) => row.startsWith("sessionCookie="))?.split("=")[1];
-      FrontAPI.fetchSubjects(session_id)
-        .then((data) => {
-          if (data.error) {
-            // custom error handling
-            setSnackbarMessage(data.message);
-            setSnackbarOpen(true);
-          } else {
-            setSubjects(data);
-          }
-        })
-        .catch((error) => {
-          // network error
-          setSnackbarMessage('Failed to fetch subjects. Please try again.'); // Set the error message
-          setSnackbarOpen(true); // Open the snackbar to display the error
-        });
-    }, []);
+  useEffect(() => {
+    // fetch the list of subjects. unconditional 
+    const session_id = document.cookie.split("; ").find((row) => row.startsWith("sessionCookie="))?.split("=")[1];
+    FrontAPI.fetchSubjects(session_id)
+      .then((data) => {
+        if (data.error) {
+          // custom error handling
+          setSnackbarMessage(data.message);
+          setSnackbarOpen(true);
+        } else {
+          setSubjects(data);
+        }
+      })
+      .catch((error) => {
+        // network error
+        setSnackbarMessage('Network error. Please try again.'); 
+        setSnackbarOpen(true);
+      });
+  }, []);
   
   // handle when user change selected subject
   const handleSubjectChange = (event) => {
@@ -126,12 +127,24 @@ export default function AppointmentScheduler() {
       ...formData,
       timeSlot: selectedTimeSlot,
     });
-    setSelectedTimeSlot(selectedTimeSlot);
+    // setSelectedTimeSlot(selectedTimeSlot);
   };
   
   // handle when user click submit button
   const handleSubmit = async (event) => {
     event.preventDefault();
+
+    if (cooldown) {
+      // on cd
+      return;
+    }
+    // cd is on
+    setCooldown(true);
+    // 5 sec timer
+    setTimeout(() => {
+      setCooldown(false);
+    }, 5000);
+
       // verify user's session before allowing them to create an appointment
       const session_id = document.cookie.split("; ").find((row) => row.startsWith("sessionCookie="))?.split("=")[1];
       const sessionResponse = await FrontAPI.verifySession(session_id);
@@ -144,7 +157,7 @@ export default function AppointmentScheduler() {
       // createAppointment function from FrontAPI
       const response = await FrontAPI.createAppointment(formData, session_id);
 
-      console.log(response)
+      console.log(response);
       switch (response.status_code) {
         case 201:
           // success. 
@@ -251,7 +264,7 @@ export default function AppointmentScheduler() {
                     <Select
                       label="Time Slot"
                       name="timeSlot"
-                      value={selectedTimeSlot}
+                      value={formData.timeSlot}
                       onChange={handleTimeSlotChange}
                     >
 
@@ -279,7 +292,7 @@ export default function AppointmentScheduler() {
                   fullWidth
                   disabled={isSubmitDisabled} //not allow empty
                 >
-                  Schedule
+                  {cooldown ? 'Cooldown (5s)' : 'Schedule'}
                 </Button>
 
                 {/* CustomSnackbar for displaying error messages */}

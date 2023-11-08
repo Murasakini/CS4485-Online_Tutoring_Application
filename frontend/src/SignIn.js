@@ -36,6 +36,7 @@ export default function SignIn() {
   // display error msg to the user
   const [snackbarOpen, setSnackbarOpen] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState('');
+  const [cooldown, setCooldown] = useState(false);
 
   // form as a state
   const [formData, setFormData] = useState({
@@ -66,9 +67,20 @@ export default function SignIn() {
   const handleSubmit = async (event) => {
     // preventDefault() prevents a page refresh
     event.preventDefault();
+
+    if (cooldown) {
+      // on cd
+      return;
+    }
+    // cd is on
+    setCooldown(true);
+    // 5 sec timer
+    setTimeout(() => {
+      setCooldown(false);
+    }, 5000);
+
     const response = await FrontAPI.signIn(formData);
 
-    console.log(response)
     switch (response.status_code) {
       case 200:
         // success
@@ -181,10 +193,10 @@ export default function SignIn() {
               variant="contained"
               sx={{ mt: 2, mb: 2 }}
             >
-              Sign In
+              {cooldown ? 'Cooldown (5s)' : 'Sign In'}
             </Button>
 
-            {/* CustomSnackbar component for displaying error messages */}
+            {/* CustomSnackbar for displaying error messages */}
             <CustomSnackbar
               open={snackbarOpen}
               message={snackbarMessage}

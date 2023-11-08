@@ -15,6 +15,7 @@ import List from '@mui/material/List';
 import ListItem from '@mui/material/ListItem';
 import ListItemText from '@mui/material/ListItemText';
 import Copyright from './components/Copyright';
+import CustomSnackbar from './components/CustomSnackbar';
 
 const theme = createTheme({
   palette: {
@@ -35,9 +36,9 @@ export default function SignUp() {
   const [passwordsMatch, setPasswordsMatch] = useState(true); // check reenter password
   const [passwordValid, setPasswordValid] = useState(true); // check password
   const [passwordValidationMessage, setPasswordValidationMessage] = useState('');
-  const [criminal, setCriminal] = useState(false); // AND operator of all crime related questionaire boxes
-  const [snackbarOpen, setSnackbarOpen] = useState(false);      // for dialog
+  const [openSnackbar, setSnackbarOpen] = useState(false);      // for dialog
   const [snackbarMessage, setSnackbarMessage] = useState('');  // for dialog msg
+  const [cooldown, setCooldown] = useState(false);
 
   const [showMore, setShowMore] = useState(false);
   const [formData, setFormData] = useState({
@@ -125,24 +126,36 @@ export default function SignUp() {
       authorizationBackgroundCheck,
     } = formData;
   
-    // update
-    setCriminal(
-      !(
+    setFormData({
+      ...formData,
+      criminal: !(
         criminalHistory ||
         pendingCharges ||
         probationOrParole ||
         sexOffenderRegistry ||
         outstandingWarrants ||
         authorizationBackgroundCheck
-      )
-    );    
+      ),
+    });
   }, [formData]);
   
 
   // listen for submit event from "Sign in" Button
   const handleSubmit = async (event) => {
+    
     // preventDefault() prevents a page refresh
     event.preventDefault();
+
+    if (cooldown) {
+      // on cd
+      return;
+    }
+    // cd is on
+    setCooldown(true);
+    // 5 sec timer
+    setTimeout(() => {
+      setCooldown(false);
+    }, 5000);
 
     let isTutor = false;
 
@@ -158,6 +171,8 @@ export default function SignUp() {
                 // Registration success
                 console.log('Registration successful');
                 setSuccessful(true);
+                setSnackbarMessage('Registration successful! Please navigate to Sign In page.');
+                setSnackbarOpen(true);
                 break;
               case 400:
                 // Bad request
@@ -215,9 +230,6 @@ export default function SignUp() {
                   label="First Name | ASCII only"
                   value={formData.firstName}
                   onChange={handleChange}
-                  inputProps={{
-                    maxLength: 45, // Limit to 45 characters
-                  }}
                   inputProps={{
                     pattern: '^[A-Za-z]+$', // ASCII characters
                     maxLength: 45, // Limit to 45 characters
@@ -449,8 +461,14 @@ export default function SignUp() {
               sx={{ mt: 2, mb: 2 }}
               disabled={!passwordsMatch || !passwordValid}
             >
-              Sign Up
+              {cooldown ? 'Cooldown (5s)' : 'Sign Up'}
             </Button>
+
+            <CustomSnackbar
+              open={openSnackbar}
+              message={snackbarMessage}
+              onClose={() => setSnackbarOpen(false)}
+            />
             
             {/* hyper links */}
             <Grid container justifyContent="flex-end">
