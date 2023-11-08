@@ -81,10 +81,13 @@ const FrontAPI = {
       if (error.response) {
         console.error('Error response status:', error.response.status);
         console.error('Error response data:', error.response.data);
+        return error.data.status_code;
       } else if (error.request) {
         console.error('No response received:', error.request);
+        return error.data.status_code;
       } else {
         console.error('Error message:', error.message);
+        return error.data.status_code;
       }
     }
   },
@@ -92,19 +95,30 @@ const FrontAPI = {
   // send sign in info for checking
   signIn: async (formData) => {
     try {
-      const response = await axiosInstance.post('/api/v1/login', {
-        email: formData.email,
-        password: SHA256(formData.password).toString(),
-      });
+      let response;
+      if (formData.userType === "student") {
+        response = await axiosInstance.post('/api/v1/login/user', {
+          email: formData.email,
+          password: SHA256(formData.password).toString(),
+        });
+      } else {
+          response = await axiosInstance.post('/api/v1/login/tutor', {
+            email: formData.email,
+            password: SHA256(formData.password).toString(),
+          });
+      }
       return response.data;
     } catch (error) {
       if (error.response) {
         console.error('Error response status:', error.response.status);
         console.error('Error response data:', error.response.data);
+        return error.data.status_code;
       } else if (error.request) {
         console.error('No response received:', error.request);
+        return error.data.status_code;
       } else {
         console.error('Error message:', error.message);
+        return error.data.status_code;
       }
     }
   },
@@ -125,12 +139,14 @@ const FrontAPI = {
       if (error.response) {
         console.error('Error response status:', error.response.status);
         console.error('Error response data:', error.response.data);
+        return error.data.status_code;
       } else if (error.request) {
         console.error('No response received:', error.request);
+        return error.data.status_code;
       } else {
         console.error('Error message:', error.message);
+        return error.data.status_code;
       }
-      throw error;
     }
   },
 
@@ -144,22 +160,24 @@ const FrontAPI = {
           message: 'dummy'
         }
       });
-      console.log(response)
+      console.log(response);
       return response.data;
     } catch (error) {
       if (error.response) {
         console.error('Error response status:', error.response.status);
         console.error('Error response data:', error.response.data);
+        return error.data.status_code;
       } else if (error.request) {
         console.error('No response received:', error.request);
+        return error.data.status_code;
       } else {
         console.error('Error message:', error.message);
+        return error.data.status_code;
       }
-      throw error;
     }
   },
 
-  // get timeslot of the subject, tutor combination
+  // get timeslot of tutor using tutor_id
   fetchTimeSlots: async (tutor) => {
     try {
       const response = await axiosInstance.get('/api/v1/tutor_timeslots', {
@@ -169,23 +187,32 @@ const FrontAPI = {
           message: 'dummy'
         }
       });
+      console.log(response);
       return response.data;
     } catch (error) {
       if (error.response) {
         console.error('Error response status:', error.response.status);
         console.error('Error response data:', error.response.data);
+        return error.data.status_code;
       } else if (error.request) {
         console.error('No response received:', error.request);
+        return error.data.status_code;
       } else {
         console.error('Error message:', error.message);
+        return error.data.status_code;
       }
-      throw error;
     }
   },
   
   // create a new appointment
   createAppointment: async (formData, session_id) => {
     try {
+      console.log({
+        session_id: session_id,
+        subject: formData.subject,
+        tutor: formData.tutor,
+        timeSlot: formData.timeSlot,
+      });
       const response = await axiosInstance.post('/api/v1/create/appointment', {
         session_id: session_id,
         subject: formData.subject,
@@ -197,12 +224,14 @@ const FrontAPI = {
       if (error.response) {
         console.error('Error response status:', error.response.status);
         console.error('Error response data:', error.response.data);
+        return error.data.status_code;
       } else if (error.request) {
         console.error('No response received:', error.request);
+        return error.data.status_code;
       } else {
         console.error('Error message:', error.message);
+        return error.data.status_code;
       }
-      throw error;
     }
   },
 
@@ -210,9 +239,9 @@ const FrontAPI = {
   verifySession: async (session_id) => {
     try {
       // POST request to /verify_session endpoint
-      const response = await axiosInstance.post('/verify_session', {
+      const response = await axiosInstance.get('/api/v1/verify_session', {
         params: {
-          session_id: session_id
+          session_id: session_id,
         }
       });
       return response.data;
@@ -220,12 +249,14 @@ const FrontAPI = {
       if (error.response) {
         console.error('Error response status:', error.response.status);
         console.error('Error response data:', error.response.data);
+        return error.data.status_code;
       } else if (error.request) {
         console.error('No response received:', error.request);
+        return error.data.status_code;
       } else {
         console.error('Error message:', error.message);
+        return error.data.status_code;
       }
-      throw error;
     }
   },
 

@@ -1,0 +1,20 @@
+name: Deploy to Raspberry Pi
+
+on:
+  push:
+    branches:
+      - main
+      - docker-optimization
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Notify Raspberry Pi
+      env:
+        #PI_WEBHOOK_URL: ${{ secrets.PI_WEBHOOK_URL }}
+        #SECRET_TOKEN: ${{ secrets.SECRET_TOKEN }}
+        PI_WEBHOOK_URL: https://teppcq-ip-64-189-201-9.tunnelmole.net/hooks/redeploy-webhook
+        SECRET_TOKEN: supersecrettoken
+      run: |
+        curl -X POST -H "Content-Type: application/json" -d "{\"secret\":\"$SECRET_TOKEN\"}" "$PI_WEBHOOK_URL"
