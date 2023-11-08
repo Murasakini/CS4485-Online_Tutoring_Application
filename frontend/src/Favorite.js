@@ -11,7 +11,8 @@ const Favorite = () => {
         // retrieve data from db
         const getTutorList = async () => {
             // api GET to get list of favorite tutors
-            const session_id = 'bc5fddbc24c7434a94d4c9f2ee217e23'
+            //const session_id = 'bc5fddbc24c7434a94d4c9f2ee217e23'
+            const session_id = document.cookie.split("; ").find((row) => row.startsWith("sessionCookie="))?.split("=")[1];
             const response = await FrontAPI.getFavoriteTutors(session_id);
 
             switch(response?.status_code) {
@@ -27,7 +28,8 @@ const Favorite = () => {
         // delete a tutor
         const handleDeleteTutor = async (tutor_id) => {
             // api POST to add user to the favorite list
-            const session_id = 'bc5fddbc24c7434a94d4c9f2ee217e23'
+            //const session_id = 'bc5fddbc24c7434a94d4c9f2ee217e23'
+            const session_id = document.cookie.split("; ").find((row) => row.startsWith("sessionCookie="))?.split("=")[1];
             const response = await FrontAPI.deleteUserFavorite(session_id, tutor_id);
 
             switch(response?.status_code) {
@@ -51,26 +53,6 @@ const Favorite = () => {
                 default: 
                     console.log('Some errors happened while making api call for adding')
             }
-            // try {
-            //     // api DELETE with id
-            //     await Axios.delete(`http://localhost:3006/favoriteTutors/${id}`);
-
-            // } catch(err) {
-            //     if (err.response) {
-            //         console.log(err.data);
-            //         console.log(err.status);
-            //         console.log(err.header);
-            //     }
-            //     else console.log(`Error:${err.message}`);
-            // }
-
-            // // create new list without deleted tutor
-            // const newTutorList = tutorList.filter((tutor) => {
-            //     return tutor.id !== id;
-            // })
-
-            // // store new list
-            // setTutorList(newTutorList);
         };
 
         // store tutor list retrieved

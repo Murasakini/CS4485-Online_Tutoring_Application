@@ -24,8 +24,8 @@ const FindTutor = () => {
     // retrieve data from db
     const getTutorList = async () => {
         // api GET to get list of favorite tutors
-        const session_id = 'bc5fddbc24c7434a94d4c9f2ee217e23'
-
+        // const session_id = 'bc5fddbc24c7434a94d4c9f2ee217e23'
+        const session_id = document.cookie.split("; ").find((row) => row.startsWith("sessionCookie="))?.split("=")[1];
         // add session id to the search request
         searchInfo['session_id'] = session_id;
         const response = await FrontAPI.findTutors(searchInfo);
@@ -48,7 +48,8 @@ const FindTutor = () => {
     const handleAddTutor = async (tutor_id) => {
         
         // api POST to add user to the favorite list
-        const session_id = 'bc5fddbc24c7434a94d4c9f2ee217e23'
+        // const session_id = 'bc5fddbc24c7434a94d4c9f2ee217e23'
+        const session_id = document.cookie.split("; ").find((row) => row.startsWith("sessionCookie="))?.split("=")[1];
         const response = await FrontAPI.addUserFavorite(session_id, tutor_id);
 
         switch(response?.status_code) {
