@@ -30,7 +30,7 @@ TUTOR_FIELDS = USER_FIELDS.union({"criminal"})
 APPOINTMENT_FIELDS = {"subject", "tutor", "timeSlot"}
 AUTHENTICATE_FIELDS = {"email", "password"}
 PROTECTED_ENDPOINTS = ['v1.test_protected'] #, 'v1.subjects']
-
+SEARCH_FIELDS = {"first_name", "last_name", "subject"}
 
 #####################
 # Helper Functions
@@ -82,6 +82,70 @@ def clean_avail():
                CALL clean_avail;
     """)
     db.session.execute(sql)
+
+# Getters:
+
+# finds list of subjects given tutor_id
+def subjects_of_tutor(tutor_id):
+    sql = text("""
+               SELECT class_name FROM ota_db.tutor_classes_readable WHERE tutor_id = {}
+        """.format(tutor_id))
+    result = db.session.execute(sql)
+    class_list = list()
+    for row in result:
+        class_list.append(row[0])
+    return class_list
+
+# finds list of tutors given class_num, department_id
+def tutors_of_subject(class_num, department_id):
+    # recieves (tutor_id, first_name, last_name) arrays of matching tutors
+    sql = text("""
+            SELECT tutor_id, first_name, last_name FROM tutor_classes_readable 
+            WHERE class_num = :class_num AND department_id = :department_id;
+        """)
+    
+    result = db.session.execute(sql, {"class_num": class_num, "department_id": department_id})
+
+    if result == None:
+        response = {
+            'error': True,
+            'status_code': 200,
+            'message': 'No tutors found.'
+        }
+        return response
+
+    response = list()
+    for row in result:
+        # Combine first and last name of tutors before sending
+        response.append({'name': row[1] + ' ' + row[2], 'tutor_id': row[0]})
+
+    return response
+
+def subjects_of_user(session_id):
+    # finds available classes based on session id
+    validate_auth_table()
+    sql = text("""
+            SELECT user_classes_readable.class_name, user_classes_readable.class_num, user_classes_readable.department_id, user_classes_readable.department_name
+                FROM ota_db.user_classes_readable 
+                LEFT JOIN ota_db.auth_table ON user_classes_readable.user_id=auth_table.user_id 
+                WHERE auth_table.session_id = '{}';
+        """.format(session_id))
+    
+    result = db.session.execute(sql)
+
+    if result == None:
+        response = {
+            'error': True,
+            'status_code': 200,
+            'message': 'No subjects found.'
+        }
+        return response
+
+    # jsonify sql result
+    response = list()
+    for row in result:
+        response.append({'class_name': row[0], 'class_num': row[1], 'department_id': row[2], 'department_name': row[3], 'session_id': session_id})
+    return response
 
 def insert_user(data):
     if user_exists(data['netID']):
@@ -145,6 +209,53 @@ def insert_appointment(data):
     except IntegrityError:  # Catch any IntegrityError (like unique constraint violations)
         db.session.rollback()
         return "An error occurred while inserting the appointment.", False
+    
+def insert_user_favorite(data):
+    validate_auth_table()
+    query = text('''
+        INSERT INTO ota_db.user_favorites (user_id, tutor_id) 
+        VALUES ((SELECT user_id FROM ota_db.auth_table 
+                 WHERE auth_table.session_id = '{}'), :tutor_id);
+    '''.format(data.get('session_id')))
+        
+    try:
+        # execute query
+        result = db.session.execute(query, data)
+        db.session.commit()
+    
+        if result.rowcount == 1:
+            return data, True
+        else:
+            return 'Failed to add tutor to the list.', False
+    # catch integrity error
+    except IntegrityError:
+        # return to previous 
+        db.session.rollback()
+        return 'An error occurred while adding the tutor into the favorite list.', False
+    
+def delete_user_favorite(data):
+    validate_auth_table()
+    query = text('''
+        DELETE FROM ota_db.user_favorites 
+            WHERE user_id = (SELECT user_id FROM ota_db.auth_table 
+                WHERE auth_table.session_id = '{}') 
+                AND tutor_id = :tutor_id;
+    '''.format(data.get('session_id')))
+
+    try:
+        # execute query
+        result = db.session.execute(query, data)
+        db.session.commit()
+    
+        if result.rowcount == 1:
+            return data, True
+        else:
+            return 'Failed to remove tutor from the list.', False
+    # catch integrity error
+    except IntegrityError:
+        # return to previous 
+        db.session.rollback()
+        return 'An error occurred while removing the tutor from the favorite list.', False
     
 def authenticate(email, password):
     user_sql = text("""
@@ -306,7 +417,54 @@ def save_session_to_db(session_id, user_id, user_type, expire):
     except IntegrityError:  # Catch any IntegrityError (like unique constraint violations)
         db.session.rollback()
         return "An error occurred while inserting the user.", False    
+
+'''
+This function checks whether the tutor already in the list associated to the user.
+:param session_id: user session_id
+:param tutor_id: tutor id 
+:return: none if the tutor is not existed in the user's favorite list; otherwise, a row from db favorite list
+'''
+def in_favorites_list(session_id, tutor_id):
+    # define query
+    query = text('''
+            SELECT F.user_id, F.tutor_id 
+            FROM ota_db.user_favorites as F, ota_db.auth_table as A 
+            WHERE A.user_id = F.user_id AND F.tutor_id = '{}' AND A.session_id = '{}';
+            '''.format(tutor_id, session_id))
     
+    # execute query
+    result = db.session.execute(query)
+    # True if found, False if not found
+    return result.fetchone() != None
+
+"""
+This function takes a session_id to determine a user, and returns a readable version of the user's list of tutors and their subjects.
+"""
+def user_favorite_query(session_id):
+    # retrieve list of favorite tutors
+    #validate_auth_table()
+    sql = text("""
+            SELECT ota_db.user_favorites_readable.tutor_id, ota_db.user_favorites_readable.first_name, 
+                   ota_db.user_favorites_readable.last_name
+            FROM ota_db.user_favorites_readable 
+            LEFT JOIN ota_db.auth_table ON user_favorites_readable.user_id=auth_table.user_id
+            WHERE auth_table.session_id = '{}';
+        """.format(session_id))
+    
+    # execute query
+    result = db.session.execute(sql)
+    rows = result.fetchall()
+
+    # append each returned row into response
+    fav_list = list()
+    for row in rows:
+        fav_list.append({
+            'name': row[1] + ' ' + row[2], 
+            'subject': subjects_of_tutor(row[0]),
+            'tutor_id': row[0]
+        })
+
+    return fav_list
 
 
 
@@ -421,8 +579,7 @@ def signup_user():
     
 
 @version.route("/subj_tutors", methods=["GET"])
-def tutors_of_subject():
-
+def subj_tutors():
     if not validate_fields(request.args, {'subject'}):
         response = {
             'error': True,
@@ -430,33 +587,15 @@ def tutors_of_subject():
             'message': 'Invalid or missing fields in request.'
         }
         return jsonify(response), 400
-
+    
     # gets subject from request, in format "department_id/class_id"
     subject = request.args.get('subject').split('/')
 
     class_num = subject[1]
     department_id = subject[0]
     
-    # recieves (tutor_id, first_name, last_name) arrays of matching tutors
-    sql = text("""
-            SELECT tutor_id, first_name, last_name FROM tutor_classes_readable 
-            WHERE class_num = :class_num AND department_id = :department_id;
-        """)
+    response = subjects_of_tutor(class_num, department_id)
     
-    result = db.session.execute(sql, {"class_num": class_num, "department_id": department_id})
-
-    if result == None:
-        response = {
-            'error': True,
-            'status_code': 200,
-            'message': 'No tutors found.'
-        }
-        return jsonify(response), 200
-
-    response = list()
-    for row in result:
-        # Combine first and last name of tutors before sending
-        response.append({'name': row[1] + ' ' + row[2], 'tutor_id': row[0]})
     return jsonify(response), 200
 
 
@@ -474,29 +613,8 @@ def subjects():
     # pulls a user's session_id from the browser
     session_id = request.args.get('session_id')
 
-    # finds available classes based on session id
-    validate_auth_table()
-    sql = text("""
-            SELECT user_classes_readable.class_name, user_classes_readable.class_num, user_classes_readable.department_id, user_classes_readable.department_name
-                FROM ota_db.user_classes_readable 
-                LEFT JOIN ota_db.auth_table ON user_classes_readable.user_id=auth_table.user_id 
-                WHERE auth_table.session_id = '{}';
-        """.format(session_id))
+    response = subjects_of_user(session_id)
     
-    result = db.session.execute(sql)
-
-    if result == None:
-        response = {
-            'error': True,
-            'status_code': 200,
-            'message': 'No subjects found.'
-        }
-        return jsonify(response), 200
-
-    # jsonify sql result
-    response = list()
-    for row in result:
-        response.append({'class_name': row[0], 'class_num': row[1], 'department_id': row[2], 'department_name': row[3], 'session_id': session_id})
     return jsonify(response), 200
 
 @version.route("/tutor_timeslots", methods=["GET"])
@@ -581,8 +699,10 @@ def create_appointment():
     if success:
         # remove tutor's availability from the database
         sql = text("""
-                DROP * FROM ota_db.tutors_availability WHERE time_available = "{}";
-        """.format(data))
+                DROP * FROM ota_db.tutors_availability WHERE time_available = "{}" AND tutor_id = :tutor_id;
+        """.format(request.args.get("timeSlot")))
+        db.session.execute(sql, formatted_data)
+
         response = {
             'error': False,
             'status_code': 201,
@@ -733,6 +853,166 @@ def test_protected():
         "message": "This is a protected endpoint."
     }
 
+#------------favorite tutors and search tutors------------
+# get favorite tutor list endpoint
+@version.route("/favorite_tutors", methods=["GET"])
+def get_favorite_tutors():
+    
+    # pulls a user's session_id from the browser
+    session_id = request.args.get('session_id')
+    
+    # get list of user favorites
+    fav_list = user_favorite_query(session_id)
+
+    response = {
+        'error': False,
+        'status_code': 201,
+        'message': 'Retrieve favorite tutors list successfully.',
+        'result': fav_list
+    }
+
+    return jsonify(response), 201
+    
+# endpoint to add a tutor into favorite list
+@version.route("/add_favorite_tutors", methods=["POST"])
+def add_favorite_tutors():
+
+    # get data sent along with the request
+    data = request.get_json()
+    session_id = data.get("session_id")  
+    tutor_id = data.get("tutor_id")
+
+    formatted_data = {
+        "session_id": session_id,
+        "tutor_id": tutor_id
+    }
+    # session_id = 'bc5fddbc24c7434a94d4c9f2ee217e23'
+    # tutor_id = 106
+
+    # check if the tutor is already in user's favorite list
+    if not in_favorites_list(session_id=session_id, tutor_id=tutor_id):  # tutor wasn't in list
+        inserted_data, success = insert_user_favorite(formatted_data)
+        if success:
+                response = {
+                    'error': False,
+                    'status_code': 201,
+                    'message': 'Added tutor to the list successfully.'
+                }
+                status_code = 201
+        else:
+            response = {
+                'error': True,
+                'status_code': 409,
+                'message': inserted_data
+            }
+            status_code = 409
+    else:  # tutor existed
+        response = response = {
+            'error': False,
+            'status_code': 403,
+            'message': 'The tutor is already in the list.'
+        }
+        status_code = 403
+
+    return jsonify(response), status_code
+
+# endpoint to remove a tutor from the favorite list
+@version.route("/remove_favorite_tutor", methods=["POST"])
+def remove_favorite_tutor():
+
+    # get data sent along with the request
+    data = request.get_json()
+    session_id = data.get("session_id")  
+    tutor_id = data.get("tutor_id")
+
+    formatted_data = {
+        "session_id": session_id,
+        "tutor_id": tutor_id
+    }
+
+    # check if the tutor is actually in user's favorite list
+    if in_favorites_list(session_id=session_id, tutor_id=tutor_id):  
+        deleted_data, success = delete_user_favorite(formatted_data)
+        if success:
+                response = {
+                    'error': False,
+                    'status_code': 201,
+                    'message': 'Removed tutor from the list successfully.'
+                }
+                status_code = 201
+        else:
+            response = {
+                'error': True,
+                'status_code': 409,
+                'message': deleted_data
+            }
+            status_code = 409
+
+    else:  # tutor wasn't in list
+        response = response = {
+            'error': False,
+            'status_code': 403,
+            'message': 'The tutor is not in your favorite list.'
+        }
+        status_code = 403
+
+    return jsonify(response), status_code
+
+# endpoint to find tutors
+@version.route("/find_tutors", methods=["POST"])
+def find_tutors():
+    # pulls a user's session_id from the browser
+    # get data sent along with the request
+    data = request.get_json()
+
+    # define conditions in where clause
+    where_conditions = ''
+    for key, value in data.items():
+        if key == 'session_id' or len(value) == 0:
+            continue
+        
+        where_conditions += ' AND ' + str(key) + ' = \'' + data.get(str(key)) + '\''
+
+    # retrieve list of tutors based on search fields
+    validate_auth_table()
+    sql = text("""
+            SELECT tutor_id, first_name, last_name
+            FROM ota_db.tutors
+            WHERE EXISTS (SELECT * FROM ota_db.auth_table WHERE session_id = '{}')
+        """.format(data.get('session_id')) + where_conditions + ';')
+    
+    # execute query
+    result = db.session.execute(sql, data)
+    rows = result.fetchall()
+
+    # create list of tutors returned from db 
+    tutor_list = list()
+    for row in rows:
+        tutor_list.append({
+            'name': row[1] + ' ' + row[2], 
+            'subject': subjects_of_tutor(row[0]),
+            'tutor_id': row[0]
+        })
+
+    if len(tutor_list) == 0:
+        response = {
+            'error': False,
+            'status_code': 201,
+            'message': 'No data found.',
+            'result': tutor_list
+        }
+        status_code = 201
+
+    else:
+        response = {
+            'error': False,
+            'status_code': 201,
+            'message': 'Found tutors.',
+            'result': tutor_list
+        }
+        status_code = 201
+
+    return jsonify(response), status_code
 
 #####################
 # Main

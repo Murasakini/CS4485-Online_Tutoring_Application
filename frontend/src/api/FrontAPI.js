@@ -260,6 +260,118 @@ const FrontAPI = {
     }
   },
 
+  // get favorite tutors list
+  getFavoriteTutors: async (session_id) => {
+    try {
+      // access endpoint and get data
+      const response = await axiosInstance.get('/api/v1/favorite_tutors', {
+        params: {
+          session_id: session_id
+        }, data:{
+          message: 'dummy'
+        }
+      });
+
+      //console.log(response)
+      return response.data;
+
+      // handle errors
+    } catch (error) {
+      if (error.response) {
+        console.error('Error response status:', error.response.status);
+        console.error('Error response data:', error.response.data);
+        return error.response.data
+
+      } else if (error.request) {
+        console.error('No response received:', error.request);
+
+      } else {
+        console.error('Error message:', error.message);
+      }
+    }
+  },
+
+  // get favorite tutors list
+  findTutors: async (search_data) => {
+    try {
+      // access endpoint and get data
+      const response = await axiosInstance.post('/api/v1/find_tutors', search_data);
+
+      //console.log(response)
+      return response.data;
+
+      // handle errors
+    } catch (error) {
+      if (error.response) {
+        console.error('Error response status:', error.response.status);
+        console.error('Error response data:', error.response.data);
+        return error.response.data
+
+      } else if (error.request) {
+        console.error('No response received:', error.request);
+
+      } else {
+        console.error('Error message:', error.message);
+      }
+    }
+  },
+
+  // get favorite tutors list
+  addUserFavorite: async (session_id, tutor_id) => {
+    try {
+      // access endpoint and send data
+      const response = await axiosInstance.post('/api/v1/add_favorite_tutors', {
+        session_id: session_id,
+        tutor_id: tutor_id
+      });
+
+      //console.log(response)
+      return response.data;
+
+      // handle errors
+    } catch (error) {
+      if (error.response) {
+        console.error('Error response status:', error.response.status);
+        console.error('Error response data:', error.response.data);
+        return error.response.data
+
+      } else if (error.request) {
+        console.error('No response received:', error.request);
+
+      } else {
+        console.error('Error message:', error.message);
+      }
+    }
+  },
+
+  // delete tutors from favorite list
+  deleteUserFavorite: async (session_id, tutor_id) => {
+    try {
+      // access endpoint and send data
+      const response = await axiosInstance.post('/api/v1/remove_favorite_tutor', {
+        session_id: session_id,
+        tutor_id: tutor_id
+      });
+
+      //console.log(response)
+      return response.data;
+
+      // handle errors
+    } catch (error) {
+      if (error.response) {
+        console.error('Error response status:', error.response.status);
+        console.error('Error response data:', error.response.data);
+        return error.response.data
+
+      } else if (error.request) {
+        console.error('No response received:', error.request);
+
+      } else {
+        console.error('Error message:', error.message);
+      }
+    }
+  },
+
 };
 
 export default FrontAPI;

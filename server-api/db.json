@@ -20,5 +20,75 @@
       "subject": "Math",
       "id": 1
     }
+  ],
+  "tutor": [
+    {
+      "id": 1,
+      "name": "Curtis Wyatt",
+      "email": "Curtis.Wyatt@email.com",
+      "subject": "English"
+    },
+    {
+      "id": 2,
+      "name": "Luka Osborn",
+      "email": "Luka.Osborn@email.com",
+      "subject": "History"
+    },
+    {
+      "id": 3,
+      "name": "Bradley Russell",
+      "email": "Bradley.Russell@email.com",
+      "subject": "English"
+    },
+    {
+      "id": 4,
+      "name": "Dante Dyer",
+      "email": "Dante.Dyer@email.com",
+      "subject": "Economy"
+    },
+    {
+      "id": 5,
+      "name": "Stacey Vang",
+      "email": "Stacey.Vang@email.com",
+      "subject": "Psychology"
+    },
+    {
+      "id": 6,
+      "name": "Yasin Ali",
+      "email": "Yasin.Ali@email.com",
+      "subject": "Computer"
+    },
+    {
+      "id": 7,
+      "name": "Nell Merrill",
+      "email": "Nell.Merrill@email.com",
+      "subject": "Math"
+    }
+  ],
+  "favoriteTutors": [
+    {
+      "id": 7,
+      "name": "Nell Merrill",
+      "email": "Nell.Merrill@email.com",
+      "subject": "Math"
+    },
+    {
+      "id": 1,
+      "name": "Curtis Wyatt",
+      "email": "Curtis.Wyatt@email.com",
+      "subject": "English"
+    },
+    {
+      "id": 4,
+      "name": "Dante Dyer",
+      "email": "Dante.Dyer@email.com",
+      "subject": "Economy"
+    },
+    {
+      "id": 2,
+      "name": "Luka Osborn",
+      "email": "Luka.Osborn@email.com",
+      "subject": "History"
+    }
   ]
 }
