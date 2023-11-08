@@ -67,6 +67,9 @@ export default function TwoFactorAuthentication() {
 
   // 2FA code as a state
   const [code, setCode] = useState('');
+
+  // resend2FA cooldown
+  const [isCoolDown, setCoolDown] = useState(false);
   
   // read 2FA code
   const handleCodeChange = (event) => {
@@ -79,12 +82,29 @@ export default function TwoFactorAuthentication() {
       email: email,
       userType: userType,
     };
+    
+    if (isCoolDown) {
+      setSnackbarMessage('Cooling down. Please try again later.');
+      setSnackbarOpen(true);
+    } else {
 
-    try {
-      const apiResponse = await FrontAPI.resend2FA(formData);
-      setResponse(apiResponse);
-    } catch (error) {
-      console.error('API call failed:', error);
+      try {
+        const apiResponse = await FrontAPI.resend2FA(formData);
+        setResponse(apiResponse);
+      } catch (error) {
+        console.error('API call failed:', error);
+      }
+
+      setSnackbarMessage('New code has been sent.');
+      setSnackbarOpen(true);
+
+      // 10 seconds cooldown
+      setTimeout(() => {}, 10000); 
+
+      setCoolDown(true);
+
+      // Reset the cooldown after 10 seconds
+      setTimeout(() => {setCoolDown(false);}, 10000);
     }
   };
   
@@ -183,6 +203,7 @@ export default function TwoFactorAuthentication() {
               onChange={handleCodeChange}
               maxLength="6"
               style={{
+                textAlign: 'center',
                 width: '90%',
                 padding: '10px',
                 marginBottom: '10px',
