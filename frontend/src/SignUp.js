@@ -38,6 +38,7 @@ export default function SignUp() {
   const [passwordValidationMessage, setPasswordValidationMessage] = useState('');
   const [openSnackbar, setSnackbarOpen] = useState(false);      // for dialog
   const [snackbarMessage, setSnackbarMessage] = useState('');  // for dialog msg
+  const [cooldown, setCooldown] = useState(false);
 
   const [showMore, setShowMore] = useState(false);
   const [formData, setFormData] = useState({
@@ -141,8 +142,20 @@ export default function SignUp() {
 
   // listen for submit event from "Sign in" Button
   const handleSubmit = async (event) => {
+    
     // preventDefault() prevents a page refresh
     event.preventDefault();
+
+    if (cooldown) {
+      // on cd
+      return;
+    }
+    // cd is on
+    setCooldown(true);
+    // 5 sec timer
+    setTimeout(() => {
+      setCooldown(false);
+    }, 5000);
 
     let isTutor = false;
 
@@ -448,7 +461,7 @@ export default function SignUp() {
               sx={{ mt: 2, mb: 2 }}
               disabled={!passwordsMatch || !passwordValid}
             >
-              Sign Up
+              {cooldown ? 'Cooldown (5s)' : 'Sign Up'}
             </Button>
 
             <CustomSnackbar
