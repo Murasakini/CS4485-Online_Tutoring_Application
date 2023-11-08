@@ -30,6 +30,7 @@ export default function TutorAppointmentScheduler() {
   const [availableSlots, setAvailableSlots] = useState([]);
   const [openSnackbar, setSnackbarOpen] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState('');
+  const [cooldown, setCooldown] = useState(false);
 
   useEffect(() => {
     // fetch the list of subjects. unconditional 
@@ -105,6 +106,18 @@ export default function TutorAppointmentScheduler() {
   // handle when user click submit
   const handleSubmit = async (event) => {
     event.preventDefault();
+
+    if (cooldown) {
+      // on cd
+      return;
+    }
+    // cd is on
+    setCooldown(true);
+    // 5 sec timer
+    setTimeout(() => {
+      setCooldown(false);
+    }, 5000);
+
     // verify user's session before allowing them to create an appointment
     const session_id = document.cookie.split("; ").find((row) => row.startsWith("sessionCookie="))?.split("=")[1];
     const sessionResponse = await FrontAPI.verifySession(session_id);
@@ -232,7 +245,7 @@ export default function TutorAppointmentScheduler() {
           fullWidth
           disabled={!formData.tutorId || !formData.subject || !formData.timeSlot}
         >
-          Schedule
+          {cooldown ? 'Cooldown (5s)' : 'Sign Up'}
         </Button>
 
         <CustomSnackbar
