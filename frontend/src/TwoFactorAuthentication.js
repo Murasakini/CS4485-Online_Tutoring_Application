@@ -1,12 +1,11 @@
 import { useState } from 'react';
 import Button from '@mui/material/Button';
 import { ThemeProvider, createTheme } from '@mui/material/styles';
-//import './App.css';
 import FrontAPI from './api/FrontAPI.js';
 import * as React from 'react';
 import { Navigate } from 'react-router-dom';
 import CustomSnackbar from './components/CustomSnackbar.js';
-import { useLocation } from 'react-router-dom'; /////////////
+import { useLocation } from 'react-router-dom';
 
 const theme = createTheme({
     palette: {
@@ -62,23 +61,30 @@ export default function TwoFactorAuthentication() {
   const [snackbarOpen, setSnackbarOpen] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState('');
 
-  // set response from Resend 2FA
-  const [response, setResponse] = useState(null);
+  // 2FA code & user info as a state
+  const [formData, setFormData] = useState({
+    email: '',
+    userType: '',
+    code: ''
+  });
 
-  // 2FA code as a state
-  const [code, setCode] = useState('');
+  // read 2FA code & user info
+  const handleCodeChange = (event) => {
+    const code = event.target.value;
+      
+    setFormData({
+      email: email,
+      userType: userType,
+      code: code,
+    });
+  };
 
   // resend2FA cooldown
   const [isCoolDown, setCoolDown] = useState(false);
-  
-  // read 2FA code
-  const handleCodeChange = (event) => {
-    setCode(event.target.value);
-  };
 
   // call resend2FA API
   const handleResend2FAClick = async () => {
-    const formData = {
+    const resendData = {
       email: email,
       userType: userType,
     };
@@ -89,8 +95,9 @@ export default function TwoFactorAuthentication() {
     } else {
 
       try {
-        const apiResponse = await FrontAPI.resend2FA(formData);
-        setResponse(apiResponse);
+        const apiResponse = await FrontAPI.resend2FA(resendData);
+
+        console.log(apiResponse.data);
       } catch (error) {
         console.error('API call failed:', error);
       }
@@ -98,9 +105,7 @@ export default function TwoFactorAuthentication() {
       setSnackbarMessage('New code has been sent.');
       setSnackbarOpen(true);
 
-      // 10 seconds cooldown
-      setTimeout(() => {}, 10000); 
-
+      // Start the cooldown (set isCoolDown to true)
       setCoolDown(true);
 
       // Reset the cooldown after 10 seconds
@@ -111,13 +116,17 @@ export default function TwoFactorAuthentication() {
   const handleSubmit = async (event) => {
     event.preventDefault();
     
-    const response = await FrontAPI.validate2FA(code);
-    console.log('Entered 2FA Code:', code);
-      
+    console.log('Entered 2FA Code:', formData.code);
+    const response = await FrontAPI.validate2FA(formData);
+    
+    console.log(response);
+
     // Copied from handleSubmit in Signin.js 
     switch (response.status_code) { 
       case 200:
         // success
+        // cookie hardcoded to last an hour ## TODO: make max age dependant on cookie_data.expire minus current time
+        document.cookie = `sessionCookie=${response.cookie_data.session_id}; max-age=3600`
         setSuccessful(true);
         console.log('2FA successful');
         break;
@@ -190,7 +199,7 @@ export default function TwoFactorAuthentication() {
             </a>
           </p>
 
-          <label class="control-label required" htmlfor="code" style={labelStyle}>
+          <label className="control-label required" htmlFor="code" style={labelStyle}>
             Secure verification code 
             <abbr className="required disclaimer-basic" style={disclaimerRequiredStyle}> *</abbr>
           </label>
@@ -199,7 +208,7 @@ export default function TwoFactorAuthentication() {
             <input
               type="text"
               //placeholder="Enter Verification Code"
-              value={code}
+              value={formData.code}
               onChange={handleCodeChange}
               maxLength="6"
               style={{

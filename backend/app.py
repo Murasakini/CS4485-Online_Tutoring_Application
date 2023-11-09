@@ -472,24 +472,12 @@ def authenticate_user(email, password):
     if user_result:
         user_type = 'user'
         user_id = user_result[0]
-            # Generate a unique session_id
-        session_id = uuid.uuid4().hex
-        
-        # Set an expiration time for the session
-        expire = datetime.utcnow() + timedelta(hours=1)
-        
-        # Save the session to the database
-        a, b = save_session_to_db(session_id, user_id, user_type, expire)
-        
-        print("session result message: " + str(a), flush=True)
-        print("success in inserting session: " + str(b), flush=True)
+            # Session_id generation moved to validate_2fa()
 
         data = {
             "user_type": user_type,
             "user_id": user_id,
-            "email": email,
-            "session_id": session_id,
-            "expire": expire
+            "email": email
         }
         
         return data, True
@@ -508,24 +496,12 @@ def authenticate_tutor(email, password):
     if tutor_result:
         user_type = 'tutor'
         user_id = tutor_result[0]
-            # Generate a unique session_id
-        session_id = uuid.uuid4().hex
-        
-        # Set an expiration time for the session
-        expire = datetime.utcnow() + timedelta(hours=1)
-        
-        # Save the session to the database
-        a, b = save_session_to_db(session_id, user_id, user_type, expire)
-        
-        print("session result message: " + str(a), flush=True)
-        print("success in inserting session: " + str(b), flush=True)
+            # Session_id generation moved to validate_2fa()
 
         data = {
             "user_type": user_type,
             "user_id": user_id,
-            "email": email,
-            "session_id": session_id,
-            "expire": expire
+            "email": email
         }
         
         return data, True
@@ -755,14 +731,23 @@ def send_email_tutor(tutor_id):
 
     return True
 
-def check_2fa_code(code):
-    sql = text("""
+def check_2fa_code(code, user_type, user_id_num):
+    if user_type == 'user':
+        sql = text("""
             SELECT 2fa_table.2fa_code
             FROM 2fa_table
-            WHERE 2fa_table.2fa_code = :code
+            WHERE 2fa_table.user_id = :user_id_num
+            AND 2fa_table.2fa_code = :code
+        """)
+    elif user_type == 'tutor':
+        sql = text("""
+            SELECT 2fa_table.2fa_code
+            FROM 2fa_table
+            WHERE 2fa_table.tutor_id = :user_id_num
+            AND 2fa_table.2fa_code = :code
         """)
     
-    validated = db.session.execute(sql, {"code": code}).fetchone()
+    validated = db.session.execute(sql, {"user_id_num": user_id_num, "code": code}).fetchone()
 
     if validated:
         # Validation success
@@ -1631,8 +1616,8 @@ def login_user():
         response = {
             'error': False,
             'status_code': 200,
-            'message': 'Login successful, cookie created.',
-            'cookie_data': user_data
+            'message': 'Login successful.',
+            'user_data': user_data
         }
         response_success = jsonify(response)
         #response_success.set_cookie('sessionCookie', user_data.session_id, expires = user_data.expire) # cookie should be created after 2FA authentication
@@ -1667,8 +1652,8 @@ def login_tutor():
         response = {
             'error': False,
             'status_code': 200,
-            'message': 'Login successful, cookie created.',
-            'cookie_data': user_data
+            'message': 'Login successful.',
+            'user_data': user_data
         }
         response_success = jsonify(response)
         #response_success.set_cookie('sessionCookie', user_data.session_id, expires = user_data.expire)
@@ -1721,16 +1706,48 @@ def send_2fa():
 def validate_2fa():
     data = request.get_json()
     code = data.get("code")
+    email = data.get("email")
+    user_type= data.get("userType")
+
+    if user_type == 'student':
+        user_id = search_id_user(email)
+        user_type = 'user'
+    elif user_type == 'tutor':
+        user_id = search_id_tutor(email)
+
     delete_expired_2fa()
-    authenticated = check_2fa_code(code)
+    authenticated = check_2fa_code(code, user_type, user_id)
 
     if authenticated:
+
+        # Generate a unique session_id
+        session_id = uuid.uuid4().hex
+        
+        # Set an expiration time for the session
+        expire = datetime.utcnow() + timedelta(hours=1)
+            
+        # Save the session to the database
+        a, b = save_session_to_db(session_id, user_id, user_type, expire)
+        
+        print("session result message: " + str(a), flush=True)
+        print("success in inserting session: " + str(b), flush=True)
+
+        user_data = {
+            "user_type": user_type,
+            "user_id": user_id,
+            "email": email,
+            "session_id": session_id,
+            "expire": expire
+        }
+
         response = {
             'error': False,
             'status_code': 200,
-            'message': '2FA code found.'
+            'message': '2FA code found.',
+            'cookie_data': user_data
         }
         delete_2fa_by_code(code)
+
         return jsonify(response), 200
     else:
         response = {
@@ -1755,7 +1772,7 @@ def resend_2fa():
                 'status_code': 200,
                 'message': 'Student 2FA code resent.'
             }
-            return jsonify(response)
+            return jsonify(response) ,200
     elif userType == 'tutor':
         tutor_id = search_id_tutor(email)
         if delete_2fa_by_tutorid(tutor_id):
@@ -1765,7 +1782,7 @@ def resend_2fa():
                 'status_code': 200,
                 'message': 'Tutor 2FA code resent.'
             }
-            return jsonify(response)
+            return jsonify(response), 200
     else:
         response = {
             'error': True,
@@ -2322,6 +2339,217 @@ def update_subject():
 
         return jsonify(response), status_code
     
+#------------favorite tutors and search tutors------------
+# get favorite tutor list endpoint
+@version.route("/favorite_tutors", methods=["GET"])
+def get_favorite_tutors():
+    
+    # pulls a user's session_id from the browser
+    session_id = request.args.get('session_id')
+    
+    # get list of user favorites
+    fav_list = user_favorite_query(session_id)
+
+    response = {
+        'error': False,
+        'status_code': 201,
+        'message': 'Retrieve favorite tutors list successfully.',
+        'result': fav_list
+    }
+
+    return jsonify(response), 201
+    
+# endpoint to add a tutor into favorite list
+@version.route("/add_favorite_tutors", methods=["POST"])
+def add_favorite_tutors():
+
+    # get data sent along with the request
+    data = request.get_json()
+    session_id = data.get("session_id")  
+    tutor_id = data.get("tutor_id")
+
+    formatted_data = {
+        "session_id": session_id,
+        "tutor_id": tutor_id
+    }
+    # session_id = 'bc5fddbc24c7434a94d4c9f2ee217e23'
+    # tutor_id = 106
+
+    # check if the tutor is already in user's favorite list
+    if not in_favorites_list(session_id=session_id, tutor_id=tutor_id):  # tutor wasn't in list
+        inserted_data, success = insert_user_favorite(formatted_data)
+        if success:
+                response = {
+                    'error': False,
+                    'status_code': 201,
+                    'message': 'Added tutor to the list successfully.'
+                }
+                status_code = 201
+        else:
+            response = {
+                'error': True,
+                'status_code': 409,
+                'message': inserted_data
+            }
+            status_code = 409
+    else:  # tutor existed
+        response = response = {
+            'error': False,
+            'status_code': 403,
+            'message': 'The tutor is already in the list.'
+        }
+        status_code = 403
+
+    return jsonify(response), status_code
+
+# endpoint to remove a tutor from the favorite list
+@version.route("/remove_favorite_tutor", methods=["POST"])
+def remove_favorite_tutor():
+
+    # get data sent along with the request
+    data = request.get_json()
+    session_id = data.get("session_id")  
+    tutor_id = data.get("tutor_id")
+
+    formatted_data = {
+        "session_id": session_id,
+        "tutor_id": tutor_id
+    }
+
+    # check if the tutor is actually in user's favorite list
+    if in_favorites_list(session_id=session_id, tutor_id=tutor_id):  
+        deleted_data, success = delete_user_favorite(formatted_data)
+        if success:
+                response = {
+                    'error': False,
+                    'status_code': 201,
+                    'message': 'Removed tutor from the list successfully.'
+                }
+                status_code = 201
+        else:
+            response = {
+                'error': True,
+                'status_code': 409,
+                'message': deleted_data
+            }
+            status_code = 409
+
+    else:  # tutor wasn't in list
+        response = response = {
+            'error': False,
+            'status_code': 403,
+            'message': 'The tutor is not in your favorite list.'
+        }
+        status_code = 403
+
+    return jsonify(response), status_code
+
+# endpoint to find tutors
+@version.route("/find_tutors", methods=["POST"])
+def find_tutors():
+    ###
+    # Due to multiple classes can a tutor register, if class name is included in the search field, 
+    # we use different SQL query to retrieve data 
+    ###
+
+    # pulls a user's session_id from the browser
+    # get data sent along with the request
+    data = request.get_json()
+
+    # define conditions in where clause
+    where_conditions = ''
+    for key, value in data.items():
+        if key == 'session_id' or len(value) == 0:
+            continue
+        
+        where_conditions += ' AND ' + str(key) + ' = \'' + data.get(str(key)) + '\''
+
+    # case 1: class name is not included
+    if data.get('class_name') == None or data.get('class_name') == '':
+        
+        # retrieve list of tutors based on search fields
+        validate_auth_table()
+        sql = text("""
+                SELECT tutor_id, first_name, last_name
+                FROM ota_db.tutors
+                WHERE EXISTS (SELECT * FROM ota_db.auth_table WHERE session_id = '{}')
+            """.format(data.get('session_id')) + where_conditions + ';')
+        
+        # execute query
+        result = db.session.execute(sql)
+        rows = result.fetchall()
+
+        # create list of tutors returned from db 
+        tutor_list = list()
+        for row in rows:
+            tutor_list.append({
+                'name': row[1] + ' ' + row[2], 
+                'subject': subjects_of_tutor(row[0]),
+                'tutor_id': row[0]
+            })
+
+        if len(tutor_list) == 0:
+            response = {
+                'error': False,
+                'status_code': 201,
+                'message': 'No data found.',
+                'result': tutor_list
+            }
+            status_code = 201
+
+        else:
+            response = {
+                'error': False,
+                'status_code': 201,
+                'message': 'Found tutors.',
+                'result': tutor_list
+            }
+            status_code = 201
+    # end of case 1
+
+    # case 2: class name is included       
+    else:
+        # retrieve list of tutors based on search fields
+        validate_auth_table()
+        sql = text("""
+                SELECT tutor_id, first_name, last_name, class_name
+                FROM ota_db.tutor_classes_readable
+                WHERE EXISTS (SELECT * FROM ota_db.auth_table WHERE session_id = '{}')
+            """.format(data.get('session_id')) + where_conditions + ';')
+        
+        # execute query
+        result = db.session.execute(sql)
+        rows = result.fetchall()
+
+        if len(rows) == 0:  # no data found
+            response = {
+                'error': False,
+                'status_code': 201,
+                'message': 'No data found.',
+                'result': tutor_list
+            }
+            status_code = 201
+
+        else:   # at least 1 data found
+            # create list of tutors returned from db 
+            tutor_list = list()
+            for row in rows:
+                subject_list = [row[3]]  # put subject into a list
+                tutor_list.append({
+                    'name': row[1] + ' ' + row[2], 
+                    'subject': subject_list,
+                    'tutor_id': row[0]
+                })
+            
+            response = {
+                'error': False,
+                'status_code': 201,
+                'message': 'Found tutors.',
+                'result': tutor_list
+            }
+            status_code = 201
+
+    return jsonify(response), status_code
 
 #####################
 # Main

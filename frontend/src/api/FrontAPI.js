@@ -120,10 +120,13 @@ const FrontAPI = {
     }
   },
 
-  validate2FA: async (code) => {
+  // validate 2FA code
+  validate2FA: async (formData) => {
     try {
       const response = await axiosInstance.post('/api/v1/TwoFactorAuthentication/validate', {
-        code: code
+        code: formData.code,
+        email: formData.email,
+        userType: formData.userType
       });
 
       return response.data;
