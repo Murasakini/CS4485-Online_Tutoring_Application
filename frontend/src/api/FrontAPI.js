@@ -68,7 +68,7 @@ const FrontAPI = {
       if (error.response) {
         console.error('Error response status:', error.response.status);
         console.error('Error response data:', error.response.data);
-        return error.data;
+        return error.response.data;
       } else if (error.request) {
         console.error('No response received:', error.request);
         return { status_code: -1, message: 'Network error occurred' };
@@ -99,7 +99,7 @@ const FrontAPI = {
       if (error.response) {
         console.error('Error response status:', error.response.status);
         console.error('Error response data:', error.response.data);
-        return error.data;
+        return error.response.data;
       } else if (error.request) {
         console.error('No response received:', error.request);
         return { status_code: -1, message: 'Network error occurred' };
@@ -126,7 +126,7 @@ const FrontAPI = {
       if (error.response) {
         console.error('Error response status:', error.response.status);
         console.error('Error response data:', error.response.data);
-        return error.data;
+        return error.response.data;
       } else if (error.request) {
         console.error('No response received:', error.request);
         return { status_code: -1, message: 'Network error occurred' };
@@ -153,7 +153,7 @@ const FrontAPI = {
       if (error.response) {
         console.error('Error response status:', error.response.status);
         console.error('Error response data:', error.response.data);
-        return error.data;
+        return error.response.data;
       } else if (error.request) {
         console.error('No response received:', error.request);
         return { status_code: -1, message: 'Network error occurred' };
@@ -180,7 +180,7 @@ const FrontAPI = {
       if (error.response) {
         console.error('Error response status:', error.response.status);
         console.error('Error response data:', error.response.data);
-        return error.data;
+        return error.response.data;
       } else if (error.request) {
         console.error('No response received:', error.request);
         return { status_code: -1, message: 'Network error occurred' };
@@ -205,7 +205,7 @@ const FrontAPI = {
       if (error.response) {
         console.error('Error response status:', error.response.status);
         console.error('Error response data:', error.response.data);
-        return error.data;
+        return error.response.data;
       } else if (error.request) {
         console.error('No response received:', error.request);
         return { status_code: -1, message: 'Network error occurred' };
@@ -230,7 +230,7 @@ const FrontAPI = {
       if (error.response) {
         console.error('Error response status:', error.response.status);
         console.error('Error response data:', error.response.data);
-        return error.data;
+        return error.response.data;
       } else if (error.request) {
         console.error('No response received:', error.request);
         return { status_code: -1, message: 'Network error occurred' };
@@ -261,7 +261,7 @@ const FrontAPI = {
       if (error.response) {
         console.error('Error response status:', error.response.status);
         console.error('Error response data:', error.response.data);
-        return error.data;
+        return error.response.data;
       } else if (error.request) {
         console.error('No response received:', error.request);
         return { status_code: -1, message: 'Network error occurred' };
@@ -286,7 +286,7 @@ const FrontAPI = {
       if (error.response) {
         console.error('Error response status:', error.response.status);
         console.error('Error response data:', error.response.data);
-        return error.data;
+        return error.response.data;
       } else if (error.request) {
         console.error('No response received:', error.request);
         return { status_code: -1, message: 'Network error occurred' };
@@ -314,7 +314,7 @@ const FrontAPI = {
       if (error.response) {
         console.error('Error response status:', error.response.status);
         console.error('Error response data:', error.response.data);
-        return error.data;
+        return error.response.data;
       } else if (error.request) {
         console.error('No response received:', error.request);
         return { status_code: -1, message: 'Network error occurred' };
@@ -342,7 +342,7 @@ const FrontAPI = {
       if (error.response) {
         console.error('Error response status:', error.response.status);
         console.error('Error response data:', error.response.data);
-        return error.data;
+        return error.response.data;
       } else if (error.request) {
         console.error('No response received:', error.request);
         return { status_code: -1, message: 'Network error occurred' };
@@ -362,7 +362,7 @@ const FrontAPI = {
       if (error.response) {
         console.error('Error response status:', error.response.status);
         console.error('Error response data:', error.response.data);
-        return error.data;
+        return error.response.data;
       } else if (error.request) {
         console.error('No response received:', error.request);
         return { status_code: -1, message: 'Network error occurred' };
@@ -382,7 +382,7 @@ const FrontAPI = {
       if (error.response) {
         console.error('Error response status:', error.response.status);
         console.error('Error response data:', error.response.data);
-        return error.data;
+        return error.response.data;
       } else if (error.request) {
         console.error('No response received:', error.request);
         return { status_code: -1, message: 'Network error occurred' };
