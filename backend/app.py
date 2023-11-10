@@ -442,7 +442,7 @@ This function takes a session_id to determine a user, and returns a readable ver
 """
 def user_favorite_query(session_id):
     # retrieve list of favorite tutors
-    #validate_auth_table()
+    validate_auth_table()
     sql = text("""
             SELECT ota_db.user_favorites_readable.tutor_id, ota_db.user_favorites_readable.first_name, 
                    ota_db.user_favorites_readable.last_name
@@ -466,7 +466,66 @@ def user_favorite_query(session_id):
 
     return fav_list
 
+'''
+This function retrieves tutoring hours
+:param tutor_id: tutor id
+:return: number of tutoring hours
+'''
+def get_tutoring_hours(tutor_id):
+    sql = text('''
+            SELECT num_hours
+            FROM ota_db.tutor_leaderboard
+            WHERE tutor_id = {};
+        '''.format(tutor_id))
+    
+    # execute query
+    result = db.session.execute(sql)
+    rows = result.fetchone()
 
+    if rows == None:
+        return 0
+    else:
+        return rows[0]
+
+'''
+This function retrieves profile information of an account.
+:param session_id: session id
+:return: object/dictionary contains profile information
+'''
+def get_profile(session_id):
+    # retrieve list of favorite tutors
+    validate_auth_table()
+    sql = text("""
+            SELECT T.tutor_id, T.first_name, T.last_name, T.netID, T.email, T.phone_num, T.about_me
+            FROM ota_db.tutors as T, ota_db.auth_table as A
+            WHERE T.tutor_id = A.tutor_id AND A.session_id = '{}';
+        """.format(session_id))
+    
+    # execute query
+    result = db.session.execute(sql)
+    row = result.fetchone()
+
+    # check returned data
+    if row == None:  # no data returned
+        profile = None
+        status_code = 200
+
+    else:   # data returned
+        # create profile
+        profile = {
+            'name': row[1] + ' ' + row[2], 
+            'netID': row[3],
+            'email': row[4],
+            'phone_num': row[5],
+            'about_me': row[6],
+            'subject': subjects_of_tutor(row[0]),
+            'num_hours': get_tutoring_hours(row[0]),
+            'tutor_id': row[0]
+        }
+
+        status_code = 201
+
+    return profile, status_code
 
 #####################
 # Routes
@@ -1062,6 +1121,35 @@ def find_tutors():
                 'result': tutor_list
             }
             status_code = 201
+
+    return jsonify(response), status_code
+
+#------------my profile------------
+# endpoint to find tutors
+@version.route("/my_profile", methods=["GET"])
+def my_profile():
+    # pulls a user's session_id from the browser
+    session_id = request.args.get('session_id')
+    
+    # get profile
+    profile, status_code = get_profile(session_id)
+
+    # build response
+    if profile == None:  # no profile found
+        response = {
+            'error': True,
+            'status_code': status_code,
+            'message': 'Some problems occurred while retrieving the profile.',
+            'result': None
+        }
+
+    else:  # profile found
+        response = {
+            'error': False,
+            'status_code': status_code,
+            'message': 'Retrieve profile information successfully.',
+            'result': profile
+        }
 
     return jsonify(response), status_code
 
