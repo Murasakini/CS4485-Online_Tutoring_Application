@@ -379,15 +379,15 @@ def authenticate_tutor(email, password):
     else:
         return None, False  # Authentication failed
     
-def save_session_to_db(session_id, user_id, user_type, expire):
+def save_session_to_db(session_id, account_id, account_type, expire):
     # Save the session_id, user_id, and expiration to the auth_table in the database
-    if user_type == 'user':
-        user_id = user_id
+    if account_type == 'user':
+        user_id = account_id
         tutor_id = None
 
-    elif user_type == 'tutor':
+    elif account_type == 'tutor':
         user_id = None
-        tutor_id = user_id
+        tutor_id = account_id
 
     data = {
         "session_id": session_id,
