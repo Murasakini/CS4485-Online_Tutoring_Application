@@ -9,9 +9,35 @@ function Leaderboard() {
   useEffect(() => {
     // the tutor and user leaderboards
     const fetchLeaderboards = async () => {
-      // add ERROR HANDLING for these 2
       const tutorLeaderboardData = await FrontAPI.fetchTutorLeaderboard();
+      switch (tutorLeaderboardData.status_code) {
+        case 200:
+          // success. 
+          console.log('Successfully created availability!');
+          setSnackbarMessage('Successfully created availability!');
+          setSnackbarOpen(true);
+          break;
+        default:
+          console.log(`Error ${response.status_code}: ${response.message}`);
+          setSnackbarMessage(response.message);
+          setSnackbarOpen(true);
+          break;
+      }
+
       const userLeaderboardData = await FrontAPI.fetchUserLeaderboard();
+      switch (tutorLeaderboardData.status_code) {
+        case 200:
+          // success. 
+          console.log('Successfully created availability!');
+          setSnackbarMessage('Successfully created availability!');
+          setSnackbarOpen(true);
+          break;
+        default:
+          console.log(`Error ${response.status_code}: ${response.message}`);
+          setSnackbarMessage(response.message);
+          setSnackbarOpen(true);
+          break;
+      }
 
       setTutorLeaderboard(tutorLeaderboardData.message);
       setUserLeaderboard(userLeaderboardData.message);
