@@ -8,9 +8,12 @@ export default function MyProfileInfo(props) {
     photo: profile_photo,
     name: props.accInfo.name,
     email: props.accInfo.email, 
-    phone: props.accInfo.phone,
-    about: props.accInfo.about,
-    subject: props.accInfo.subject
+    phone_num: props.accInfo.phone_num,
+    about_me: props.accInfo.about_me,
+    subject: props.accInfo.subject,
+    tutor_id: props.accInfo.tutor_id,
+    num_hours: props.accInfo.num_hours,
+    netID: props.accInfo.netID
   }
   return (
     <Box
@@ -30,8 +33,15 @@ export default function MyProfileInfo(props) {
 
       <TextField
         id="name"
-        label="First and Last Name"
+        label="Name"
         defaultValue={data.name}
+        InputProps={{ readOnly: true }}
+      />
+
+      <TextField
+        id="netID"
+        label="Net ID"
+        defaultValue={data.netID}
         InputProps={{ readOnly: true }}
       />
 
@@ -45,24 +55,39 @@ export default function MyProfileInfo(props) {
       <TextField
         id="phone"
         label="Phone Number"
-        defaultValue={data.phone}
+        defaultValue={(data.phone_num) ? data.phone_num : 'N/A'}
         InputProps={{ readOnly: true }}
       />
 
-      <TextField
+      {data.about_me &&
+        <TextField
         id="about"
         label="About Me"
-        defaultValue={data.about}
+        defaultValue={(data.about_me) ? data.about_me : 'N/A'}
         multiline
         InputProps={{ readOnly: true }}
-      />
+        />
+      }
 
-      <TextField
-        id="subjects"
-        label="Subject List"
-        defaultValue={data.subject}
+      {data.subject &&
+          <TextField
+          id="subject"
+          label="Subject List"
+          defaultValue={(data.about_me) ? data.subject.map((subj) => (' ' + subj)) : 'N/A'}
+          multiline
+          InputProps={{ readOnly: true }}
+        />
+      }
+
+      {data.num_hours &&
+        <TextField
+        id="num_hours"
+        label="About Me"
+        defaultValue={data.num_hours}
         InputProps={{ readOnly: true }}
-      />
+        />
+      }
+
       <br />
 
       <Link to="/EditMyProfile" state={{ fromMyAccount: {data}}} >
