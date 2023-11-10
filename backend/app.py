@@ -475,7 +475,7 @@ def user_favorite_query(session_id):
 @app.route("/", methods=["GET"])
 def index():
     return {
-        "message": "Hello Worldss!"
+        "message": "Hello Worldsss!"
     }
 
 @version.before_request
