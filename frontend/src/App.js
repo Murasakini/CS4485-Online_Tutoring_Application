@@ -12,6 +12,8 @@ import SignUp from './SignUp.js';
 import AppointmentScheduler from './AppointmentScheduler.js';
 import Favorite from './Favorite.js';
 import Leaderboard from './Leaderboard.js';
+import TutorProfile from './TutorProfile.js';
+
 
 function App() {
   return (
@@ -25,6 +27,7 @@ function App() {
             <Route path='/MyProfile' element={<MyProfile />} />
             <Route path='/EditMyProfile' element={<EditMyProfile />} />
             <Route path='/Favorite' element={<Favorite />} />
+            <Route path='/TutorProfile' element={<TutorProfile />} />
             <Route path='/AppointmentScheduler' element={<AppointmentScheduler />} />
             <Route path='/FindTutor' element={<FindTutor />} />
             <Route path='/MyAccount' element={<MyAccount />} />

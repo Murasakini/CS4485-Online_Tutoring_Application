@@ -1,7 +1,7 @@
 import axios from 'axios';
 import { SHA256 } from 'crypto-js';
 
-const baseURL = 'http://127.0.0.1:5000';
+const baseURL = 'https://f043-64-189-201-9.ngrok-free.app/';
 
 const axiosInstance = axios.create({
   baseURL,
@@ -378,20 +378,82 @@ const FrontAPI = {
     try {
       const response = await axiosInstance.get("/api/user_leaderboard");
       return response.data;
+      
+     } catch (error) {
+    if (error.response) {
+      console.error('Error response status:', error.response.status);
+      console.error('Error response data:', error.response.data);
+      
+      return error.response.data;
+      } else if (error.request) {
+        console.error('No response received:', error.request);
+        return { status_code: -1, message: 'Network error occurred' };
+        
+      } else {
+        console.error('Error message:', error.message);
+        return { status_code: -1, message: 'Network error occurred' };
+        
+      }
+    }
+  },  
+
+  getMyProfile: async (session_id) => {
+    try {
+      // access endpoint and get data
+      const response = await axiosInstance.get('/api/v1/my_profile', {
+        params: {
+          session_id: session_id
+        }
+      });
+
+      //console.log(response)
+      return response.data;
+
+      // handle errors
     } catch (error) {
       if (error.response) {
         console.error('Error response status:', error.response.status);
         console.error('Error response data:', error.response.data);
-        return error.response.data;
+
+        return error.response.data
+
       } else if (error.request) {
         console.error('No response received:', error.request);
-        return { status_code: -1, message: 'Network error occurred' };
+
       } else {
         console.error('Error message:', error.message);
-        return { status_code: -1, message: 'Network error occurred' };
       }
     }
-  },  
+  },
+
+  getTutorProfile: async (session_id, tutor_id) => {
+    try {
+      // access endpoint and get data
+      const response = await axiosInstance.get('/api/v1/tutor_profile', {
+        params: {
+          session_id: session_id,
+          tutor_id: tutor_id
+        }
+      });
+
+      //console.log(response)
+      return response.data;
+
+      // handle errors
+    } catch (error) {
+      if (error.response) {
+        console.error('Error response status:', error.response.status);
+        console.error('Error response data:', error.response.data);
+        return error.response.data
+
+      } else if (error.request) {
+        console.error('No response received:', error.request);
+
+      } else {
+        console.error('Error message:', error.message);
+      }
+    }
+  },
 
 };
 
