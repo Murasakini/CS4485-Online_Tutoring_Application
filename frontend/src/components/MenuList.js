@@ -62,6 +62,15 @@ export default function BasicList() {
               <ListItemText primary="Find a tutor" />
             </ListItemButton>
           </ListItem>
+
+          <ListItem disablePadding component={Link} to="/Leaderboard">
+            <ListItemButton>
+              <ListItemIcon>
+                <SearchIcon />
+              </ListItemIcon>
+              <ListItemText primary="Leaderboard" />
+            </ListItemButton>
+          </ListItem>
         </List>
       </nav>
 
