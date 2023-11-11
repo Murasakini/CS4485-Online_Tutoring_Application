@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Container, Typography, Table, TableContainer, TableHead, TableRow, TableCell, TableBody, Paper } from "@mui/material";
 import FrontAPI from "./api/FrontAPI";
+import CustomSnackbar from './components/CustomSnackbar';
 
 function Leaderboard() {
   const [tutorLeaderboard, setTutorLeaderboard] = useState([]);
@@ -13,8 +14,8 @@ function Leaderboard() {
       switch (tutorLeaderboardData.status_code) {
         case 200:
           // success. 
-          console.log('Successfully retrieved tutor leaderboard!');
-          setSnackbarMessage('Successfully retrieved tutor leaderboard!');
+          console.log('Successfully created availability!');
+          setSnackbarMessage('Successfully created availability!');
           setSnackbarOpen(true);
           break;
         default:
@@ -28,8 +29,8 @@ function Leaderboard() {
       switch (tutorLeaderboardData.status_code) {
         case 200:
           // success. 
-          console.log('Successfully retrieved user leaderboard!');
-          setSnackbarMessage('Successfully retrieved user leaderboard!');
+          console.log('Successfully created availability!');
+          setSnackbarMessage('Successfully created availability!');
           setSnackbarOpen(true);
           break;
         default:
@@ -93,6 +94,13 @@ function Leaderboard() {
             </TableBody>
           </Table>
         </TableContainer>
+
+                {/* CustomSnackbar for displaying error messages */}
+                <CustomSnackbar
+                  open={snackbarOpen}
+                  message={snackbarMessage}
+                  onClose={() => setSnackbarOpen(false)}
+                />
       </div>
     </Container>
   );
