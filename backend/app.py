@@ -487,19 +487,90 @@ def get_tutoring_hours(tutor_id):
     else:
         return rows[0]
 
-'''
-This function retrieves profile information of an account.
-:param session_id: session id
-:return: object/dictionary contains profile information
-'''
-def get_profile(session_id):
-    # retrieve list of favorite tutors
+''''''
+def get_id(session_id):
+    # retrieve id associated with session id
     validate_auth_table()
     sql = text("""
-            SELECT T.tutor_id, T.first_name, T.last_name, T.netID, T.email, T.phone_num, T.about_me
-            FROM ota_db.tutors as T, ota_db.auth_table as A
-            WHERE T.tutor_id = A.tutor_id AND A.session_id = '{}';
+            SELECT user_id, tutor_id
+            FROM ota_db.auth_table
+            WHERE session_id = '{}';
         """.format(session_id))
+    
+    # execute query
+    result = db.session.execute(sql)
+    row = result.fetchone()
+
+    # check returned data
+    if row == None:  # unauthorized
+        status_code = 401  
+        user_id = None
+        tutor_id = None
+
+    else:  # authorized
+        status_code = 200
+
+        # get id returned
+        if row[0] == None:  # not user account -> tutor account
+            user_id = None
+            tutor_id = row[1]  # tutor_id
+
+        else:  # user account
+            user_id = row[0]  # user_id
+            tutor_id = None
+
+    return user_id, tutor_id, status_code
+
+'''
+This function retrieves profile information of user account.
+:param user_id: user id
+:return: object/dictionary contains profile information
+'''
+def get_user_profile(user_id):
+    # retrieve profile information
+    validate_auth_table()
+    sql = text("""
+            SELECT user_id, first_name, last_name, netID, email, phone_num
+            FROM ota_db.users
+            WHERE user_id = {};
+        """.format(user_id))
+    
+    # execute query
+    result = db.session.execute(sql)
+    row = result.fetchone()
+
+    # check returned data
+    if row == None:  # no data returned
+        profile = None
+        status_code = 200
+
+    else:   # data returned
+        # create profile
+        profile = {
+            'name': row[1] + ' ' + row[2], 
+            'netID': row[3],
+            'email': row[4],
+            'phone_num': row[5],
+            'tutor_id': row[0]
+        }
+
+        status_code = 201
+
+    return profile, status_code
+
+'''
+This function retrieves profile information of tutor account.
+:param tutor_id: tutor id
+:return: object/dictionary contains profile information
+'''
+def get_tutor_profile(tutor_id):
+    # retrieve profile information
+    validate_auth_table()
+    sql = text("""
+            SELECT tutor_id, first_name, last_name, netID, email, phone_num, about_me
+            FROM ota_db.tutors
+            WHERE tutor_id = {};
+        """.format(tutor_id))
     
     # execute query
     result = db.session.execute(sql)
@@ -1131,10 +1202,30 @@ def my_profile():
     # pulls a user's session_id from the browser
     session_id = request.args.get('session_id')
     
-    # get profile
-    profile, status_code = get_profile(session_id)
+    # determine session id belongs to tutor or user
+    user_id, tutor_id, status_code = get_id(session_id)
+
+    if status_code == 401:  # invalid session id
+        response = {
+            'error': True,
+            'status_code': status_code,
+            'message': 'Unauthorized access.',
+            'result': None
+        }
+
+        return jsonify(response), status_code
+
+    elif user_id == None:  # not user account -> tutor account
+        # get profile
+        profile, status_code = get_tutor_profile(tutor_id)
+    
+    else:  # user account
+        # get profile
+        profile, status_code = get_user_profile(user_id)
 
     # build response
+    
+
     if profile == None:  # no profile found
         response = {
             'error': True,
