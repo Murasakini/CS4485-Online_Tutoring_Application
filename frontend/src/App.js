@@ -11,7 +11,7 @@ import SignIn from './SignIn.js';
 import SignUp from './SignUp.js';
 import AppointmentScheduler from './AppointmentScheduler.js';
 import Favorite from './Favorite.js';
-
+import Leaderboard from './Leaderboard.js';
 
 function App() {
   return (
@@ -29,6 +29,7 @@ function App() {
             <Route path='/FindTutor' element={<FindTutor />} />
             <Route path='/MyAccount' element={<MyAccount />} />
             <Route path='/EditMyAccount' element={<EditMyAccount />} />
+            <Route path='/Leaderboard' element={<Leaderboard />} />
           </Routes>
         </div>
       </div>
