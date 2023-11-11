@@ -10,20 +10,7 @@ const axiosInstance = axios.create({
   }
 });
 
-// interceptor to send session cookie with every request
-//axiosInstance.interceptors.request.use((config) => {
-  // ensure that config.headers is initialized
-  // initialize if not defined
-  //config.headers = config.headers || {}; 
-
-  // get session cookie from local storage
-  //const sessionCookie = localStorage.getItem('sessionCookie');
-
-  // add  session cookie to headers
-  //config.headers.common['Cookie'] = sessionCookie;
-
-  //return config;
-//});
+// TODO: 2 last returns in catch block is iffy. need looking into bcs they do not neccessarily have status_code
 
 // api functions
 const FrontAPI = {
@@ -81,13 +68,13 @@ const FrontAPI = {
       if (error.response) {
         console.error('Error response status:', error.response.status);
         console.error('Error response data:', error.response.data);
-        return error.data.status_code;
+        return error.response.data;
       } else if (error.request) {
         console.error('No response received:', error.request);
-        return error.data.status_code;
+        return { status_code: -1, message: 'Network error occurred' };
       } else {
         console.error('Error message:', error.message);
-        return error.data.status_code;
+        return { status_code: -1, message: 'Network error occurred' };
       }
     }
   },
@@ -112,13 +99,13 @@ const FrontAPI = {
       if (error.response) {
         console.error('Error response status:', error.response.status);
         console.error('Error response data:', error.response.data);
-        return error.data.status_code;
+        return error.response.data;
       } else if (error.request) {
         console.error('No response received:', error.request);
-        return error.data.status_code;
+        return { status_code: -1, message: 'Network error occurred' };
       } else {
         console.error('Error message:', error.message);
-        return error.data.status_code;
+        return { status_code: -1, message: 'Network error occurred' };
       }
     }
   },
@@ -139,13 +126,13 @@ const FrontAPI = {
       if (error.response) {
         console.error('Error response status:', error.response.status);
         console.error('Error response data:', error.response.data);
-        return error.data.status_code;
+        return error.response.data;
       } else if (error.request) {
         console.error('No response received:', error.request);
-        return error.data.status_code;
+        return { status_code: -1, message: 'Network error occurred' };
       } else {
         console.error('Error message:', error.message);
-        return error.data.status_code;
+        return { status_code: -1, message: 'Network error occurred' };
       }
     }
   },
@@ -166,13 +153,13 @@ const FrontAPI = {
       if (error.response) {
         console.error('Error response status:', error.response.status);
         console.error('Error response data:', error.response.data);
-        return error.data.status_code;
+        return error.response.data;
       } else if (error.request) {
         console.error('No response received:', error.request);
-        return error.data.status_code;
+        return { status_code: -1, message: 'Network error occurred' };
       } else {
         console.error('Error message:', error.message);
-        return error.data.status_code;
+        return { status_code: -1, message: 'Network error occurred' };
       }
     }
   },
@@ -193,13 +180,13 @@ const FrontAPI = {
       if (error.response) {
         console.error('Error response status:', error.response.status);
         console.error('Error response data:', error.response.data);
-        return error.data.status_code;
+        return error.response.data;
       } else if (error.request) {
         console.error('No response received:', error.request);
-        return error.data.status_code;
+        return { status_code: -1, message: 'Network error occurred' };
       } else {
         console.error('Error message:', error.message);
-        return error.data.status_code;
+        return { status_code: -1, message: 'Network error occurred' };
       }
     }
   },
@@ -207,12 +194,6 @@ const FrontAPI = {
   // create a new appointment
   createAppointment: async (formData, session_id) => {
     try {
-      console.log({
-        session_id: session_id,
-        subject: formData.subject,
-        tutor: formData.tutor,
-        timeSlot: formData.timeSlot,
-      });
       const response = await axiosInstance.post('/api/v1/create/appointment', {
         session_id: session_id,
         subject: formData.subject,
@@ -224,13 +205,13 @@ const FrontAPI = {
       if (error.response) {
         console.error('Error response status:', error.response.status);
         console.error('Error response data:', error.response.data);
-        return error.data.status_code;
+        return error.response.data;
       } else if (error.request) {
         console.error('No response received:', error.request);
-        return error.data.status_code;
+        return { status_code: -1, message: 'Network error occurred' };
       } else {
         console.error('Error message:', error.message);
-        return error.data.status_code;
+        return { status_code: -1, message: 'Network error occurred' };
       }
     }
   },
@@ -249,13 +230,13 @@ const FrontAPI = {
       if (error.response) {
         console.error('Error response status:', error.response.status);
         console.error('Error response data:', error.response.data);
-        return error.data.status_code;
+        return error.response.data;
       } else if (error.request) {
         console.error('No response received:', error.request);
-        return error.data.status_code;
+        return { status_code: -1, message: 'Network error occurred' };
       } else {
         console.error('Error message:', error.message);
-        return error.data.status_code;
+        return { status_code: -1, message: 'Network error occurred' };
       }
     }
   },
@@ -280,13 +261,13 @@ const FrontAPI = {
       if (error.response) {
         console.error('Error response status:', error.response.status);
         console.error('Error response data:', error.response.data);
-        return error.response.data
-
+        return error.response.data;
       } else if (error.request) {
         console.error('No response received:', error.request);
-
+        return { status_code: -1, message: 'Network error occurred' };
       } else {
         console.error('Error message:', error.message);
+        return { status_code: -1, message: 'Network error occurred' };
       }
     }
   },
@@ -305,13 +286,13 @@ const FrontAPI = {
       if (error.response) {
         console.error('Error response status:', error.response.status);
         console.error('Error response data:', error.response.data);
-        return error.response.data
-
+        return error.response.data;
       } else if (error.request) {
         console.error('No response received:', error.request);
-
+        return { status_code: -1, message: 'Network error occurred' };
       } else {
         console.error('Error message:', error.message);
+        return { status_code: -1, message: 'Network error occurred' };
       }
     }
   },
@@ -333,13 +314,13 @@ const FrontAPI = {
       if (error.response) {
         console.error('Error response status:', error.response.status);
         console.error('Error response data:', error.response.data);
-        return error.response.data
-
+        return error.response.data;
       } else if (error.request) {
         console.error('No response received:', error.request);
-
+        return { status_code: -1, message: 'Network error occurred' };
       } else {
         console.error('Error message:', error.message);
+        return { status_code: -1, message: 'Network error occurred' };
       }
     }
   },
@@ -361,16 +342,60 @@ const FrontAPI = {
       if (error.response) {
         console.error('Error response status:', error.response.status);
         console.error('Error response data:', error.response.data);
-        return error.response.data
-
+        return error.response.data;
       } else if (error.request) {
         console.error('No response received:', error.request);
-
+        return { status_code: -1, message: 'Network error occurred' };
       } else {
         console.error('Error message:', error.message);
+        return { status_code: -1, message: 'Network error occurred' };
       }
     }
   },
+
+  // tutor leaderboard
+  fetchTutorLeaderboard: async () => {
+    try {
+      const response = await axiosInstance.get("/api/tutor_leaderboard");
+      return response.data;
+    } catch (error) {
+      if (error.response) {
+        console.error('Error response status:', error.response.status);
+        console.error('Error response data:', error.response.data);
+        return error.response.data;
+      } else if (error.request) {
+        console.error('No response received:', error.request);
+        return { status_code: -1, message: 'Network error occurred' };
+      } else {
+        console.error('Error message:', error.message);
+        return { status_code: -1, message: 'Network error occurred' };
+      }
+    }
+  },
+
+  // user leaderboard
+  fetchUserLeaderboard: async () => {
+    try {
+      const response = await axiosInstance.get("/api/user_leaderboard");
+      return response.data;
+      
+     } catch (error) {
+    if (error.response) {
+      console.error('Error response status:', error.response.status);
+      console.error('Error response data:', error.response.data);
+      
+      return error.response.data;
+      } else if (error.request) {
+        console.error('No response received:', error.request);
+        return { status_code: -1, message: 'Network error occurred' };
+        
+      } else {
+        console.error('Error message:', error.message);
+        return { status_code: -1, message: 'Network error occurred' };
+        
+      }
+    }
+  },  
 
   getMyProfile: async (session_id) => {
     try {
@@ -389,6 +414,7 @@ const FrontAPI = {
       if (error.response) {
         console.error('Error response status:', error.response.status);
         console.error('Error response data:', error.response.data);
+
         return error.response.data
 
       } else if (error.request) {
