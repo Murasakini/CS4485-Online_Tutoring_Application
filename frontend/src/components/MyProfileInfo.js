@@ -30,7 +30,7 @@ export default function MyProfileInfo(props) {
       autoComplete="off"
     >
       {/* profile photo */}
-      <Box component={Link}>
+      <Box>
         <img style= {{width: 200, height: 200, marginLeft:"6px", marginTop:"6px",}} 
         src={data.photo} alt="profile_photo" />
       </Box> 

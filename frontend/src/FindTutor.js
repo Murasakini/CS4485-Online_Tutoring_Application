@@ -10,6 +10,7 @@ const FindTutor = () => {
     // create holder for values and function to update values
     const [searchInfo, setSearchInfo] = useState({});
     const [searchResult, setSearchResult] = useState([]);
+    const [progress, setProgress] = useState(null);
 
     // display error msg to the user
     const [severity, setSeverity] = useState('error');
@@ -31,8 +32,8 @@ const FindTutor = () => {
     const getTutorList = async () => {
         // api GET to get list of favorite tutors
         const session_id = document.cookie.split("; ").find((row) => row.startsWith("sessionCookie="))?.split("=")[1];
-        // add session id to the search request
-        searchInfo['session_id'] = session_id;
+        searchInfo['session_id'] = session_id;  // add session id to the search request
+
         const response = await FrontAPI.findTutors(searchInfo);
 
         switch(response?.status_code) {
@@ -46,14 +47,22 @@ const FindTutor = () => {
                 // store the search result
                 setSearchResult([]);
                 setSearchResult(response?.result);
+                
+
+                // set status of progress/ for displaying waiting icon
+                setProgress(false);  // finish progress 
+
                 break;
 
             default:
                 // display messsage
                 console.log('Some error happened');
                 setSeverity('error');
-                setSnackbarMessage(response?.status_code + ": " + response?.message);
+                setSnackbarMessage('Some errors happened');
                 setSnackbarOpen(true);
+
+                // set status of progress/ for displaying waiting icon
+                setProgress(false);  // finish progress 
         }
     };
 
@@ -106,6 +115,9 @@ const FindTutor = () => {
     const handleSearchSubmit = (e) => {
         e.preventDefault();
         
+        // set status of progress/ for displaying waiting icon
+        setProgress(true);  // start searching progress
+
         // reset search result
         setSearchResult([]);
 
@@ -120,10 +132,12 @@ const FindTutor = () => {
             <Header title="FIND A TUTOR"/>
             <Body content={
                 <React.Fragment>
-                    <Search searchInfo={searchResult}
+                    <Search 
+                    searchInfo={searchResult}
                     handleChange={handleChange} 
                     handleSearchSubmit={handleSearchSubmit}
-                    handleAddTutor={handleAddTutor}/>
+                    handleAddTutor={handleAddTutor}
+                    progress={progress}/>
 
                     {/* CustomSnackbar for displaying error messages */}
                     <CustomSnackbar

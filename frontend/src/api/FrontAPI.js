@@ -400,6 +400,35 @@ const FrontAPI = {
     }
   },
 
+  getTutorProfile: async (session_id, tutor_id) => {
+    try {
+      // access endpoint and get data
+      const response = await axiosInstance.get('/api/v1/tutor_profile', {
+        params: {
+          session_id: session_id,
+          tutor_id: tutor_id
+        }
+      });
+
+      //console.log(response)
+      return response.data;
+
+      // handle errors
+    } catch (error) {
+      if (error.response) {
+        console.error('Error response status:', error.response.status);
+        console.error('Error response data:', error.response.data);
+        return error.response.data
+
+      } else if (error.request) {
+        console.error('No response received:', error.request);
+
+      } else {
+        console.error('Error message:', error.message);
+      }
+    }
+  },
+
 };
 
 export default FrontAPI;
