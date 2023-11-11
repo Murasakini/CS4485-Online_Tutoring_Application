@@ -13,8 +13,8 @@ function Leaderboard() {
       switch (tutorLeaderboardData.status_code) {
         case 200:
           // success. 
-          console.log('Successfully created availability!');
-          setSnackbarMessage('Successfully created availability!');
+          console.log('Successfully retrieved tutor leaderboard!');
+          setSnackbarMessage('Successfully retrieved tutor leaderboard!');
           setSnackbarOpen(true);
           break;
         default:
@@ -28,8 +28,8 @@ function Leaderboard() {
       switch (tutorLeaderboardData.status_code) {
         case 200:
           // success. 
-          console.log('Successfully created availability!');
-          setSnackbarMessage('Successfully created availability!');
+          console.log('Successfully retrieved user leaderboard!');
+          setSnackbarMessage('Successfully retrieved user leaderboard!');
           setSnackbarOpen(true);
           break;
         default:
