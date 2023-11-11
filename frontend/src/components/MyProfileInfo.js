@@ -15,6 +15,10 @@ export default function MyProfileInfo(props) {
     num_hours: props.accInfo.num_hours,
     netID: props.accInfo.netID
   }
+
+  let allowEdit = true;
+
+  if (props.allowEdit != null) allowEdit = props.allowEdit;
   return (
     <Box
       component="form"
@@ -26,7 +30,7 @@ export default function MyProfileInfo(props) {
       autoComplete="off"
     >
       {/* profile photo */}
-      <Box>
+      <Box component={Link}>
         <img style= {{width: 200, height: 200, marginLeft:"6px", marginTop:"6px",}} 
         src={data.photo} alt="profile_photo" />
       </Box> 
@@ -39,16 +43,16 @@ export default function MyProfileInfo(props) {
       />
 
       <TextField
-        id="netID"
-        label="Net ID"
-        defaultValue={data.netID}
+        id="email"
+        label="Email Address"
+        defaultValue={data.email}
         InputProps={{ readOnly: true }}
       />
 
       <TextField
-        id="email"
-        label="Email Address"
-        defaultValue={data.email}
+        id="netID"
+        label="Net ID"
+        defaultValue={data.netID}
         InputProps={{ readOnly: true }}
       />
 
@@ -73,32 +77,44 @@ export default function MyProfileInfo(props) {
           <TextField
           id="subject"
           label="Subject List"
-          defaultValue={(data.about_me) ? data.subject.map((subj) => (' ' + subj)) : 'N/A'}
+          defaultValue={data.subject ? data.subject.map((subj) => (' ' + subj)) : 'N/A'}
           multiline
           InputProps={{ readOnly: true }}
         />
       }
 
-      {data.num_hours &&
+      {(data.num_hours != null) &&
         <TextField
         id="num_hours"
-        label="About Me"
+        label="Total Tutoring hours"
         defaultValue={data.num_hours}
         InputProps={{ readOnly: true }}
         />
       }
-
       <br />
 
-      <Link to="/EditMyProfile" state={{ fromMyAccount: {data}}} >
+      {allowEdit ?
+        <Link to="/EditMyProfile" state={{ fromMyAccount: {data}}} >
+          <Button
+            variant="contained"
+            size="large"
+            style={{ marginBottom: "8px" }}
+          >
+            Edit
+          </Button>
+        </Link> :
+        
         <Button
           variant="contained"
           size="large"
           style={{ marginBottom: "8px" }}
+          onClick={() => props.history(-1)}
         >
-          Edit
+          Go Back
         </Button>
-      </Link>
+      }
+
+
     </Box>
   );
 }

@@ -5,6 +5,8 @@ import Button from '@mui/material/Button';
 import { Typography, List, Grid, ListItem, ListItemAvatar, 
          ListItemText, Avatar, IconButton } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
+import CircularProgress from '@mui/material/CircularProgress';
+import { Link } from "react-router-dom";
 
 const Search = (props) => {
 
@@ -40,15 +42,22 @@ const Search = (props) => {
                 <br/>
                 <Button type="Submit" variant="contained" size="large">Search</Button>
             </Box>
-
-            {/* display search results */}
+            
             <Box sx={{  textAlign: 'center' }}>
             <Grid>
                 <Typography sx={{ mt: 4, mb: 2, }} variant="h6" component="div">
-                    Search Result
+                    <b>Search Result</b>
                 </Typography>
 
-                {props.searchInfo.length === 0 ? 
+                {/* display waiting icon */}
+                {props.progress &&
+                    <Box textAlign="center">
+                        <CircularProgress />
+                    </Box>
+                }
+
+                {/* display search results */}
+                {(props.progress != null) && (props.progress === false && props.searchInfo.length === 0) ? 
                     <Typography sx={{ mt: 4, mb: 2, }} variant="h6" component="div">
                         No Result
                     </Typography> :
@@ -66,7 +75,7 @@ const Search = (props) => {
                             >
 
                             <ListItemAvatar>
-                            <Avatar alt={info.name} src='url' />
+                            <Avatar component={Link} to="/TutorProfile" state={{ fromSearch_FavoriteTutor: {info}}} alt={info.name} src='url' />
                             </ListItemAvatar>
 
                             <ListItemText
