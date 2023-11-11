@@ -487,7 +487,13 @@ def get_tutoring_hours(tutor_id):
     else:
         return rows[0]
 
-''''''
+'''
+This function retrieves user/tutor id associated to the session id.
+:param session_id: session id
+:return authorized: true if session id is valid; otherwise, false
+:return user_id: user id if session id belongs to user; otherwise, None 
+:return tutor_id: tutor id if session id belongs to user; otherwise, None 
+'''
 def get_id(session_id):
     # retrieve id associated with session id
     validate_auth_table()
@@ -503,12 +509,12 @@ def get_id(session_id):
 
     # check returned data
     if row == None:  # unauthorized
-        status_code = 401  
+        authorized = False  
         user_id = None
         tutor_id = None
 
     else:  # authorized
-        status_code = 200
+        authorized = True
 
         # get id returned
         if row[0] == None:  # not user account -> tutor account
@@ -519,7 +525,7 @@ def get_id(session_id):
             user_id = row[0]  # user_id
             tutor_id = None
 
-    return user_id, tutor_id, status_code
+    return user_id, tutor_id, authorized
 
 '''
 This function retrieves profile information of user account.
@@ -1196,25 +1202,26 @@ def find_tutors():
     return jsonify(response), status_code
 
 #------------my profile------------
-# endpoint to find tutors
+# endpoint to get my profile
 @version.route("/my_profile", methods=["GET"])
 def my_profile():
     # pulls a user's session_id from the browser
     session_id = request.args.get('session_id')
     
     # determine session id belongs to tutor or user
-    user_id, tutor_id, status_code = get_id(session_id)
+    user_id, tutor_id, authorized = get_id(session_id)
 
-    if status_code == 401:  # invalid session id
+    if not authorized:  # invalid session id
         response = {
             'error': True,
-            'status_code': status_code,
+            'status_code': 401,
             'message': 'Unauthorized access.',
             'result': None
         }
 
-        return jsonify(response), status_code
+        return jsonify(response), 401
 
+    # valid session id
     elif user_id == None:  # not user account -> tutor account
         # get profile
         profile, status_code = get_tutor_profile(tutor_id)
@@ -1224,12 +1231,10 @@ def my_profile():
         profile, status_code = get_user_profile(user_id)
 
     # build response
-    
-
     if profile == None:  # no profile found
         response = {
             'error': True,
-            'status_code': status_code,
+            'status_code': status_code,  # 200
             'message': 'Some problems occurred while retrieving the profile.',
             'result': None
         }
@@ -1237,12 +1242,55 @@ def my_profile():
     else:  # profile found
         response = {
             'error': False,
-            'status_code': status_code,
+            'status_code': status_code,  # 201
             'message': 'Retrieve profile information successfully.',
             'result': profile
         }
 
     return jsonify(response), status_code
+
+# endpoint to get tutor profile
+@version.route("/tutor_profile", methods=["GET"])
+def tutor_profile():
+    # pulls a user's session_id and tutor_id from the browser
+    session_id = request.args.get('session_id')
+    tutor_id = request.args.get('tutor_id')
+    
+    # validate session
+    _, _, authorized = get_id(session_id)
+    
+    if not authorized:  # invalid session id
+        response = {
+            'error': True,
+            'status_code': 401,
+            'message': 'Unauthorized access.',
+            'result': None
+        }
+
+        return jsonify(response), 401
+
+    else:  # valid session id
+        # get profile
+        profile, status_code = get_tutor_profile(tutor_id)
+
+        # build response
+        if profile == None:  # no profile found
+            response = {
+                'error': True,
+                'status_code': status_code,  # 200
+                'message': 'Some problems occurred while retrieving the profile.',
+                'result': None
+            }
+
+        else:  # profile found
+            response = {
+                'error': False,
+                'status_code': status_code,   # 201
+                'message': 'Retrieve profile information successfully.',
+                'result': profile
+            }
+
+        return jsonify(response), status_code
 
 #####################
 # Main
