@@ -33,10 +33,10 @@ const FavortieTutor = (props) => {
                         >
 
                         <ListItemAvatar>
-                        <Avatar alt={info.name} src='url' />
+                        <Avatar component={Link} to="/TutorProfile" state={{ fromSearch_FavoriteTutor: {info}}} alt={info.name} src='url' />
                         </ListItemAvatar>
 
-                        <ListItemText
+                        <ListItemText 
                             primary={info.name}
                             secondary={
                                 <React.Fragment>

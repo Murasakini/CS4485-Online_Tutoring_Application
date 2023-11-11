@@ -33,11 +33,11 @@ const EditMyProfile = () => {
 
     // do something when clicking save button (submit)
     const handleSaveSubmit = (e) => {
-        e.preventDefault();
-        console.log(accInfo);
-        Axios.put("http://localhost:3006/accountInfo/1", accInfo)
-        .then(response => console.log(response.data))
-        .catch(err => console.log(err));
+        // e.preventDefault();
+        // console.log(accInfo);
+        // Axios.put("http://localhost:3006/accountInfo/1", accInfo)
+        // .then(response => console.log(response.data))
+        // .catch(err => console.log(err));
     }
 
     return (

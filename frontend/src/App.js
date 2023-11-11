@@ -11,6 +11,7 @@ import SignIn from './SignIn.js';
 import SignUp from './SignUp.js';
 import AppointmentScheduler from './AppointmentScheduler.js';
 import Favorite from './Favorite.js';
+import TutorProfile from './TutorProfile.js';
 
 
 function App() {
@@ -25,6 +26,7 @@ function App() {
             <Route path='/MyProfile' element={<MyProfile />} />
             <Route path='/EditMyProfile' element={<EditMyProfile />} />
             <Route path='/Favorite' element={<Favorite />} />
+            <Route path='/TutorProfile' element={<TutorProfile />} />
             <Route path='/AppointmentScheduler' element={<AppointmentScheduler />} />
             <Route path='/FindTutor' element={<FindTutor />} />
             <Route path='/MyAccount' element={<MyAccount />} />
