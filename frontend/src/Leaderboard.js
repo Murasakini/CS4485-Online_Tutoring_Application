@@ -6,42 +6,33 @@ import CustomSnackbar from './components/CustomSnackbar';
 function Leaderboard() {
   const [tutorLeaderboard, setTutorLeaderboard] = useState([]);
   const [userLeaderboard, setUserLeaderboard] = useState([]);
+  const [snackbarOpen, setSnackbarOpen] = useState(false);
+  const [snackbarMessage, setSnackbarMessage] = useState('');
 
   useEffect(() => {
     // the tutor and user leaderboards
     const fetchLeaderboards = async () => {
-      const tutorLeaderboardData = await FrontAPI.fetchTutorLeaderboard();
-      switch (tutorLeaderboardData.status_code) {
-        case 200:
-          // success. 
-          console.log('Successfully created availability!');
-          setSnackbarMessage('Successfully created availability!');
+      try {
+        const tutorLeaderboardData = await FrontAPI.fetchTutorLeaderboard();
+        if (tutorLeaderboardData.status_code === 200) {
+          setTutorLeaderboard(tutorLeaderboardData.message);
+        } else {
+          setSnackbarMessage(`Error ${tutorLeaderboardData.status_code}: ${tutorLeaderboardData.message}`);
           setSnackbarOpen(true);
-          break;
-        default:
-          console.log(`Error ${response.status_code}: ${response.message}`);
-          setSnackbarMessage(response.message);
-          setSnackbarOpen(true);
-          break;
-      }
+        }
 
-      const userLeaderboardData = await FrontAPI.fetchUserLeaderboard();
-      switch (tutorLeaderboardData.status_code) {
-        case 200:
-          // success. 
-          console.log('Successfully created availability!');
-          setSnackbarMessage('Successfully created availability!');
+        const userLeaderboardData = await FrontAPI.fetchUserLeaderboard();
+        if (userLeaderboardData.status_code === 200) {
+          setUserLeaderboard(userLeaderboardData.message);
+        } else {
+          setSnackbarMessage(`Error ${userLeaderboardData.status_code}: ${userLeaderboardData.message}`);
           setSnackbarOpen(true);
-          break;
-        default:
-          console.log(`Error ${response.status_code}: ${response.message}`);
-          setSnackbarMessage(response.message);
-          setSnackbarOpen(true);
-          break;
+        }
+      } catch (error) {
+        console.error("Error fetching leaderboards:", error);
+        setSnackbarMessage("Error fetching leaderboards. Please try again later.");
+        setSnackbarOpen(true);
       }
-
-      setTutorLeaderboard(tutorLeaderboardData.message);
-      setUserLeaderboard(userLeaderboardData.message);
     };
 
     fetchLeaderboards();
@@ -95,12 +86,12 @@ function Leaderboard() {
           </Table>
         </TableContainer>
 
-                {/* CustomSnackbar for displaying error messages */}
-                <CustomSnackbar
-                  open={snackbarOpen}
-                  message={snackbarMessage}
-                  onClose={() => setSnackbarOpen(false)}
-                />
+        {/* CustomSnackbar for displaying error messages */}
+        <CustomSnackbar
+          open={snackbarOpen}
+          message={snackbarMessage}
+          onClose={() => setSnackbarOpen(false)}
+        />
       </div>
     </Container>
   );
