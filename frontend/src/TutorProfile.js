@@ -3,7 +3,7 @@ import { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import Header from './components/Header.js';
 import Body from './components/Body.js';
-import MyProfileInfo from './components/MyProfileInfo.js';
+import TutorProfileInfo from './components/TutorProfileInfo.js';
 import FrontAPI from './api/FrontAPI.js';
 import CustomSnackbar from './components/CustomSnackbar.js';
 
@@ -84,7 +84,7 @@ const TutorAccount = () => {
             {accInfo && 
                 <Body content={
                     <React.Fragment>
-                        <MyProfileInfo accInfo={accInfo} allowEdit={false} history={history}/>
+                        <TutorProfileInfo accInfo={accInfo} allowEdit={false} history={history}/>
 
                         {/* CustomSnackbar for displaying error messages */}
                         <CustomSnackbar
