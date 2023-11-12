@@ -6,6 +6,7 @@ from sqlalchemy.exc import IntegrityError
 from datetime import datetime, timedelta
 import yaml
 import uuid
+import os
 
 #####################
 # Global Variables and Setup
@@ -23,6 +24,7 @@ app = Flask(__name__)
 CORS(app, supports_credentials=True, withCredentials=True)
 app.config['SQLALCHEMY_DATABASE_URI'] = f'mysql+pymysql://{username}:{password}@online-tutoring-application.ccm0nvuvbmz8.us-east-2.rds.amazonaws.com:3306/ota_db'
 db = SQLAlchemy(app)
+app.config['UPLOAD_FOLDER'] = 'static/profile_image'
 
 
 USER_FIELDS = {"first_name", "last_name", "netID", "email", "phone_num", "password"}
@@ -31,6 +33,8 @@ APPOINTMENT_FIELDS = {"subject", "tutor", "timeSlot"}
 AUTHENTICATE_FIELDS = {"email", "password"}
 PROTECTED_ENDPOINTS = ['v1.test_protected'] #, 'v1.subjects']
 SEARCH_FIELDS = {"first_name", "last_name", "subject"}
+UPLOAD_FOLDER = 'static/profile_image'
+ALLOWED_EXTENSIONS = set(['png', 'jpg', 'jpeg','svg'])
 
 #####################
 # Helper Functions
@@ -603,6 +607,15 @@ def get_tutor_profile(tutor_id):
         status_code = 201
 
     return profile, status_code
+
+'''
+This function checks if a filename has allowed extension.
+:param filename: name of a file
+:return: true if the extension in the allow list; otherwise return false
+'''
+def allowed_file(filename):
+    # check if file extension in the allowed list
+    return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
 #####################
 # Routes
@@ -1291,6 +1304,65 @@ def tutor_profile():
             }
 
         return jsonify(response), status_code
+    
+# endpoint to get tutor profile
+@version.route("/media_upload", methods=["POST"])
+def media_upload():    
+    # check if file is alongs with the request
+    if 'file' not in request.files:  # file not in the request
+        response = {
+            'error': True,
+            'status_code': 400,
+            'message': 'An image is not provided.'
+        }
+
+        status_code = 400
+
+        return jsonify(response), status_code
+    
+    # file in the request
+    file = request.files['file']  # store file 
+    #session_id = request.
+    
+    # check if filename is missing
+    if file.filename == '':  # missing filename
+        response = {
+            'error': True,
+            'status_code': 400,
+            'message': 'No image was selected.'
+        }
+
+        status_code = 400
+
+        return jsonify(response), status_code
+    
+    # check if file not null and extension is legit
+    if file and allowed_file(file.filename):
+        filename = file.filename
+        file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+
+        response = {
+            'error': False,
+            'status_code': 201,
+            'message': 'Image uploaded successfully.',
+            'path': app.config['UPLOAD_FOLDER']
+        }
+
+        status_code = 201
+
+        return jsonify(response), status_code
+    else:
+        response = {
+            'error': True,
+            'status_code': 400,
+            'message': 'File extension is invalid, or error occurred while uploading the image.'
+        }
+
+        status_code = 400
+
+        return jsonify(response), status_code
+
+
 
 #####################
 # Main
