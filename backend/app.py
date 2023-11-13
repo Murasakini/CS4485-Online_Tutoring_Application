@@ -617,6 +617,17 @@ def allowed_file(filename):
     # check if file extension in the allowed list
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
+'''
+This function creates a unique filename based on tutor/user id
+'''
+def create_filename(user_id, tutor_id):
+    extension = 'jpg'
+    if user_id == None:
+        return f'tutor-{tutor_id}.{extension}'
+    else:
+        return f'user-{user_id}.{extension}'
+
+
 #####################
 # Routes
 #####################
@@ -1228,8 +1239,7 @@ def my_profile():
         response = {
             'error': True,
             'status_code': 401,
-            'message': 'Unauthorized access.',
-            'result': None
+            'message': 'Unauthorized access.'
         }
 
         return jsonify(response), 401
@@ -1269,15 +1279,14 @@ def tutor_profile():
     session_id = request.args.get('session_id')
     tutor_id = request.args.get('tutor_id')
     
-    # validate session
+    # validate session id
     _, _, authorized = get_id(session_id)
     
     if not authorized:  # invalid session id
         response = {
             'error': True,
             'status_code': 401,
-            'message': 'Unauthorized access.',
-            'result': None
+            'message': 'Unauthorized access.'
         }
 
         return jsonify(response), 401
@@ -1307,7 +1316,21 @@ def tutor_profile():
     
 # endpoint to get tutor profile
 @version.route("/media_upload", methods=["POST"])
-def media_upload():    
+def media_upload():
+    session_id = request.form['session_id']  
+
+    # validate session id
+    user_id, tutor_id, authorized = get_id(session_id)
+    
+    if not authorized:  # invalid session id
+        response = {
+            'error': True,
+            'status_code': 401,
+            'message': 'Unauthorized access.'
+        }
+
+        return jsonify(response), 401
+      
     # check if file is alongs with the request
     if 'file' not in request.files:  # file not in the request
         response = {
@@ -1322,8 +1345,7 @@ def media_upload():
     
     # file in the request
     file = request.files['file']  # store file 
-    #session_id = request.
-    
+
     # check if filename is missing
     if file.filename == '':  # missing filename
         response = {
@@ -1338,14 +1360,16 @@ def media_upload():
     
     # check if file not null and extension is legit
     if file and allowed_file(file.filename):
-        filename = file.filename
+        filename = create_filename(user_id=user_id, tutor_id=tutor_id)
         file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+        file_path = app.config['UPLOAD_FOLDER'] + '/' + filename
 
         response = {
             'error': False,
             'status_code': 201,
             'message': 'Image uploaded successfully.',
-            'path': app.config['UPLOAD_FOLDER']
+            'file_path': file_path,
+            'session_id': session_id
         }
 
         status_code = 201
