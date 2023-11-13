@@ -449,9 +449,10 @@ def user_favorite_query(session_id):
     validate_auth_table()
     sql = text("""
             SELECT ota_db.user_favorites_readable.tutor_id, ota_db.user_favorites_readable.first_name, 
-                   ota_db.user_favorites_readable.last_name
+                   ota_db.user_favorites_readable.last_name, image_path
             FROM ota_db.user_favorites_readable 
-            LEFT JOIN ota_db.auth_table ON user_favorites_readable.user_id=auth_table.user_id
+            LEFT JOIN ota_db.auth_table ON user_favorites_readable.user_id = auth_table.user_id
+            LEFT JOIN ota_db.tutors ON user_favorites_readable.tutor_id = tutors.tutor_id
             WHERE auth_table.session_id = '{}';
         """.format(session_id))
     
@@ -465,6 +466,7 @@ def user_favorite_query(session_id):
         fav_list.append({
             'name': row[1] + ' ' + row[2], 
             'subject': subjects_of_tutor(row[0]),
+            'image_path': row[3],
             'tutor_id': row[0]
         })
 
@@ -540,7 +542,7 @@ def get_user_profile(user_id):
     # retrieve profile information
     validate_auth_table()
     sql = text("""
-            SELECT user_id, first_name, last_name, netID, email, phone_num
+            SELECT user_id, first_name, last_name, netID, email, phone_num, image_path
             FROM ota_db.users
             WHERE user_id = {};
         """.format(user_id))
@@ -561,6 +563,7 @@ def get_user_profile(user_id):
             'netID': row[3],
             'email': row[4],
             'phone_num': row[5],
+            'image_path': row[6],
             'tutor_id': row[0]
         }
 
@@ -577,7 +580,7 @@ def get_tutor_profile(tutor_id):
     # retrieve profile information
     validate_auth_table()
     sql = text("""
-            SELECT tutor_id, first_name, last_name, netID, email, phone_num, about_me
+            SELECT tutor_id, first_name, last_name, netID, email, phone_num, about_me, image_path
             FROM ota_db.tutors
             WHERE tutor_id = {};
         """.format(tutor_id))
@@ -599,6 +602,7 @@ def get_tutor_profile(tutor_id):
             'email': row[4],
             'phone_num': row[5],
             'about_me': row[6],
+            'image_path': row[7],
             'subject': subjects_of_tutor(row[0]),
             'num_hours': get_tutoring_hours(row[0]),
             'tutor_id': row[0]
@@ -1191,7 +1195,7 @@ def find_tutors():
         # retrieve list of tutors based on search fields
         validate_auth_table()
         sql = text("""
-                SELECT tutor_id, first_name, last_name
+                SELECT tutor_id, first_name, last_name, image_path
                 FROM ota_db.tutors
                 WHERE EXISTS (SELECT * FROM ota_db.auth_table WHERE session_id = '{}')
             """.format(data.get('session_id')) + where_conditions + ';')
@@ -1206,6 +1210,7 @@ def find_tutors():
             tutor_list.append({
                 'name': row[1] + ' ' + row[2], 
                 'subject': subjects_of_tutor(row[0]),
+                'image_path': row[3],
                 'tutor_id': row[0]
             })
 
@@ -1233,9 +1238,9 @@ def find_tutors():
         # retrieve list of tutors based on search fields
         validate_auth_table()
         sql = text("""
-                SELECT tutor_id, first_name, last_name, class_name
-                FROM ota_db.tutor_classes_readable
-                WHERE EXISTS (SELECT * FROM ota_db.auth_table WHERE session_id = '{}')
+                SELECT R.tutor_id, R.first_name, R.last_name, R.class_name, T.image_path
+                FROM ota_db.tutor_classes_readable as R, ota_db.tutors as T
+                WHERE R.tutor_id = T.tutor_id AND EXISTS (SELECT * FROM ota_db.auth_table WHERE session_id = '{}')
             """.format(data.get('session_id')) + where_conditions + ';')
         
         # execute query
@@ -1259,6 +1264,7 @@ def find_tutors():
                 tutor_list.append({
                     'name': row[1] + ' ' + row[2], 
                     'subject': subject_list,
+                    'image_path': row[4],
                     'tutor_id': row[0]
                 })
             
