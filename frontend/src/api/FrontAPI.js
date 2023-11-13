@@ -1,7 +1,7 @@
 import axios from 'axios';
 import { SHA256 } from 'crypto-js';
 
-const baseURL = 'http://localhost:5000';
+const baseURL = 'https://f043-64-189-201-9.ngrok-free.app/';
 
 const axiosInstance = axios.create({
   baseURL,
@@ -354,51 +354,6 @@ const FrontAPI = {
     }
   },
 
-  // tutor leaderboard
-  fetchTutorLeaderboard: async () => {
-    try {
-      const response = await axiosInstance.get("/api/tutor_leaderboard");
-      return response.data;
-    } catch (error) {
-      if (error.response) {
-        console.error('Error response status:', error.response.status);
-        console.error('Error response data:', error.response.data);
-        return error.response.data;
-      } else if (error.request) {
-        console.error('No response received:', error.request);
-        return { status_code: -1, message: 'Network error occurred' };
-      } else {
-        console.error('Error message:', error.message);
-        return { status_code: -1, message: 'Network error occurred' };
-      }
-    }
-  },
-
-  // user leaderboard
-  fetchUserLeaderboard: async () => {
-    try {
-      const response = await axiosInstance.get("/api/user_leaderboard");
-      return response.data;
-      
-     } catch (error) {
-    if (error.response) {
-      console.error('Error response status:', error.response.status);
-      console.error('Error response data:', error.response.data);
-      
-      return error.response.data;
-      } else if (error.request) {
-        console.error('No response received:', error.request);
-        return { status_code: -1, message: 'Network error occurred' };
-        
-      } else {
-        console.error('Error message:', error.message);
-        return { status_code: -1, message: 'Network error occurred' };
-        
-      }
-    }
-  },  
-
-  // display my profile
   getMyProfile: async (session_id) => {
     try {
       // access endpoint and get data
@@ -427,8 +382,7 @@ const FrontAPI = {
       }
     }
   },
-
-  // display tutor profile
+ 
   getTutorProfile: async (session_id, tutor_id) => {
     try {
       // access endpoint and get data
@@ -454,6 +408,85 @@ const FrontAPI = {
 
       } else {
         console.error('Error message:', error.message);
+      }
+    }
+  },
+
+  // get # of total tutoring hours for logged in user
+  getTotalHours: async (session_id) => {
+    try {
+      // POST request to /total_hours endpoint
+      const response = await axiosInstance.get('/api/v1/total_hours', {
+        params: {
+          session_id: session_id,
+        },  data:{
+          message: 'dummy'
+        }
+      });
+      return response.data;
+    } catch (error) {
+      if (error.response) {
+        console.error('Error response status:', error.response.status);
+        console.error('Error response data:', error.response.data);
+        return error.data.status_code;
+      } else if (error.request) {
+        console.error('No response received:', error.request);
+        return error.data.status_code;
+      } else {
+        console.error('Error message:', error.message);
+        return error.data.status_code;
+      }
+    }
+  },
+
+  // get sorted leaderboard of all tutors and their hours
+  fetchTutorLeaderboard: async () => {
+    try {
+      // POST request to /tutor_leaderboard endpoint
+      const response = await axiosInstance.get('/api/v1/tutor_leaderboard', {
+        data:{
+          message: 'dummy'
+        }
+      });
+      console.log(response);
+      return response.data;
+    } catch (error) {
+      if (error.response) {
+        console.error('Error response status:', error.response.status);
+        console.error('Error response data:', error.response.data);
+        return error.data.status_code;
+      } else if (error.request) {
+        console.error('No response received:', error.request);
+        return error.data.status_code;
+      } else {
+        console.error('Error message:', error.message);
+        return error.data.status_code;
+      }
+    }
+  },
+
+  // get sorted leaderboard of all users and their hours
+  fetchUserLeaderboard: async () => {
+    try {
+      // POST request to /user_leaderboard endpoint
+      const response = await axiosInstance.get('/api/v1/user_leaderboard', {
+        data:{
+          message: 'dummy'
+        }
+      });
+      console.log(response);
+      return response.data;
+    } catch (error) {
+      if (error.response) {
+        console.error('Error response status:', error.response.status);
+        console.error('Error response data:', error.response.data);
+        return error.data.status_code;
+      } else if (error.request) {
+        console.error('No response received:', error.request);
+        return error.data.status_code;
+      } else {
+        console.error('Error message:', error.message);
+        return error.data.status_code;
       }
     }
   },
