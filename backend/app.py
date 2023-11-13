@@ -894,23 +894,39 @@ def get_total_hours():
     
 @version.route("/tutor_leaderboard", methods=["GET"])
 def get_tutor_leaderboard():
-    leaderboard = tutor_hours_leaderboard()
-    response = {
+    leaderboard, success = tutor_hours_leaderboard()
+    if success:
+        response = {
             'error': False,
             'status_code': 200,
             'message': leaderboard
         }
-    return jsonify(response), 200
+        return jsonify(response), 200
+    else:
+        response = {
+            'error': True,
+            'status_code': 400,
+            'message': 'Error fetching leaderboard.'
+        }
+        return jsonify(response), 400
 
 @version.route("/user_leaderboard", methods=["GET"])
 def get_user_leaderboard():
-    leaderboard = user_hours_leaderboard()
-    response = {
+    leaderboard, success = user_hours_leaderboard()
+    if success:
+        response = {
             'error': False,
             'status_code': 200,
             'message': leaderboard
         }
-    return jsonify(response), 200
+        return jsonify(response), 200
+    else:
+        response = {
+            'error': True,
+            'status_code': 400,
+            'message': 'Error fetching leaderboard.'
+        }
+        return jsonify(response), 400
 
 
 

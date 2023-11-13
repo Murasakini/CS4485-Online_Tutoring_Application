@@ -1,7 +1,7 @@
 import axios from 'axios';
 import { SHA256 } from 'crypto-js';
 
-const baseURL = 'https://f043-64-189-201-9.ngrok-free.app/';
+const baseURL = 'http://127.0.0.1:5000';//'https://f043-64-189-201-9.ngrok-free.app/';
 
 const axiosInstance = axios.create({
   baseURL,
@@ -353,50 +353,6 @@ const FrontAPI = {
     }
   },
 
-  // tutor leaderboard
-  fetchTutorLeaderboard: async () => {
-    try {
-      const response = await axiosInstance.get("/api/tutor_leaderboard");
-      return response.data;
-    } catch (error) {
-      if (error.response) {
-        console.error('Error response status:', error.response.status);
-        console.error('Error response data:', error.response.data);
-        return error.response.data;
-      } else if (error.request) {
-        console.error('No response received:', error.request);
-        return { status_code: -1, message: 'Network error occurred' };
-      } else {
-        console.error('Error message:', error.message);
-        return { status_code: -1, message: 'Network error occurred' };
-      }
-    }
-  },
-
-  // user leaderboard
-  fetchUserLeaderboard: async () => {
-    try {
-      const response = await axiosInstance.get("/api/user_leaderboard");
-      return response.data;
-      
-     } catch (error) {
-    if (error.response) {
-      console.error('Error response status:', error.response.status);
-      console.error('Error response data:', error.response.data);
-      
-      return error.response.data;
-      } else if (error.request) {
-        console.error('No response received:', error.request);
-        return { status_code: -1, message: 'Network error occurred' };
-        
-      } else {
-        console.error('Error message:', error.message);
-        return { status_code: -1, message: 'Network error occurred' };
-        
-      }
-    }
-  },  
-
   getMyProfile: async (session_id) => {
     try {
       // access endpoint and get data
@@ -483,7 +439,7 @@ const FrontAPI = {
   },
 
   // get sorted leaderboard of all tutors and their hours
-  getTutorLeaderboard: async () => {
+  fetchTutorLeaderboard: async () => {
     try {
       // POST request to /tutor_leaderboard endpoint
       const response = await axiosInstance.get('/api/v1/tutor_leaderboard', {
@@ -491,6 +447,7 @@ const FrontAPI = {
           message: 'dummy'
         }
       });
+      console.log(response);
       return response.data;
     } catch (error) {
       if (error.response) {
@@ -508,7 +465,7 @@ const FrontAPI = {
   },
 
   // get sorted leaderboard of all users and their hours
-  getUserLeaderboard: async () => {
+  fetchUserLeaderboard: async () => {
     try {
       // POST request to /user_leaderboard endpoint
       const response = await axiosInstance.get('/api/v1/user_leaderboard', {
@@ -516,6 +473,7 @@ const FrontAPI = {
           message: 'dummy'
         }
       });
+      console.log(response);
       return response.data;
     } catch (error) {
       if (error.response) {
