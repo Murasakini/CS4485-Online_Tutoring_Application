@@ -63,7 +63,7 @@ function Leaderboard() {
                 <TableRow key={index}>
                   <TableCell>{index + 1}</TableCell>
                   <TableCell>{entry.name}</TableCell>
-                  <TableCell>{entry.hours}</TableCell>
+                  <TableCell>{entry.num_hours}</TableCell>
                 </TableRow>
               ))}
             </TableBody>
@@ -85,7 +85,7 @@ function Leaderboard() {
                 <TableRow key={index}>
                   <TableCell>{index + 1}</TableCell>
                   <TableCell>{entry.name}</TableCell>
-                  <TableCell>{entry.hours}</TableCell>
+                  <TableCell>{entry.num_hours}</TableCell>
                 </TableRow>
               ))}
             </TableBody>
