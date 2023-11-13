@@ -619,6 +619,9 @@ def allowed_file(filename):
 
 '''
 This function creates a unique filename based on tutor/user id
+:param user_id: user id
+:param tutor_id: tutor id
+:return: filename as {type}-{id}.jpg
 '''
 def create_filename(user_id, tutor_id):
     extension = 'jpg'
@@ -627,7 +630,47 @@ def create_filename(user_id, tutor_id):
     else:
         return f'user-{user_id}.{extension}'
 
+'''
+This function stores path of image in database
+:param path: path in file system
+:user_id: user id
+:tutor_id: tutor id
+:return: true if store successfully; otherwise, false
+'''
+def store_image_path(path, user_id, tutor_id):
+    if user_id == None:  # tutor_id is provided
+        data ={
+            'image_path': path,
+            'tutor_id': tutor_id
+        }
+        sql = text("""
+                UPDATE ota_db.tutors 
+                SET image_path = '{}' 
+                WHERE tutor_id = {};
+            """.format(path, tutor_id))
+        
+    else:  # user_id is provided
+        sql = text("""
+                UPDATE ota_db.users 
+                SET image_path = '{}' 
+                WHERE user_id = {};
+            """.format(path, user_id))
+    try:
+        # execute query
+        result = db.session.execute(sql)
+        db.session.commit()
 
+        # check returned data
+        if result == None:  # error occured
+            return False
+        else:
+            return True
+    
+    # handle exception
+    except:
+        # return to previous 
+        db.session.rollback()
+        return False
 #####################
 # Routes
 #####################
@@ -1364,18 +1407,34 @@ def media_upload():
         file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
         file_path = app.config['UPLOAD_FOLDER'] + '/' + filename
 
-        response = {
-            'error': False,
-            'status_code': 201,
-            'message': 'Image uploaded successfully.',
-            'file_path': file_path,
-            'session_id': session_id
-        }
+        # save image path to db
+        successful = store_image_path(file_path, user_id=user_id, tutor_id=tutor_id)
 
-        status_code = 201
+        if successful:  # store path successfully
+            response = {
+                'error': False,
+                'status_code': 201,
+                'message': 'Image uploaded successfully.',
+                'file_path': file_path
+            }
 
-        return jsonify(response), status_code
-    else:
+            status_code = 201
+
+            return jsonify(response), status_code
+        
+        else:  # fail to store path
+            response = {
+                'error': True,
+                'status_code': 409,
+                'message': 'Failed to store the image path in database.',
+                'file_path': file_path
+            }
+
+            status_code = 201
+
+            return jsonify(response), status_code
+        
+    else:  # invalid file extension or file is none
         response = {
             'error': True,
             'status_code': 400,
