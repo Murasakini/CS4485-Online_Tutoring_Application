@@ -645,19 +645,23 @@ def store_image_path(path, user_id, tutor_id):
         }
         sql = text("""
                 UPDATE ota_db.tutors 
-                SET image_path = '{}' 
-                WHERE tutor_id = {};
-            """.format(path, tutor_id))
+                SET image_path = :image_path 
+                WHERE tutor_id = :tutor_id;
+            """)
         
     else:  # user_id is provided
+        data ={
+            'image_path': path,
+            'user_id': user_id
+        }
         sql = text("""
                 UPDATE ota_db.users 
-                SET image_path = '{}' 
-                WHERE user_id = {};
-            """.format(path, user_id))
+                SET image_path = :image_path 
+                WHERE user_id = :user_id;
+            """)
     try:
         # execute query
-        result = db.session.execute(sql)
+        result = db.session.execute(sql, data)
         db.session.commit()
 
         # check returned data
