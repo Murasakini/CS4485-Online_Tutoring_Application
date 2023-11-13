@@ -1,4 +1,4 @@
-from flask import Flask, jsonify, Blueprint, request
+from flask import Flask, jsonify, Blueprint, request, send_from_directory
 from flask_sqlalchemy import SQLAlchemy
 from flask_cors import CORS
 from sqlalchemy import text
@@ -1455,7 +1455,42 @@ def media_upload():
 
         return jsonify(response), status_code
 
+@version.route("/get_image", methods = ['GET'])
+def get_image():
+    # pulls a user's session_id and tutor_id from the browser
+    session_id = request.args.get('session_id')
+    tutor_id = request.args.get('tutor_id')
+    user_id = None  # initialize 
 
+    # get id from session id
+    if tutor_id == None:  # tutor id is not provided -> my profile
+        # determine type of account
+        user_id, tutor_id, authorized = get_id(session_id)
+
+    else:  # tutor id is provided -> tutor profile
+        # check authorized only
+        _, _, authorized = get_id(session_id)
+
+    if not authorized:  # invalid session id
+        response = {
+            'error': True,
+            'status_code': 401,
+            'message': 'Unauthorized access.'
+        }
+
+        return jsonify(response), 401
+    
+    # get filename 
+    filename = create_filename(user_id=user_id, tutor_id=tutor_id)
+
+    # return file
+    try:
+        image = send_from_directory(directory=app.config["UPLOAD_FOLDER"], path=filename, as_attachment=True)
+       
+        return image, 201
+    
+    except FileNotFoundError:
+        return None, 404
 
 #####################
 # Main
