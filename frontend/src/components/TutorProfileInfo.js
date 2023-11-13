@@ -1,10 +1,8 @@
 import * as React from "react";
 import { TextField, Box, Button } from "@mui/material/";
-import profile_photo from "../logo/profile_photo.png";
 
 export default function MyProfileInfo(props) {
   const data = {
-    photo: profile_photo,
     name: props.accInfo.name,
     email: props.accInfo.email, 
     phone_num: props.accInfo.phone_num,
@@ -12,7 +10,8 @@ export default function MyProfileInfo(props) {
     subject: props.accInfo.subject,
     tutor_id: props.accInfo.tutor_id,
     num_hours: props.accInfo.num_hours,
-    netID: props.accInfo.netID
+    netID: props.accInfo.netID,
+    image_path: props.accInfo.image_path
   }
 
   return (
@@ -27,8 +26,8 @@ export default function MyProfileInfo(props) {
     >
         {/* profile photo */}
         <Box>
-        <img style= {{width: 200, height: 200, marginLeft:"6px", marginTop:"6px",}} 
-        src={data.photo} alt="profile_photo" />
+        <img style= {{width: 300, height: 300, marginLeft:"6px", marginTop:"6px", objectFit:"contain"}} 
+        src={data.image_path} alt="profile_photo" />
         </Box> 
 
         <TextField

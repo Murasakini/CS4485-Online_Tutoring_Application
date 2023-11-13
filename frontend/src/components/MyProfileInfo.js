@@ -1,10 +1,8 @@
 import * as React from "react";
 import { TextField, Box, Button } from "@mui/material/";
-import profile_photo from "../logo/profile_photo.png";
 
 export default function MyProfileInfo(props) {
   const data = {
-    photo: profile_photo,
     name: props.accInfo.name,
     email: props.accInfo.email, 
     phone_num: props.accInfo.phone_num,
