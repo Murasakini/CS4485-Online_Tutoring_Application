@@ -1698,7 +1698,7 @@ def send_2fa():
         response = {
             'error': True,
             'status_code': 400,
-            'message': 'Unable to sent 2FA email.'
+            'message': 'Unable to send 2FA email'
         }
         return jsonify(response)
 
@@ -1787,7 +1787,7 @@ def resend_2fa():
         response = {
             'error': True,
             'status_code': 400,
-            'message': 'Failed to resent 2FA code.'
+            'message': 'Failed to resend 2FA code.'
         }
         return jsonify(response)
 

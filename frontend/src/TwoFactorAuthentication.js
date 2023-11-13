@@ -84,32 +84,47 @@ export default function TwoFactorAuthentication() {
 
   // call resend2FA API
   const handleResend2FAClick = async () => {
-    const resendData = {
-      email: email,
-      userType: userType,
-    };
-    
-    if (isCoolDown) {
-      setSnackbarMessage('Cooling down. Please try again later.');
-      setSnackbarOpen(true);
-    } else {
-
-      try {
+    if (email && userType) {
+      const resendData = {
+        email: email,
+        userType: userType,
+      };
+      
+      if (isCoolDown) {
+        setSnackbarMessage('Cooling down. Please try again later.');
+        setSnackbarOpen(true);
+      } else {
         const apiResponse = await FrontAPI.resend2FA(resendData);
 
-        console.log(apiResponse.data);
-      } catch (error) {
-        console.error('API call failed:', error);
-      }
+        switch (apiResponse.data.status_code) {
+          case 200:
+            // success
+            setSnackbarMessage('New code has been sent.');
+            setSnackbarOpen(true);
+            console.log(apiResponse.data);
+            break;
+          case 400:
+            console.log(apiResponse.data);
+            console.log('API call failed:');
+            setSnackbarMessage('Failed to send new code.');
+            setSnackbarOpen(true);
+            break;
+          default:
+            console.log(apiResponse.data);
+            setSnackbarMessage('Invalid Form.');
+            setSnackbarOpen(true);
+            break;
+        }
 
-      setSnackbarMessage('New code has been sent.');
+        // Start the cooldown (set isCoolDown to true)
+        setCoolDown(true);
+  
+        // Reset the cooldown after 10 seconds
+        setTimeout(() => {setCoolDown(false);}, 10000);
+      } 
+    } else {
+      setSnackbarMessage('Invalid Form.');
       setSnackbarOpen(true);
-
-      // Start the cooldown (set isCoolDown to true)
-      setCoolDown(true);
-
-      // Reset the cooldown after 10 seconds
-      setTimeout(() => {setCoolDown(false);}, 10000);
     }
   };
   
