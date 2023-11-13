@@ -14,10 +14,6 @@ export default function MyProfileInfo(props) {
     num_hours: props.accInfo.num_hours,
     netID: props.accInfo.netID
   }
-
-  let allowEdit = true;
-
-  if (props.allowEdit != null) allowEdit = props.allowEdit;
   return (
     <Box
       component="form"
@@ -30,8 +26,14 @@ export default function MyProfileInfo(props) {
     >
       {/* profile photo */}
       <Box>
-        <img style= {{width: 200, height: 200, marginLeft:"6px", marginTop:"6px",}} 
-        src={data.photo} alt="profile_photo" />
+        <img style= {{width: 300, height: 300, marginLeft:"6px", marginTop:"6px", objectFit:"contain"}} 
+        src={props.imgURL} alt={data.name} />
+
+        <br />
+
+        <input type="file" name="myImage" onChange={props.fileSelectHandler}/>
+        <button onClick={props.handleUpload}>Upload</button>
+
       </Box> 
 
       <TextField

@@ -84,7 +84,7 @@ const TutorAccount = () => {
             {accInfo && 
                 <Body content={
                     <React.Fragment>
-                        <TutorProfileInfo accInfo={accInfo} allowEdit={false} history={history}/>
+                        <TutorProfileInfo accInfo={accInfo} history={history}/>
 
                         {/* CustomSnackbar for displaying error messages */}
                         <CustomSnackbar

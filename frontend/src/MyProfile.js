@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useRef } from 'react';
 import { useState, useEffect } from 'react';
 import Header from './components/Header.js';
 import Body from './components/Body.js';
@@ -9,6 +9,8 @@ import CustomSnackbar from './components/CustomSnackbar.js';
 const MyAccount = () => {
     // hold json data from db and function to store data
     const [accInfo, setAccInfo] = useState(null);
+    const [uploadImg, setUploadImg] = useState(null);
+    const [imgURL, setImgURL] = useState('');
 
     // display error msg to the user
     const [severity, setSeverity] = useState('error');
@@ -17,7 +19,7 @@ const MyAccount = () => {
 
     // retrieve data from db
     const getMyProfile = async () => {
-        // api GET to get list of favorite tutors
+        // api GET to get my profile
         const session_id = document.cookie.split("; ").find((row) => row.startsWith("sessionCookie="))?.split("=")[1];
         const response = await FrontAPI.getMyProfile(session_id);
 
@@ -66,21 +68,80 @@ const MyAccount = () => {
         console.log(accInfo);
     }, []);
 
+    const fileSelectHandler = (event) => {
+        //event.preventDefault();
+        const inputImage = event.target.files[0];  // store the file select
+        setUploadImg(inputImage);
+
+        console.log(inputImage);
+    }
+
+    const handleUpload = async (event) => {
+        event.preventDefault();
+        console.log('image uploaded: ', uploadImg)
+        // api GET to get my profile
+        const session_id = document.cookie.split("; ").find((row) => row.startsWith("sessionCookie="))?.split("=")[1];
+        const response = await FrontAPI.uploadImage(session_id, uploadImg);
+
+        switch(response?.status_code) {
+            case 201:  // success
+                // display messsage
+                console.log(response);
+                setSnackbarMessage(response?.message);
+                setSnackbarOpen(true);
+                setSeverity('success');  // set level of severity of message
+
+                setImgURL(response?.file_path);  // store the image url/file path
+                
+                break;
+            
+            case 200:  // no profile returned
+                // display messsage
+                console.log(response?.message);
+                setSeverity('error');
+                setSnackbarMessage(response?.message);
+                setSnackbarOpen(true);
+
+                break;
+
+            case 400:
+                // display messsage
+                console.log(response?.message);
+                setSeverity('error');
+                setSnackbarMessage(response?.message);
+                setSnackbarOpen(true);
+
+                break;
+
+            default:
+                // display messsage
+                console.log('Something wrong happened from the server');
+                setSeverity('error');
+                setSnackbarMessage('Something wrong happened from the server');
+                setSnackbarOpen(true);
+        }
+    }
+
     return (
         <React.Fragment>
-            <Header title="MY ACCOUNT" />
+            <Header title="MY PROFILE" />
             {/* return information only if retrieving data  is ready */}
             {accInfo && 
                 <Body content={
                     <React.Fragment>
-                        <MyProfileInfo accInfo={accInfo}/>
+                        <MyProfileInfo 
+                        accInfo={accInfo} 
+                        fileSelectHandler={fileSelectHandler}
+                        imgURL={imgURL}
+                        handleUpload={handleUpload}/>
 
                         {/* CustomSnackbar for displaying error messages */}
                         <CustomSnackbar
                         open={snackbarOpen}
                         message={snackbarMessage}
                         onClose={() => setSnackbarOpen(false)}
-                        severity={severity}/>
+                        severity={severity}
+                        />
                     </React.Fragment>}
                 />}
 
