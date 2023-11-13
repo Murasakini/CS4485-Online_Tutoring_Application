@@ -75,7 +75,7 @@ const Search = (props) => {
                             >
 
                             <ListItemAvatar>
-                            <Avatar component={Link} to="/TutorProfile" state={{ fromSearch_FavoriteTutor: {info}}} alt={info.name} src='url' />
+                            <Avatar component={Link} to="/TutorProfile" state={{ fromSearch_FavoriteTutor: {info}}} alt={info.name} src={info.image_path} />
                             </ListItemAvatar>
 
                             <ListItemText

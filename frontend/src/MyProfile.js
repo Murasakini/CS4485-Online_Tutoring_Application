@@ -77,7 +77,6 @@ const MyAccount = () => {
     }
 
     const handleUpload = async (event) => {
-        event.preventDefault();
         console.log('image uploaded: ', uploadImg)
         // api GET to get my profile
         const session_id = document.cookie.split("; ").find((row) => row.startsWith("sessionCookie="))?.split("=")[1];
@@ -132,7 +131,6 @@ const MyAccount = () => {
                         <MyProfileInfo 
                         accInfo={accInfo} 
                         fileSelectHandler={fileSelectHandler}
-                        imgURL={imgURL}
                         handleUpload={handleUpload}/>
 
                         {/* CustomSnackbar for displaying error messages */}
