@@ -14,7 +14,8 @@ const axiosInstance = axios.create({
 
 // api functions
 const FrontAPI = {
-  
+  "baseURL": baseURL,
+
   // send sign up info
   signUp: async (formData, isTutor) => {
     try {
@@ -495,6 +496,11 @@ const FrontAPI = {
     }
   },
 
+  // get profile image
+  /*
+  The api call is resided in MyProfile.js or TutorProfile.js due to the nature of the returned file 
+  */
+  
 };
 
 export default FrontAPI;

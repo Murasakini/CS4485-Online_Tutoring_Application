@@ -10,6 +10,7 @@ const MyAccount = () => {
     // hold json data from db and function to store data
     const [accInfo, setAccInfo] = useState(null);
     const [uploadImg, setUploadImg] = useState(null);
+    const [profileImg, setProfileImg] = useState(null);
 
     // display error msg to the user
     const [severity, setSeverity] = useState('error');
@@ -52,12 +53,29 @@ const MyAccount = () => {
         }
     };
 
+    // retrieve profile image from server
+    const getProfileImage = async () => {
+        // api GET to get my profile
+        const session_id = document.cookie.split("; ").find((row) => row.startsWith("sessionCookie="))?.split("=")[1];
+
+        fetch(FrontAPI.baseURL + `/api/v1/get_image?session_id=${session_id}`)
+          .then((response) => response.blob())
+          .then((myBlob) => {
+            const objectURL = URL.createObjectURL(myBlob);
+            setProfileImg(objectURL);
+          })
+          .catch(error => {
+            console.error('There profile image is not found.', error);
+          });
+    };
+
     // store tutor list retrieved
     useEffect(() => {
         // define function to get tutor list
         const myProfile = async () => {
             // call function to get tutor list
-            const profile = await getMyProfile();  
+            const profile = await getMyProfile();   // get profile info
+            await getProfileImage();  // get image 
 
             // store list
             if (profile) setAccInfo(profile);
@@ -123,6 +141,7 @@ const MyAccount = () => {
                         accInfo={accInfo} 
                         fileSelectHandler={fileSelectHandler}
                         handleUpload={handleUpload}
+                        profileImg={profileImg}
                         />
 
                         {/* CustomSnackbar for displaying error messages */}

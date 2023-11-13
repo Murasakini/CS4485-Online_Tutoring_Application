@@ -10,8 +10,7 @@ export default function MyProfileInfo(props) {
     subject: props.accInfo.subject,
     tutor_id: props.accInfo.tutor_id,
     num_hours: props.accInfo.num_hours,
-    netID: props.accInfo.netID,
-    image_path: props.accInfo.image_path
+    netID: props.accInfo.netID
   }
   return (
     <Box
@@ -26,7 +25,7 @@ export default function MyProfileInfo(props) {
       {/* profile photo */}
       <Box>
         <img style= {{width: 300, height: 300, marginLeft:"6px", marginTop:"6px", objectFit:"contain"}} 
-        src={data.image_path} alt={data.name} /> 
+        src={props.profileImg} alt={data.name} /> 
 
         <br />
 
