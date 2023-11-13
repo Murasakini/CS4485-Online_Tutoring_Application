@@ -83,7 +83,8 @@ const TutorAccount = () => {
         // define function to get tutor list
         const tutorProfile = async () => {
             // call function to get tutor list
-            const profile = await getTutorProfile();  
+            const profile = await getTutorProfile(); 
+            await getProfileImage(); 
 
             // store list
             if (profile) setAccInfo(profile);
