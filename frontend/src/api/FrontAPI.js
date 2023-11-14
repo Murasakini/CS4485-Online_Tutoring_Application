@@ -1,7 +1,8 @@
 import axios from 'axios';
 import { SHA256 } from 'crypto-js';
 
-const baseURL = 'http://127.0.0.1:5000';//'https://f043-64-189-201-9.ngrok-free.app/';
+const baseURL = 'https://f043-64-189-201-9.ngrok-free.app/';
+// const baseURL = 'http://localhost:5000';
 
 const axiosInstance = axios.create({
   baseURL,
@@ -14,7 +15,8 @@ const axiosInstance = axios.create({
 
 // api functions
 const FrontAPI = {
-  
+  "baseURL": baseURL,
+
   // send sign up info
   signUp: async (formData, isTutor) => {
     try {
@@ -381,7 +383,7 @@ const FrontAPI = {
       }
     }
   },
-
+ 
   getTutorProfile: async (session_id, tutor_id) => {
     try {
       // access endpoint and get data
@@ -490,6 +492,49 @@ const FrontAPI = {
     }
   },
 
+  // upload profile image
+  uploadImage: async (session_id, uploadImage) => {
+    // create header Content-Type with multipart/form-data instead of application/json
+    const axiosInstance = axios.create({
+      baseURL,
+      headers: {
+        'Content-Type': 'multipart/form-data'
+      }
+    });
+
+    try {
+      // create form data to send to server
+      const img = new FormData(); 
+      img.append('file', uploadImage);  // file
+      img.append('session_id', session_id);  // session id
+
+      // access endpoint and get data
+      const response = await axiosInstance.post('/api/v1/media_upload', img);
+
+      //console.log(response)
+      return response.data;
+
+      // handle errors
+    } catch (error) {
+      if (error.response) {
+        console.error('Error response status:', error.response.status);
+        console.error('Error response data:', error.response.data);
+        return error.response.data
+
+      } else if (error.request) {
+        console.error('No response received:', error.request);
+
+      } else {
+        console.error('Error message:', error.message);
+      }
+    }
+  },
+
+  // get profile image
+  /*
+  The api call is resided in MyProfile.js or TutorProfile.js due to the nature of the returned file 
+  */
+  
 };
 
 export default FrontAPI;

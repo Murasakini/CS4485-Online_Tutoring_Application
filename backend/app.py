@@ -1,4 +1,4 @@
-from flask import Flask, jsonify, Blueprint, request
+from flask import Flask, jsonify, Blueprint, request, send_from_directory
 from flask_sqlalchemy import SQLAlchemy
 from flask_cors import CORS
 from sqlalchemy import text
@@ -6,6 +6,7 @@ from sqlalchemy.exc import IntegrityError
 from datetime import datetime, timedelta
 import yaml
 import uuid
+import os
 
 #####################
 # Global Variables and Setup
@@ -23,6 +24,7 @@ app = Flask(__name__)
 CORS(app, supports_credentials=True, withCredentials=True)
 app.config['SQLALCHEMY_DATABASE_URI'] = f'mysql+pymysql://{username}:{password}@online-tutoring-application.ccm0nvuvbmz8.us-east-2.rds.amazonaws.com:3306/ota_db'
 db = SQLAlchemy(app)
+app.config['UPLOAD_FOLDER'] = 'static/profile_image'
 
 
 USER_FIELDS = {"first_name", "last_name", "netID", "email", "phone_num", "password"}
@@ -31,6 +33,8 @@ APPOINTMENT_FIELDS = {"subject", "tutor", "timeSlot"}
 AUTHENTICATE_FIELDS = {"email", "password"}
 PROTECTED_ENDPOINTS = ['v1.test_protected'] #, 'v1.subjects']
 SEARCH_FIELDS = {"first_name", "last_name", "subject"}
+UPLOAD_FOLDER = 'static/profile_image'
+ALLOWED_EXTENSIONS = set(['png', 'jpg', 'jpeg','svg'])
 
 #####################
 # Helper Functions
@@ -510,9 +514,10 @@ def user_favorite_query(session_id):
     validate_auth_table()
     sql = text("""
             SELECT ota_db.user_favorites_readable.tutor_id, ota_db.user_favorites_readable.first_name, 
-                   ota_db.user_favorites_readable.last_name
+                   ota_db.user_favorites_readable.last_name, image_path
             FROM ota_db.user_favorites_readable 
-            LEFT JOIN ota_db.auth_table ON user_favorites_readable.user_id=auth_table.user_id
+            LEFT JOIN ota_db.auth_table ON user_favorites_readable.user_id = auth_table.user_id
+            LEFT JOIN ota_db.tutors ON user_favorites_readable.tutor_id = tutors.tutor_id
             WHERE auth_table.session_id = '{}';
         """.format(session_id))
     
@@ -526,6 +531,7 @@ def user_favorite_query(session_id):
         fav_list.append({
             'name': row[1] + ' ' + row[2], 
             'subject': subjects_of_tutor(row[0]),
+            'image_path': row[3],
             'tutor_id': row[0]
         })
 
@@ -601,7 +607,7 @@ def get_user_profile(user_id):
     # retrieve profile information
     validate_auth_table()
     sql = text("""
-            SELECT user_id, first_name, last_name, netID, email, phone_num
+            SELECT user_id, first_name, last_name, netID, email, phone_num, image_path
             FROM ota_db.users
             WHERE user_id = {};
         """.format(user_id))
@@ -622,6 +628,7 @@ def get_user_profile(user_id):
             'netID': row[3],
             'email': row[4],
             'phone_num': row[5],
+            'image_path': row[6],
             'tutor_id': row[0]
         }
 
@@ -638,7 +645,7 @@ def get_tutor_profile(tutor_id):
     # retrieve profile information
     validate_auth_table()
     sql = text("""
-            SELECT tutor_id, first_name, last_name, netID, email, phone_num, about_me
+            SELECT tutor_id, first_name, last_name, netID, email, phone_num, about_me, image_path
             FROM ota_db.tutors
             WHERE tutor_id = {};
         """.format(tutor_id))
@@ -660,6 +667,7 @@ def get_tutor_profile(tutor_id):
             'email': row[4],
             'phone_num': row[5],
             'about_me': row[6],
+            'image_path': row[7],
             'subject': subjects_of_tutor(row[0]),
             'num_hours': get_tutoring_hours(row[0]),
             'tutor_id': row[0]
@@ -669,6 +677,73 @@ def get_tutor_profile(tutor_id):
 
     return profile, status_code
 
+'''
+This function checks if a filename has allowed extension.
+:param filename: name of a file
+:return: true if the extension in the allow list; otherwise return false
+'''
+def allowed_file(filename):
+    # check if file extension in the allowed list
+    return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+
+'''
+This function creates a unique filename based on tutor/user id
+:param user_id: user id
+:param tutor_id: tutor id
+:return: filename as {type}-{id}.jpg
+'''
+def create_filename(user_id, tutor_id):
+    extension = 'jpg'
+    if user_id == None:
+        return f'tutor-{tutor_id}.{extension}'
+    else:
+        return f'user-{user_id}.{extension}'
+
+'''
+This function stores path of image in database
+:param path: path in file system
+:user_id: user id
+:tutor_id: tutor id
+:return: true if store successfully; otherwise, false
+'''
+def store_image_path(path, user_id, tutor_id):
+    if user_id == None:  # tutor_id is provided
+        data ={
+            'image_path': path,
+            'tutor_id': tutor_id
+        }
+        sql = text("""
+                UPDATE ota_db.tutors 
+                SET image_path = :image_path 
+                WHERE tutor_id = :tutor_id;
+            """)
+        
+    else:  # user_id is provided
+        data ={
+            'image_path': path,
+            'user_id': user_id
+        }
+        sql = text("""
+                UPDATE ota_db.users 
+                SET image_path = :image_path 
+                WHERE user_id = :user_id;
+            """)
+    try:
+        # execute query
+        result = db.session.execute(sql, data)
+        db.session.commit()
+
+        # check returned data
+        if result == None:  # error occured
+            return False
+        else:
+            return True
+    
+    # handle exception
+    except:
+        # return to previous 
+        db.session.rollback()
+        return False
 #####################
 # Routes
 #####################
@@ -1251,7 +1326,7 @@ def find_tutors():
         # retrieve list of tutors based on search fields
         validate_auth_table()
         sql = text("""
-                SELECT tutor_id, first_name, last_name
+                SELECT tutor_id, first_name, last_name, image_path
                 FROM ota_db.tutors
                 WHERE EXISTS (SELECT * FROM ota_db.auth_table WHERE session_id = '{}')
             """.format(data.get('session_id')) + where_conditions + ';')
@@ -1266,6 +1341,7 @@ def find_tutors():
             tutor_list.append({
                 'name': row[1] + ' ' + row[2], 
                 'subject': subjects_of_tutor(row[0]),
+                'image_path': row[3],
                 'tutor_id': row[0]
             })
 
@@ -1293,9 +1369,9 @@ def find_tutors():
         # retrieve list of tutors based on search fields
         validate_auth_table()
         sql = text("""
-                SELECT tutor_id, first_name, last_name, class_name
-                FROM ota_db.tutor_classes_readable
-                WHERE EXISTS (SELECT * FROM ota_db.auth_table WHERE session_id = '{}')
+                SELECT R.tutor_id, R.first_name, R.last_name, R.class_name, T.image_path
+                FROM ota_db.tutor_classes_readable as R, ota_db.tutors as T
+                WHERE R.tutor_id = T.tutor_id AND EXISTS (SELECT * FROM ota_db.auth_table WHERE session_id = '{}')
             """.format(data.get('session_id')) + where_conditions + ';')
         
         # execute query
@@ -1319,6 +1395,7 @@ def find_tutors():
                 tutor_list.append({
                     'name': row[1] + ' ' + row[2], 
                     'subject': subject_list,
+                    'image_path': row[4],
                     'tutor_id': row[0]
                 })
             
@@ -1346,8 +1423,7 @@ def my_profile():
         response = {
             'error': True,
             'status_code': 401,
-            'message': 'Unauthorized access.',
-            'result': None
+            'message': 'Unauthorized access.'
         }
 
         return jsonify(response), 401
@@ -1387,15 +1463,14 @@ def tutor_profile():
     session_id = request.args.get('session_id')
     tutor_id = request.args.get('tutor_id')
     
-    # validate session
+    # validate session id
     _, _, authorized = get_id(session_id)
     
     if not authorized:  # invalid session id
         response = {
             'error': True,
             'status_code': 401,
-            'message': 'Unauthorized access.',
-            'result': None
+            'message': 'Unauthorized access.'
         }
 
         return jsonify(response), 401
@@ -1422,6 +1497,131 @@ def tutor_profile():
             }
 
         return jsonify(response), status_code
+    
+# endpoint to get tutor profile
+@version.route("/media_upload", methods=["POST"])
+def media_upload():
+    session_id = request.form['session_id']  
+
+    # validate session id
+    user_id, tutor_id, authorized = get_id(session_id)
+    
+    if not authorized:  # invalid session id
+        response = {
+            'error': True,
+            'status_code': 401,
+            'message': 'Unauthorized access.'
+        }
+
+        return jsonify(response), 401
+      
+    # check if file is alongs with the request
+    if 'file' not in request.files:  # file not in the request
+        response = {
+            'error': True,
+            'status_code': 400,
+            'message': 'An image is not provided.'
+        }
+
+        status_code = 400
+
+        return jsonify(response), status_code
+    
+    # file in the request
+    file = request.files['file']  # store file 
+
+    # check if filename is missing
+    if file.filename == '':  # missing filename
+        response = {
+            'error': True,
+            'status_code': 400,
+            'message': 'No image was selected.'
+        }
+
+        status_code = 400
+
+        return jsonify(response), status_code
+    
+    # check if file not null and extension is legit
+    if file and allowed_file(file.filename):
+        filename = create_filename(user_id=user_id, tutor_id=tutor_id)
+        file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+        file_path = app.config['UPLOAD_FOLDER'] + '/' + filename
+
+        # save image path to db
+        successful = store_image_path(file_path, user_id=user_id, tutor_id=tutor_id)
+
+        if successful:  # store path successfully
+            response = {
+                'error': False,
+                'status_code': 201,
+                'message': 'Image uploaded successfully.',
+                'file_path': file_path
+            }
+
+            status_code = 201
+
+            return jsonify(response), status_code
+        
+        else:  # fail to store path
+            response = {
+                'error': True,
+                'status_code': 409,
+                'message': 'Failed to store the image path in database.',
+                'file_path': file_path
+            }
+
+            status_code = 201
+
+            return jsonify(response), status_code
+        
+    else:  # invalid file extension or file is none
+        response = {
+            'error': True,
+            'status_code': 400,
+            'message': 'File extension is invalid, or error occurred while uploading the image.'
+        }
+
+        status_code = 400
+
+        return jsonify(response), status_code
+
+@version.route("/get_image", methods = ['GET'])
+def get_image():
+    # pulls a user's session_id and tutor_id from the browser
+    session_id = request.args.get('session_id')
+    tutor_id = request.args.get('tutor_id')
+    user_id = None  # initialize 
+
+    # get id from session id
+    if tutor_id == None:  # tutor id is not provided -> my profile
+        # determine type of account
+        user_id, tutor_id, authorized = get_id(session_id)
+
+    else:  # tutor id is provided -> tutor profile
+        # check authorized only
+        _, _, authorized = get_id(session_id)
+
+    if not authorized:  # invalid session id
+        response = {
+            'error': True,
+            'status_code': 401,
+            'message': 'Unauthorized access.'
+        }
+
+        return jsonify(response), 401
+    
+    # get filename 
+    filename = create_filename(user_id=user_id, tutor_id=tutor_id)
+
+    # return file
+    try:
+        image = send_from_directory(directory=app.config["UPLOAD_FOLDER"], path=filename, as_attachment=True)
+       
+        return image, 201
+    
+    except FileNotFoundError:
+        return None, 404
 
 #####################
 # Main

@@ -11,6 +11,7 @@ import Person2Icon from '@mui/icons-material/Person2';
 import StarIcon from '@mui/icons-material/Star';
 import CalendarMonthIcon from '@mui/icons-material/CalendarMonth';
 import SearchIcon from '@mui/icons-material/Search';
+import LeaderboardIcon from '@mui/icons-material/Leaderboard';
 import { Link } from 'react-router-dom';
 
 export default function BasicList() {
@@ -66,7 +67,7 @@ export default function BasicList() {
           <ListItem disablePadding component={Link} to="/Leaderboard">
             <ListItemButton>
               <ListItemIcon>
-                <SearchIcon />
+                <LeaderboardIcon />
               </ListItemIcon>
               <ListItemText primary="Leaderboard" />
             </ListItemButton>
