@@ -25,7 +25,7 @@ function UpcomingApmt() {
   }, []);
 
   if (!Array.isArray(upcomingAppointments)) {
-    return <h3>No upcoming appointments</h3>;
+    return <p>No upcoming appointments</p>;
   }
 
   return (
