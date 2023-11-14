@@ -430,10 +430,10 @@ const FrontAPI = {
         return error.data.status_code;
       } else if (error.request) {
         console.error('No response received:', error.request);
-        return error.data.status_code;
+        return { status_code: -1, message: 'Network error occurred' };
       } else {
         console.error('Error message:', error.message);
-        return error.data.status_code;
+        return { status_code: -1, message: 'Network error occurred' };
       }
     }
   },
@@ -456,10 +456,10 @@ const FrontAPI = {
         return error.data.status_code;
       } else if (error.request) {
         console.error('No response received:', error.request);
-        return error.data.status_code;
+        return { status_code: -1, message: 'Network error occurred' };
       } else {
         console.error('Error message:', error.message);
-        return error.data.status_code;
+        return { status_code: -1, message: 'Network error occurred' };
       }
     }
   },
@@ -482,10 +482,30 @@ const FrontAPI = {
         return error.data.status_code;
       } else if (error.request) {
         console.error('No response received:', error.request);
-        return error.data.status_code;
+        return { status_code: -1, message: 'Network error occurred' };
       } else {
         console.error('Error message:', error.message);
+        return { status_code: -1, message: 'Network error occurred' };
+      }
+    }
+  },
+
+  // fetch upcoming appointments for the current user
+  fetchUpcomingAppointments: async () => {
+    try {
+      const response = await axiosInstance.get('/api/v1/upcoming_appointments');
+      return response.data;
+    } catch (error) {
+      if (error.response) {
+        console.error('Error response status:', error.response.status);
+        console.error('Error response data:', error.response.data);
         return error.data.status_code;
+      } else if (error.request) {
+        console.error('No response received:', error.request);
+        return { status_code: -1, message: 'Network error occurred' };
+      } else {
+        console.error('Error message:', error.message);
+        return { status_code: -1, message: 'Network error occurred' };
       }
     }
   },
