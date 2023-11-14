@@ -16,7 +16,7 @@ const axiosInstance = axios.create({
 // api functions
 const FrontAPI = {
   "baseURL": baseURL,
-
+  
   // send sign up info
   signUp: async (formData, isTutor) => {
     try {
