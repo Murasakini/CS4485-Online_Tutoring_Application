@@ -41,7 +41,7 @@ export default function TutorAppointmentScheduler() {
           setSnackbarMessage(data.message);
           setSnackbarOpen(true);
         } else {
-          setSubjects(data.class_name);
+          setSubjects(data);
         }
       })
       .catch((error) => {
@@ -63,7 +63,7 @@ export default function TutorAppointmentScheduler() {
           } else {
             // startDate and endDate to generateAllPossibleTimeSlots
             const allPossibleTimeSlots = generateAllPossibleTimeSlots(formData.startDate, formData.endDate);
-            const availableSlots = calculateAvailableTimeSlots(allPossibleTimeSlots, data.timestamp);
+            const availableSlots = calculateAvailableTimeSlots(allPossibleTimeSlots, data);
             setAvailableSlots(availableSlots);
           }
         })
