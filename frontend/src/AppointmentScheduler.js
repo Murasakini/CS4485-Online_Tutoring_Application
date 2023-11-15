@@ -44,7 +44,7 @@ export default function AppointmentScheduler() {
           setSnackbarMessage(data.message);
           setSnackbarOpen(true);
         } else {
-          setSubjects(data.class_name);
+          setSubjects(data);
         }
       })
       .catch((error) => {
@@ -74,7 +74,7 @@ export default function AppointmentScheduler() {
             setSnackbarMessage(data.message);
             setSnackbarOpen(true);
           } else {
-            setTutorsList(data.name);
+            setTutorsList(data);
           }
         })
         .catch((error) => {
@@ -107,7 +107,7 @@ export default function AppointmentScheduler() {
           setSnackbarMessage(data.message);
           setSnackbarOpen(true);
         } else {
-          setAvailableSlots(data.timestamp);
+          setAvailableSlots(data);
         }
       })
       .catch((error) => {
