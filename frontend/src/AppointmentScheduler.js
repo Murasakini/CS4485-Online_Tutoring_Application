@@ -21,10 +21,11 @@ export default function AppointmentScheduler() {
   });
   
   const [cooldown, setCooldown] = useState(false);
-  const [subjects, setSubjects] = useState([]); // subjects
+  const [subjects, setSubjects] = useState([]);
+  
   const [tutorsList, setTutorsList] = useState([]);     // tutors
   const [availableSlots, setAvailableSlots] = useState([]); // time slots
-  const [selectedTimeSlot, setSelectedTimeSlot] = useState('');
+  //const [selectedTimeSlot, setSelectedTimeSlot] = useState('');
 
     // display error msg to the user
     const [snackbarOpen, setSnackbarOpen] = useState(false);
@@ -43,7 +44,7 @@ export default function AppointmentScheduler() {
           setSnackbarMessage(data.message);
           setSnackbarOpen(true);
         } else {
-          setSubjects(data);
+          setSubjects(data.class_name);
         }
       })
       .catch((error) => {
@@ -73,7 +74,7 @@ export default function AppointmentScheduler() {
             setSnackbarMessage(data.message);
             setSnackbarOpen(true);
           } else {
-            setTutorsList(data);
+            setTutorsList(data.name);
           }
         })
         .catch((error) => {
@@ -106,7 +107,7 @@ export default function AppointmentScheduler() {
           setSnackbarMessage(data.message);
           setSnackbarOpen(true);
         } else {
-          setAvailableSlots(data);
+          setAvailableSlots(data.timestamp);
         }
       })
       .catch((error) => {
@@ -127,7 +128,7 @@ export default function AppointmentScheduler() {
       ...formData,
       timeSlot: selectedTimeSlot,
     });
-    setSelectedTimeSlot(selectedTimeSlot);
+    //setSelectedTimeSlot(selectedTimeSlot);
   };
   
   // handle when user click submit button
@@ -226,11 +227,10 @@ export default function AppointmentScheduler() {
                       value={formData.subject}
                       onChange={handleSubjectChange}
                     >
-
                       <MenuItem value="">
                         <em>Select a subject</em>
                       </MenuItem>
-                         {subjects.map((subject) => (
+                         {Array.isArray(subjects) && subjects.map((subject) => (
                          <MenuItem key={subject.class_name} value={`${subject.department_id}/${subject.class_num}`}>
                            {subject.department_name} - {subject.class_num} - {subject.class_name}
                          </MenuItem>
@@ -250,7 +250,7 @@ export default function AppointmentScheduler() {
                         <em>Select a tutor</em>
                       </MenuItem>
 
-                      {tutorsList.map((tutor) => (
+                      {Array.isArray(tutorsList) && tutorsList.map((tutor) => (
                         <MenuItem key={tutor.tutor_id} value={tutor.tutor_id}> {/* TODO: change key to something else*/ }
                           {tutor.name}
                         </MenuItem>
@@ -273,7 +273,7 @@ export default function AppointmentScheduler() {
                       </MenuItem>
 
                       {/* add the available time slots as MenuItem options */}
-                      {availableSlots.map((slot) => {
+                      {Array.isArray(availableSlots) && availableSlots.map((slot) => {
                         const startTime = new Date(slot.timestamp);
                         const endTime = addToDate(startTime, 1);
                         return (
