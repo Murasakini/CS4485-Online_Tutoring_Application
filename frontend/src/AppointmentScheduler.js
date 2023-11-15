@@ -24,7 +24,7 @@ export default function AppointmentScheduler() {
   const [subjects, setSubjects] = useState([]); // subjects
   const [tutorsList, setTutorsList] = useState([]);     // tutors
   const [availableSlots, setAvailableSlots] = useState([]); // time slots
-  //const [selectedTimeSlot, setSelectedTimeSlot] = useState('');
+  const [selectedTimeSlot, setSelectedTimeSlot] = useState('');
 
     // display error msg to the user
     const [snackbarOpen, setSnackbarOpen] = useState(false);
@@ -127,7 +127,7 @@ export default function AppointmentScheduler() {
       ...formData,
       timeSlot: selectedTimeSlot,
     });
-    // setSelectedTimeSlot(selectedTimeSlot);
+    setSelectedTimeSlot(selectedTimeSlot);
   };
   
   // handle when user click submit button
