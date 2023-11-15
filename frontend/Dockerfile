@@ -1,14 +1,10 @@
-FROM node:latest
+FROM node:16-slim
 
 WORKDIR /user/src/app
 
-COPY ./package.json ./
+COPY package*.json ./
 
-COPY ./package-lock.json ./
-
-RUN npm install react-router-dom
-RUN npm install @mui/material @emotion/react @emotion/styled
-RUN npm install axios
+RUN npm install 
 
 COPY . .
 
