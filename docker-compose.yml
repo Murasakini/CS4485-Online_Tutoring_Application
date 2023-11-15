@@ -10,7 +10,9 @@ services:
       - server
 
   web:
-    build: ./frontend
+    build: 
+      context: ./frontend
+      dockerfile: Dockerfile
     volumes:
       - ./frontend:/user/src/app
       - /user/src/app/node_modules

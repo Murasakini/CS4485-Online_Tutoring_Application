@@ -18,3 +18,26 @@ services:
     build: ./backend
     environment:
       - FLASK_ENV=production
+
+# services:
+#   nginx:
+#     image: nginx:latest
+#     ports:
+#       - "80:80"
+#     volumes:
+#       - ./nginx-prod.conf:/etc/nginx/nginx.conf:ro
+#     depends_on:
+#       - web
+#       - server
+
+#   web:
+#     build: 
+#       context: .
+#       dockerfile: frontend/Dockerfile.prod
+
+#   server:
+#     build: ./backend
+#     volumes:
+#       - ./backend:./app
+#     environment:
+#       - FLASK_ENV=production      

@@ -1,0 +1,14 @@
+services:
+  nginx:
+    image: nginx:latest
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx-prod-server-only.conf:/etc/nginx/nginx.conf:ro
+    depends_on:
+      - server
+
+  server:
+    build: ./backend
+    environment:
+      - FLASK_ENV=production
