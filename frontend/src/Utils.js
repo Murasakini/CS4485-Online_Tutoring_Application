@@ -23,10 +23,11 @@ export const generateAllPossibleTimeSlots = (startDate, endDate) => {
 
 // filter out the unavailable time slots. Used in TutorScheduler.
 export const calculateAvailableTimeSlots = (allPossibleTimeSlots, tutorTimeSlots) => {
-  const bookedTimeSlots = new Set(tutorTimeSlots.map((slot) => slot.timestamp.getTime()));
+  const bookedTimeSlots = new Set(tutorTimeSlots.map((slot) => new Date(slot.timestamp).getTime()));
   const availableSlots = allPossibleTimeSlots.filter(
-    (slot) => !bookedTimeSlots.has(slot.getTime())
+    (slot) => !bookedTimeSlots.has(new Date(slot).getTime())
   );
   return availableSlots;
 };
+
 
