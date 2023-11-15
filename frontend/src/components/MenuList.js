@@ -54,6 +54,15 @@ export default function BasicList() {
             </ListItemButton>
           </ListItem>
 
+          <ListItem disablePadding component={Link} to="/TutorScheduler">
+            <ListItemButton>
+              <ListItemIcon>
+                <CalendarMonthIcon />
+              </ListItemIcon>
+              <ListItemText primary="Tutor Scheduler" />
+            </ListItemButton>
+          </ListItem>
+
           <ListItem disablePadding component={Link} to="/FindTutor">
             <ListItemButton>
               <ListItemIcon>
