@@ -754,6 +754,12 @@ def index():
         "message": "Hello Worldsss!"
     }
 
+@version.route("/hello", methods=["GET"])
+def hello():
+    return {
+        "message": "Hello World! From Nginx"
+    }
+
 @version.before_request
 def verify_session():
 

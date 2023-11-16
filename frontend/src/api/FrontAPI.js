@@ -1,7 +1,7 @@
 import axios from 'axios';
 import { SHA256 } from 'crypto-js';
 
-const baseURL = 'https://f043-64-189-201-9.ngrok-free.app/';
+const baseURL = '';
 // const baseURL = 'http://localhost:5000';
 
 const axiosInstance = axios.create({
