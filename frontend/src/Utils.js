@@ -15,7 +15,10 @@ export const generateAllPossibleTimeSlots = (startDate, endDate) => {
   endTime.setHours(22, 0, 0, 0);
 
   while (currentTime <= endTime) {
-    timeSlots.push(new Date(currentTime));
+    // currentTime between 7 AM and 9 PM. this is start time
+    if (currentTime.getHours() >= 7 && currentTime.getHours() <= 21) {
+      timeSlots.push(new Date(currentTime));
+    }
     currentTime = new Date(currentTime.getTime() + 60 * 60 * 1000); // increment by 1 hour
   }
   return timeSlots;
