@@ -221,6 +221,66 @@ def subjects_of_user(user_id):
         response.append({'class_name': row[0], 'class_num': row[1], 'department_id': row[2], 'department_name': row[3]})
     return response
 
+'''
+This function takes a session_id to determine a user/tutor, and returns a readable version of the user/tutor's upcoming appointments.
+:param session_id: session cookie id
+'''
+def get_upcoming_appointments(session_id):
+    # finds available classes based on session id
+    user_id, tutor_id, authorized = get_id(session_id)
+
+    if not authorized:  # invalid session id
+        response = {
+            'error': True,
+            'status_code': 401,
+            'message': 'Unauthorized access.',
+            'result': None
+        }
+
+        return jsonify(response), 401
+    
+    formatted_data = {
+        'user_id': user_id,
+        'tutor_id': tutor_id
+    }
+
+    if user_id != None:
+        sql = text("""
+                SELECT upcoming_appointments.user_first_name, upcoming_appointments.user_last_name, upcoming_appointments.tutor_first_name, upcoming_appointments.tutor_first_name,
+                    upcoming_appointments.class_name, upcoming_appointments.meeting_time, upcoming_appointments.appointment_id
+                    FROM ota_db.upcoming_appointments 
+                    WHERE upcoming_appointments.user_id = :user_id;
+            """)
+        result = db.session.execute(sql, formatted_data)
+    else: # assume tutor_id exists
+        sql = text("""
+                SELECT upcoming_appointments.user_first_name, upcoming_appointments.user_last_name, upcoming_appointments.tutor_first_name, upcoming_appointments.tutor_first_name,
+                    upcoming_appointments.class_name, upcoming_appointments.meeting_time, upcoming_appointments.appointment_id
+                    FROM ota_db.upcoming_appointments 
+                    WHERE upcoming_appointments.tutor_id = :tutor_id;
+            """)
+        result = db.session.execute(sql, formatted_data)
+
+    if result == None:
+        response = {
+            'error': True,
+            'status_code': 200,
+            'message': 'No subjects found.'
+        }
+        return response
+
+    # jsonify sql result
+    response = list()
+    for row in result:
+        response.append({
+            'student_name': row[0] + " " + row[1], 
+            'tutor_name': row[2] + " " + row[3], 
+            'class_name': row[4], 
+            'meeting_time': row[5],
+            'appointment_id': row[6]
+            })
+    return response
+
 def insert_user(data):
     if user_exists(data['netID']):
             return "User with that netID already exists", False
@@ -516,9 +576,10 @@ def in_favorites_list(session_id, tutor_id):
     # True if found, False if not found
     return result.fetchone() != None
 
-"""
+'''
 This function takes a session_id to determine a user, and returns a readable version of the user's list of tutors and their subjects.
-"""
+:param session_id: session cookie id
+'''
 def user_favorite_query(session_id):
     # retrieve list of favorite tutors
     validate_auth_table()
@@ -885,6 +946,22 @@ def subj_tutors():
     
     response = tutors_of_subject(class_num, department_id)
     
+    return jsonify(response), 200
+
+@version.route("/upcoming_appointments", methods=["GET"])
+def upcoming_appointments():
+    if not validate_fields(request.args, {'session_id'}):
+        response = {
+            'error': True,
+            'status_code': 400,
+            'message': 'Invalid or missing fields in request.'
+        }
+        return jsonify(response), 400
+    
+    # pulls a user's session_id from the browser
+    session_id = request.args.get('session_id')
+
+    response = get_upcoming_appointments(session_id)
     return jsonify(response), 200
 
 

@@ -493,9 +493,15 @@ const FrontAPI = {
   },
 
   // fetch upcoming appointments for the current user
-  fetchUpcomingAppointments: async () => {
+  fetchUpcomingAppointments: async (session_id) => {
     try {
-      const response = await axiosInstance.get('/api/v1/upcoming_appointments');
+      const response = await axiosInstance.get('/api/v1/upcoming_appointments', {
+        params: {
+          session_id: session_id,
+        },  data:{
+          message: 'dummy'
+        }
+      });
       return response.data;
     } catch (error) {
       if (error.response) {
