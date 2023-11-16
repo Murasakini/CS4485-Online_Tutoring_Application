@@ -1,6 +1,6 @@
 from flask import Flask, jsonify, Blueprint, request, send_from_directory, redirect, url_for
 from flask_sqlalchemy import SQLAlchemy
-#from flask_cors import CORS
+from flask_cors import CORS
 from sqlalchemy import text
 from sqlalchemy.exc import IntegrityError
 from datetime import datetime, timedelta
@@ -427,7 +427,7 @@ def authenticate(email, password):
     if tutor_result:
         user_type = 'tutor'
         user_id = tutor_result[0]
-        return redirect(url_for(server_email.your_target_function, user_id=user_id))   
+        #return redirect(url_for(server_email.your_target_function, user_id=user_id))   
     else:
         # If not a tutor, try to authenticate as a user
         user_result = db.session.execute(user_sql, {"email": email, "password": password}).fetchone()
