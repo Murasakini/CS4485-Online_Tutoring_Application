@@ -1,5 +1,6 @@
 import * as React from "react";
 import { TextField, Box, Button } from "@mui/material/";
+import { Link } from "react-router-dom";
 
 export default function MyProfileInfo(props) {
   const data = {
@@ -10,7 +11,8 @@ export default function MyProfileInfo(props) {
     subject: props.accInfo.subject,
     tutor_id: props.accInfo.tutor_id,
     num_hours: props.accInfo.num_hours,
-    netID: props.accInfo.netID
+    netID: props.accInfo.netID,
+    image: props.profileImg
   }
   return (
     <Box
@@ -90,6 +92,11 @@ export default function MyProfileInfo(props) {
         InputProps={{ readOnly: true }}
         />
       }
+
+      <Button component={Link} to='/EditMyProfile' state={{ fromMyAccount: {data}}}
+        variant="contained" size="large" style={{ marginBottom:"8px" }}>
+          Edit
+      </Button>
     </Box>
   );
 }
