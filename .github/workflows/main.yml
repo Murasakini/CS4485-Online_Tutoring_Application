@@ -1,20 +1,18 @@
-name: Deploy to Raspberry Pi
+name: Deploy to AWS EC2
 
 on:
   push:
     branches:
       - main
-      - docker-optimization
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
-    - name: Notify Raspberry Pi
+    - name: Notify EC2 webhook server
       env:
-        #PI_WEBHOOK_URL: ${{ secrets.PI_WEBHOOK_URL }}
-        #SECRET_TOKEN: ${{ secrets.SECRET_TOKEN }}
-        PI_WEBHOOK_URL: https://teppcq-ip-64-189-201-9.tunnelmole.net/hooks/redeploy-webhook
-        SECRET_TOKEN: supersecrettoken
+        PI_WEBHOOK_URL: http://3.16.222.159:9000/hooks/deploy
       run: |
-        curl -X POST -H "Content-Type: application/json" -d "{\"secret\":\"$SECRET_TOKEN\"}" "$PI_WEBHOOK_URL"
+        curl -X POST "$PI_WEBHOOK_URL"
+
+# Yes i know this is horribly unsecure but the scope right now is not too large and its still in development
