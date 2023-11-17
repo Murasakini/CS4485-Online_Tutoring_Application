@@ -28,14 +28,12 @@ const SUBJECTS = [
   [0, 'MATH', 1, 'Calculus 1'], [0, 'MATH', 4, 'Calculus 2'], [3, 'SCIENCE', 2, 'Computer'], 
   [2, 'LANGUAGE', 2, 'English'], [2, 'LANGUAGE', 5, 'French'],
   [1, 'SOCIOLOGY', 3, 'History'], [0, 'MATH', 2, 'Linear Algebra'], 
-  [3, 'SCIENCE', 6, 'Physics', [1, 'SOCIOLOGY', 5, 'US Government']]
+  [3, 'SCIENCE', 6, 'Physics'], [1, 'SOCIOLOGY', 5, 'US Government']
 ];
 
 export default function EditProfileInfo(props) {
   const [departments, setDepartments] = React.useState([]);
-  const [departmentNames, setDepartmentName] = React.useState([]);
   const [subjects, setSubjects] = React.useState([]);
-  const [subjectNames, setSubjectNames] = React.useState([]);
 
   const handleChangeDepartments = (event) => {
     const {
@@ -74,8 +72,8 @@ export default function EditProfileInfo(props) {
     >
       {/* profile photo */}
       <Box>
-        <img style= {{width: 200, height: 200, marginLeft:"6px", marginTop:"6px",}} 
-        src={props.accInfo.image} alt="profile_photo" />
+        <img style= {{width: 250, height: 250, marginLeft:"6px", marginTop:"6px", objectFit:"contain"}} 
+        src={props.accInfo.image} alt={props.accInfo.name} />
       </Box>
       <TextField
         id="name"
@@ -128,8 +126,8 @@ export default function EditProfileInfo(props) {
             MenuProps={MenuProps}
           >
             {DEPARTMENTS.map((dept) => (
-              <MenuItem key={dept[0]} value={dept[0]}>
-                <Checkbox checked={departments.indexOf(dept[0]) > -1} />
+              <MenuItem key={dept[1]} value={dept[1]}>
+                <Checkbox checked={departments.indexOf(dept[1]) > -1} />
                 <ListItemText primary={dept[1]} />
               </MenuItem>
             ))}
@@ -149,10 +147,10 @@ export default function EditProfileInfo(props) {
             MenuProps={MenuProps}
           >
             {SUBJECTS.map((subj) => (
-              departments.includes(subj[0]) &&
-              <MenuItem key={subj[0].toString() + subj[2].toString} value={[subj[0], subj[2]]}>
-                <Checkbox checked={subjects.indexOf([subj[0], subj[2]]) > -1} />
-                <ListItemText primary={subj[1] + ' - ' + subj[3]} />
+              departments.includes(subj[1]) &&
+              <MenuItem key={`${subj[1]}-${subj[3]}`} value={`${subj[1]}-${subj[3]}`}>
+                <Checkbox checked={subjects.indexOf(`${subj[1]}-${subj[3]}`) > -1} />
+                <ListItemText primary={`${subj[1]}-${subj[3]}`} />
               </MenuItem>
             ))}
           </Select>

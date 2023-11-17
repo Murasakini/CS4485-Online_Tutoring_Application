@@ -26,8 +26,8 @@ export default function MyProfileInfo(props) {
     >
       {/* profile photo */}
       <Box>
-        <img style= {{width: 300, height: 300, marginLeft:"6px", marginTop:"6px", objectFit:"contain"}} 
-        src={props.profileImg} alt={data.name} /> 
+        <img style= {{width: 250, height: 250, marginLeft:"6px", marginTop:"6px", objectFit:"contain"}} 
+        src={data.image} alt={data.name} /> 
 
         <br />
 
@@ -93,6 +93,7 @@ export default function MyProfileInfo(props) {
         />
       }
 
+      <br/>
       <Button component={Link} to='/EditMyProfile' state={{ fromMyAccount: {data}}}
         variant="contained" size="large" style={{ marginBottom:"8px" }}>
           Edit

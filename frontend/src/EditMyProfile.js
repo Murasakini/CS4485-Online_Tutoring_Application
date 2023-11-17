@@ -12,12 +12,13 @@ const EditMyProfile = () => {
     
     // get data from MyAccount and store as initial state
     const [accInfo, setAccInfo] = useState({
-        photo: fromMyAccount.data.image,
+        image: fromMyAccount.data.image,
         name: fromMyAccount.data.name,
         email: fromMyAccount.data.email, 
         phone: fromMyAccount.data.phone,
         about: fromMyAccount.data.about,
-        subject: fromMyAccount.data.subject
+        subject: fromMyAccount.data.subject,
+        newSubject: ''
     });
 
     // update values when any changes
