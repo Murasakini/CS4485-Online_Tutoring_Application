@@ -6,6 +6,7 @@ from sqlalchemy.exc import IntegrityError
 from datetime import datetime, timedelta
 import yaml
 import uuid
+import os
 ################# FOR 2FA & Sending Email #################
 import base64 
 import random 
