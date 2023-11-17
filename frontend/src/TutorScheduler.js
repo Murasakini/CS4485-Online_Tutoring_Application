@@ -8,7 +8,7 @@ import 'react-big-calendar/lib/css/react-big-calendar.css';
 import FrontAPI from './api/FrontAPI';
 import CalendarDisplay from './components/CalendarDisplay';
 import TextField from '@mui/material/TextField';
-import {generateAllPossibleTimeSlots, calculateAvailableTimeSlots, addToDate} from './Utils';
+import {generateAllPossibleTimeSlots, calculateAvailableTimeSlots, addToDate, convertToMySQLTimestamp } from './Utils';
 import CustomSnackbar from './components/CustomSnackbar';
 
 export default function TutorAppointmentScheduler() {
@@ -26,7 +26,6 @@ export default function TutorAppointmentScheduler() {
   });
 
   const [subjects, setSubjects] = useState([]);
-  //const [tutorTimeSlots, setTutorTimeSlots] = useState([]);
   const [availableSlots, setAvailableSlots] = useState([]);
   const [openSnackbar, setSnackbarOpen] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState('');
@@ -101,11 +100,20 @@ export default function TutorAppointmentScheduler() {
       ...formData,
       timeSlot: selectedTimeSlot,
     });
+
+    console.log('form data', formData);
   };
 
   // handle when user click submit
   const handleSubmit = async (event) => {
     event.preventDefault();
+
+    //convert Date to timestamp
+    const mysqlTimestamp = convertToMySQLTimestamp(formData.timeSlot);
+    setFormData({
+      ...formData,
+      timeSlot: mysqlTimestamp,
+    });
 
     if (cooldown) {
       // on cd
@@ -206,7 +214,7 @@ export default function TutorAppointmentScheduler() {
             <MenuItem value="">
               <em>Select a subject</em>
             </MenuItem>
-            {subjects.map((subject) => (
+            {Array.isArray(subjects) && subjects.map((subject) => (
               <MenuItem key={subject.class_name} value={`${subject.department_id}/${subject.class_num}`}>
                 {subject.department_name} - {subject.class_num} - {subject.class_name}
               </MenuItem>
@@ -226,12 +234,12 @@ export default function TutorAppointmentScheduler() {
               <em>Select a time slot</em>
             </MenuItem>
             {/* add the available time slots as MenuItem options */}
-              {availableSlots.map((slot) => {
-                const startTime = new Date(slot.timestamp);
+              {Array.isArray(availableSlots) && availableSlots.map((slot) => {
+                const startTime = new Date(slot);
                 const endTime = addToDate(startTime, 1);
                 return (
-                  <MenuItem key={slot.id} value={slot.timestamp}>
-                    {`${startTime.toLocaleTimeString()} - ${endTime.toLocaleTimeString()}`}
+                  <MenuItem key={slot.id} value={slot}>
+                    {startTime.toString() + ' - ' + endTime.toString()}
                   </MenuItem>
                 );
               })}

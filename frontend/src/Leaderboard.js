@@ -12,7 +12,7 @@ function Leaderboard() {
   useEffect(() => {
     // the tutor and user leaderboards
     const fetchLeaderboards = async () => {
-      try {
+ 
         const tutorLeaderboardData = await FrontAPI.fetchTutorLeaderboard();
         switch (tutorLeaderboardData.status_code) {
           case 200:
@@ -34,11 +34,6 @@ function Leaderboard() {
             setSnackbarOpen(true);
             break;
         }
-      } catch (error) {
-        console.error("Error fetching leaderboards:", error);
-        setSnackbarMessage("Error fetching leaderboards. Please try again later.");
-        setSnackbarOpen(true);
-      }
     };
 
     fetchLeaderboards();
