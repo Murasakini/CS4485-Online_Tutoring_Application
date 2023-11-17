@@ -2476,7 +2476,7 @@ def find_tutors():
         # retrieve list of tutors based on search fields
         validate_auth_table()
         sql = text("""
-                SELECT tutor_id, first_name, last_name
+                SELECT tutor_id, first_name, last_name, image_path
                 FROM ota_db.tutors
                 WHERE EXISTS (SELECT * FROM ota_db.auth_table WHERE session_id = '{}')
             """.format(data.get('session_id')) + where_conditions + ';')
@@ -2491,6 +2491,7 @@ def find_tutors():
             tutor_list.append({
                 'name': row[1] + ' ' + row[2], 
                 'subject': subjects_of_tutor(row[0]),
+                'image_path': row[3],
                 'tutor_id': row[0]
             })
 
@@ -2499,7 +2500,7 @@ def find_tutors():
                 'error': False,
                 'status_code': 201,
                 'message': 'No data found.',
-                'result': tutor_list
+                'result': []
             }
             status_code = 201
 
@@ -2532,7 +2533,7 @@ def find_tutors():
                 'error': False,
                 'status_code': 201,
                 'message': 'No data found.',
-                'result': tutor_list
+                'result': []
             }
             status_code = 201
 
@@ -2544,6 +2545,7 @@ def find_tutors():
                 tutor_list.append({
                     'name': row[1] + ' ' + row[2], 
                     'subject': subject_list,
+                    'image_path': row[4],
                     'tutor_id': row[0]
                 })
             
@@ -2564,7 +2566,7 @@ def find_tutors():
 app.register_blueprint(version)
 
 if __name__ == "__main__":
-    app.register_blueprint(version)
+    #app.register_blueprint(version)
     app.run(debug=True, host="0.0.0.0")
     
 
