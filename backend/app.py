@@ -744,6 +744,7 @@ def store_image_path(path, user_id, tutor_id):
         # return to previous 
         db.session.rollback()
         return False
+       
 #####################
 # Routes
 #####################
@@ -1622,6 +1623,60 @@ def get_image():
     
     except FileNotFoundError:
         return None, 404
+    
+@version.route("/get_departments", methods = ['GET'])
+def get_departments():
+    # pulls a user's session_id and tutor_id from the browser
+    session_id = request.args.get('session_id')
+    
+    # validate session id
+    _, _, authorized = get_id(session_id)
+    
+    if not authorized:  # invalid session id
+        response = {
+            'error': True,
+            'status_code': 401,
+            'message': 'Unauthorized access.'
+        }
+
+        return jsonify(response), 401
+
+    else:  # valid session id
+        query = text('''
+                    SELECT department_name 
+                    FROM ota_db.departments;
+                ''')
+        
+        # execute query
+        result = db.session.execute(query)
+        rows = result.fetchall()
+
+        # make list of departments
+        departments = list()
+        for row in rows:
+            departments.append(row[0])
+
+        # make response
+        if len(departments) == 0:
+            response = {
+                'error': True,
+                'status_code': 200,
+                'message': 'Failed to retrieve a list of departments.'
+            }
+
+            status_code = 200
+            
+        else:
+            response = {
+                'error': False,
+                'status_code': 201,
+                'result': departments,
+                'message': 'Retrieves a list of departments successfully.'
+            }
+
+            status_code = 201
+
+        return jsonify(response), status_code
 
 #####################
 # Main
