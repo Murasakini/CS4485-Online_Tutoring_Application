@@ -1708,6 +1708,7 @@ def get_subjects_of_departments():
         response ={
             'error': False,
             'status_code': 200,
+            'result': department_list,
             'message': 'No department was specified.'
         }
 
@@ -1740,6 +1741,7 @@ def get_subjects_of_departments():
             response = {
                 'error': True,
                 'status_code': 200,
+                'result': subject_list,
                 'message': 'Failed to retrieve a list of subjects.'
             }
 
