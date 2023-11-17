@@ -2559,6 +2559,220 @@ def find_tutors():
 
     return jsonify(response), status_code
 
+#------------my profile------------
+# endpoint to get my profile
+@version.route("/my_profile", methods=["GET"])
+def my_profile():
+    # pulls a user's session_id from the browser
+    session_id = request.args.get('session_id')
+    
+    # determine session id belongs to tutor or user
+    user_id, tutor_id, authorized = get_id(session_id)
+
+    if not authorized:  # invalid session id
+        response = {
+            'error': True,
+            'status_code': 401,
+            'message': 'Unauthorized access.'
+        }
+
+        return jsonify(response), 401
+
+    # valid session id
+    elif user_id == None:  # not user account -> tutor account
+        # get profile
+        profile, status_code = get_tutor_profile(tutor_id)
+    
+    else:  # user account
+        # get profile
+        profile, status_code = get_user_profile(user_id)
+
+    # build response
+    if profile == None:  # no profile found
+        response = {
+            'error': True,
+            'status_code': status_code,  # 200
+            'message': 'Some problems occurred while retrieving the profile.',
+            'result': None
+        }
+
+    else:  # profile found
+        response = {
+            'error': False,
+            'status_code': status_code,  # 201
+            'message': 'Retrieve profile information successfully.',
+            'result': profile
+        }
+
+    return jsonify(response), status_code
+
+# endpoint to get tutor profile
+@version.route("/tutor_profile", methods=["GET"])
+def tutor_profile():
+    # pulls a user's session_id and tutor_id from the browser
+    session_id = request.args.get('session_id')
+    tutor_id = request.args.get('tutor_id')
+    
+    # validate session id
+    _, _, authorized = get_id(session_id)
+    
+    if not authorized:  # invalid session id
+        response = {
+            'error': True,
+            'status_code': 401,
+            'message': 'Unauthorized access.'
+        }
+
+        return jsonify(response), 401
+
+    else:  # valid session id
+        # get profile
+        profile, status_code = get_tutor_profile(tutor_id)
+
+        # build response
+        if profile == None:  # no profile found
+            response = {
+                'error': True,
+                'status_code': status_code,  # 200
+                'message': 'Some problems occurred while retrieving the profile.',
+                'result': None
+            }
+
+        else:  # profile found
+            response = {
+                'error': False,
+                'status_code': status_code,   # 201
+                'message': 'Retrieve profile information successfully.',
+                'result': profile
+            }
+
+        return jsonify(response), status_code
+    
+# endpoint to get tutor profile
+@version.route("/media_upload", methods=["POST"])
+def media_upload():
+    session_id = request.form['session_id']  
+
+    # validate session id
+    user_id, tutor_id, authorized = get_id(session_id)
+    
+    if not authorized:  # invalid session id
+        response = {
+            'error': True,
+            'status_code': 401,
+            'message': 'Unauthorized access.'
+        }
+
+        return jsonify(response), 401
+      
+    # check if file is alongs with the request
+    if 'file' not in request.files:  # file not in the request
+        response = {
+            'error': True,
+            'status_code': 400,
+            'message': 'An image is not provided.'
+        }
+
+        status_code = 400
+
+        return jsonify(response), status_code
+    
+    # file in the request
+    file = request.files['file']  # store file 
+
+    # check if filename is missing
+    if file.filename == '':  # missing filename
+        response = {
+            'error': True,
+            'status_code': 400,
+            'message': 'No image was selected.'
+        }
+
+        status_code = 400
+
+        return jsonify(response), status_code
+    
+    # check if file not null and extension is legit
+    if file and allowed_file(file.filename):
+        filename = create_filename(user_id=user_id, tutor_id=tutor_id)
+        file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+        file_path = app.config['UPLOAD_FOLDER'] + '/' + filename
+
+        # save image path to db
+        successful = store_image_path(file_path, user_id=user_id, tutor_id=tutor_id)
+
+        if successful:  # store path successfully
+            response = {
+                'error': False,
+                'status_code': 201,
+                'message': 'Image uploaded successfully.',
+                'file_path': file_path
+            }
+
+            status_code = 201
+
+            return jsonify(response), status_code
+        
+        else:  # fail to store path
+            response = {
+                'error': True,
+                'status_code': 409,
+                'message': 'Failed to store the image path in database.',
+                'file_path': file_path
+            }
+
+            status_code = 201
+
+            return jsonify(response), status_code
+        
+    else:  # invalid file extension or file is none
+        response = {
+            'error': True,
+            'status_code': 400,
+            'message': 'File extension is invalid, or error occurred while uploading the image.'
+        }
+
+        status_code = 400
+
+        return jsonify(response), status_code
+
+@version.route("/get_image", methods = ['GET'])
+def get_image():
+    # pulls a user's session_id and tutor_id from the browser
+    session_id = request.args.get('session_id')
+    tutor_id = request.args.get('tutor_id')
+    user_id = None  # initialize 
+
+    # get id from session id
+    if tutor_id == None:  # tutor id is not provided -> my profile
+        # determine type of account
+        user_id, tutor_id, authorized = get_id(session_id)
+
+    else:  # tutor id is provided -> tutor profile
+        # check authorized only
+        _, _, authorized = get_id(session_id)
+
+    if not authorized:  # invalid session id
+        response = {
+            'error': True,
+            'status_code': 401,
+            'message': 'Unauthorized access.'
+        }
+
+        return jsonify(response), 401
+    
+    # get filename 
+    filename = create_filename(user_id=user_id, tutor_id=tutor_id)
+
+    # return file
+    try:
+        image = send_from_directory(directory=app.config["UPLOAD_FOLDER"], path=filename, as_attachment=True)
+       
+        return image, 201
+    
+    except FileNotFoundError:
+        return None, 404
+
 #####################
 # Main
 #####################
