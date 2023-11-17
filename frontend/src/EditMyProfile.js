@@ -24,6 +24,8 @@ const EditMyProfile = () => {
   // store department and subject selections
   const [departmentList, setDepartmentList] = useState([]);  // store list of departments from server
   const [departments, setDepartments] = useState([]);
+
+  const [subjectList, setSubjectList] = useState([]);  // store list of departments from server
   const [subjects, setSubjects] = useState([]);
 
   // retrieve data from db
@@ -34,10 +36,10 @@ const EditMyProfile = () => {
 
     switch(response?.status_code) {
         case 201:  // success
-          console.log(response.message);
+          console.log(response);
           return response?.result;
 
-        case 200:
+        case 200:  // no list returned
           console.log(response.message);
           break;
 
@@ -47,7 +49,7 @@ const EditMyProfile = () => {
 };
 
   // handle change of departments dropdown selection
-  const handleChangeDepartments = (event) => {
+  const handleChangeDepartments = async (event) => {
     const {
       target: { value },
     } = event;
@@ -56,6 +58,30 @@ const EditMyProfile = () => {
       // On autofill we get a stringified value.
       typeof value === 'string' ? value.split(',') : value,
     );
+
+    const departments = event.target.value;  // get the list of selections
+
+    // api GET to get list of favorite tutors
+    setSubjectList([]);  // reset 
+    const session_id = document.cookie.split("; ").find((row) => row.startsWith("sessionCookie="))?.split("=")[1];
+    const response = await FrontAPI.getSubjectsOfDepartments(session_id, departments);
+
+    switch(response?.status_code) {
+        case 201:  // success
+          console.log(response);
+          setSubjectList(response.result);
+          console.log(subjectList);
+          return response?.result;
+
+        case 200:  // no list returned
+          setSubjectList([]);  // reset 
+          console.log(response.message);
+          break;
+
+        default:
+          setSubjectList([]);  // reset 
+          console.log('Some errors happened from the server.');
+    }
 
     console.log(departments);
   };
@@ -90,11 +116,6 @@ const EditMyProfile = () => {
       e.preventDefault();
       accInfo['subjects'] = subjects;
       console.log(accInfo);
-      // e.preventDefault();
-      // console.log(accInfo);
-      // Axios.put("http://localhost:3006/accountInfo/1", accInfo)
-      // .then(response => console.log(response.data))
-      // .catch(err => console.log(err));
   }
 
   // store tutor list retrieved
@@ -118,8 +139,8 @@ const EditMyProfile = () => {
       <Body content={
         <EditMyProfileInfo
         accInfo={accInfo}
+        departmentList={departmentList} subjectList={subjectList}
         handleChange={handleChange}
-        departmentList={departmentList} 
         subjects={subjects} departments={departments}
         handleChangeDepartments={handleChangeDepartments}
         handleChangeSubjects={handleChangeSubjects}

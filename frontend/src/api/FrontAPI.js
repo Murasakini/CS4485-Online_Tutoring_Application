@@ -564,14 +564,39 @@ const FrontAPI = {
     }
   },
 
-  // get # of total tutoring hours for logged in user
+  // get a list of department
   getDepartments: async (session_id) => {
     try {
-      // POST request to /total_hours endpoint
+      // GET to get list of departments
       const response = await axiosInstance.get('/api/v1/get_departments', {
         params: {
           session_id: session_id,
         }
+      });
+      return response.data;
+
+    } catch (error) {
+      if (error.response) {
+        console.error('Error response status:', error.response.status);
+        console.error('Error response data:', error.response.data);
+        return error.data.status_code;
+      } else if (error.request) {
+        console.error('No response received:', error.request);
+        return error.data.status_code;
+      } else {
+        console.error('Error message:', error.message);
+        return error.data.status_code;
+      }
+    }
+  },
+
+  // get list of subjects along with their department
+  getSubjectsOfDepartments: async (session_id, department_list) => {
+    try {
+      // POST request to /total_hours endpoint
+      const response = await axiosInstance.post('/api/v1/get_subjects_of_departments', {
+          session_id: session_id,
+          departments: department_list
       });
       return response.data;
       
@@ -580,6 +605,7 @@ const FrontAPI = {
         console.error('Error response status:', error.response.status);
         console.error('Error response data:', error.response.data);
         return error.data.status_code;
+        
       } else if (error.request) {
         console.error('No response received:', error.request);
         return error.data.status_code;

@@ -20,17 +20,9 @@ const MenuProps = {
   },
 };
 
-
-
-const SUBJECTS = [
-  [0, 'MATH', 1, 'Calculus 1'], [0, 'MATH', 4, 'Calculus 2'], [3, 'SCIENCE', 2, 'Computer'], 
-  [2, 'LANGUAGE', 2, 'English'], [2, 'LANGUAGE', 5, 'French'],
-  [1, 'SOCIOLOGY', 3, 'History'], [0, 'MATH', 2, 'Linear Algebra'], 
-  [3, 'SCIENCE', 6, 'Physics'], [1, 'SOCIOLOGY', 5, 'US Government']
-];
-
 export default function EditProfileInfo(props) {
   const DEPARTMENTS = props.departmentList;
+  const SUBJECTS = props.subjectList;
 
   return (
     <Box
@@ -124,10 +116,9 @@ export default function EditProfileInfo(props) {
             MenuProps={MenuProps}
           >
             {SUBJECTS.map((subj) => (
-              props.departments.includes(subj[1]) &&
-              <MenuItem key={`${subj[1]}-${subj[3]}`} value={`${subj[1]}-${subj[3]}`}>
-                <Checkbox checked={props.subjects.indexOf(`${subj[1]}-${subj[3]}`) > -1} />
-                <ListItemText primary={`${subj[1]}-${subj[3]}`} />
+              <MenuItem key={subj} value={subj}>
+                <Checkbox checked={props.subjects.indexOf(subj) > -1} />
+                <ListItemText primary={subj} />
               </MenuItem>
             ))}
           </Select>
