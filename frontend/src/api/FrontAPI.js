@@ -535,6 +535,60 @@ const FrontAPI = {
   The api call is resided in MyProfile.js or TutorProfile.js due to the nature of the returned file 
   */
   
+  // delete tutors from favorite list
+  updateProfile: async (session_id, profile) => {
+    try {
+      // access endpoint and send data
+      const response = await axiosInstance.post('/api/v1/update_profile', {
+        session_id: session_id,
+        profile: profile
+      });
+
+      //console.log(response)
+      return response.data;
+
+      // handle errors
+    } catch (error) {
+      if (error.response) {
+        console.error('Error response status:', error.response.status);
+        console.error('Error response data:', error.response.data);
+        return error.response.data;
+
+      } else if (error.request) {
+        console.error('No response received:', error.request);
+        return { status_code: -1, message: 'Network error occurred' };
+      } else {
+        console.error('Error message:', error.message);
+        return { status_code: -1, message: 'Network error occurred' };
+      }
+    }
+  },
+
+  // get # of total tutoring hours for logged in user
+  getDepartments: async (session_id) => {
+    try {
+      // POST request to /total_hours endpoint
+      const response = await axiosInstance.get('/api/v1/get_departments', {
+        params: {
+          session_id: session_id,
+        }
+      });
+      return response.data;
+      
+    } catch (error) {
+      if (error.response) {
+        console.error('Error response status:', error.response.status);
+        console.error('Error response data:', error.response.data);
+        return error.data.status_code;
+      } else if (error.request) {
+        console.error('No response received:', error.request);
+        return error.data.status_code;
+      } else {
+        console.error('Error message:', error.message);
+        return error.data.status_code;
+      }
+    }
+  },
 };
 
 export default FrontAPI;

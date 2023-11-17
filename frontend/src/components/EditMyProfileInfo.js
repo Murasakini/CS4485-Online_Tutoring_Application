@@ -20,9 +20,7 @@ const MenuProps = {
   },
 };
 
-const DEPARTMENTS = [
-  [0, 'MATH'], [2, 'LANGUAGE'],  [3, 'SCIENCE'], [1, 'SOCIOLOGY']
-];
+
 
 const SUBJECTS = [
   [0, 'MATH', 1, 'Calculus 1'], [0, 'MATH', 4, 'Calculus 2'], [3, 'SCIENCE', 2, 'Computer'], 
@@ -32,33 +30,7 @@ const SUBJECTS = [
 ];
 
 export default function EditProfileInfo(props) {
-  const [departments, setDepartments] = React.useState([]);
-  const [subjects, setSubjects] = React.useState([]);
-
-  const handleChangeDepartments = (event) => {
-    const {
-      target: { value },
-    } = event;
-    
-    setDepartments(
-      // On autofill we get a stringified value.
-      typeof value === 'string' ? value.split(',') : value,
-    );
-
-    console.log(departments);
-  };
-
-  const handleChangeSubjects = (event) => {
-    const {
-      target: { value },
-    } = event;
-    setSubjects(
-      // On autofill we get a stringified value.
-      typeof value === 'string' ? value.split(',') : value,
-    );
-
-    console.log(subjects);
-  };
+  const DEPARTMENTS = props.departmentList;
 
   return (
     <Box
@@ -122,18 +94,18 @@ export default function EditProfileInfo(props) {
           <InputLabel id="demo-multiple-checkbox-label">Departments</InputLabel>
           <Select
             labelId="demo-multiple-checkbox-label"
-            id="demo-multiple-checkbox"
+            id="departments"
             multiple
-            value={departments}
-            onChange={handleChangeDepartments}
-            input={<OutlinedInput label="Departments" />}
+            value={props.departments}
+            onChange={props.handleChangeDepartments}
+            input={<OutlinedInput label="departments" />}
             renderValue={(selected) => selected.join(', ')}
             MenuProps={MenuProps}
           >
             {DEPARTMENTS.map((dept) => (
-              <MenuItem key={dept[1]} value={dept[1]}>
-                <Checkbox checked={departments.indexOf(dept[1]) > -1} />
-                <ListItemText primary={dept[1]} />
+              <MenuItem key={dept} value={dept}>
+                <Checkbox checked={props.departments.indexOf(dept) > -1} />
+                <ListItemText primary={dept} />
               </MenuItem>
             ))}
           </Select>
@@ -143,18 +115,18 @@ export default function EditProfileInfo(props) {
           <InputLabel id="demo-multiple-checkbox-label">Subjects</InputLabel>
           <Select
             labelId="demo-multiple-checkbox-label"
-            id="demo-multiple-checkbox"
+            id="subjects"
             multiple
-            value={subjects}
-            onChange={handleChangeSubjects}
+            value={props.subjects}
+            onChange={props.handleChangeSubjects}
             input={<OutlinedInput label="Subjects" />}
             renderValue={(selected) => selected.join(', ')}
             MenuProps={MenuProps}
           >
             {SUBJECTS.map((subj) => (
-              departments.includes(subj[1]) &&
+              props.departments.includes(subj[1]) &&
               <MenuItem key={`${subj[1]}-${subj[3]}`} value={`${subj[1]}-${subj[3]}`}>
-                <Checkbox checked={subjects.indexOf(`${subj[1]}-${subj[3]}`) > -1} />
+                <Checkbox checked={props.subjects.indexOf(`${subj[1]}-${subj[3]}`) > -1} />
                 <ListItemText primary={`${subj[1]}-${subj[3]}`} />
               </MenuItem>
             ))}
