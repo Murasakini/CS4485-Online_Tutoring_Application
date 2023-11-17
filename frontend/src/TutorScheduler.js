@@ -8,7 +8,7 @@ import 'react-big-calendar/lib/css/react-big-calendar.css';
 import FrontAPI from './api/FrontAPI';
 import CalendarDisplay from './components/CalendarDisplay';
 import TextField from '@mui/material/TextField';
-import {generateAllPossibleTimeSlots, calculateAvailableTimeSlots, addToDate} from './Utils';
+import {generateAllPossibleTimeSlots, calculateAvailableTimeSlots, addToDate, convertToMySQLTimestamp } from './Utils';
 import CustomSnackbar from './components/CustomSnackbar';
 
 export default function TutorAppointmentScheduler() {
@@ -100,11 +100,20 @@ export default function TutorAppointmentScheduler() {
       ...formData,
       timeSlot: selectedTimeSlot,
     });
+
+    console.log('form data', formData);
   };
 
   // handle when user click submit
   const handleSubmit = async (event) => {
     event.preventDefault();
+
+    //convert Date to timestamp
+    const mysqlTimestamp = convertToMySQLTimestamp(formData.timeSlot);
+    setFormData({
+      ...formData,
+      timeSlot: mysqlTimestamp,
+    });
 
     if (cooldown) {
       // on cd
@@ -226,11 +235,11 @@ export default function TutorAppointmentScheduler() {
             </MenuItem>
             {/* add the available time slots as MenuItem options */}
               {Array.isArray(availableSlots) && availableSlots.map((slot) => {
-                const startTime = new Date(slot.timestamp);
+                const startTime = new Date(slot);
                 const endTime = addToDate(startTime, 1);
                 return (
-                  <MenuItem key={slot.id} value={slot.timestamp}>
-                    {`${startTime.toLocaleTimeString()} - ${endTime.toLocaleTimeString()}`}
+                  <MenuItem key={slot.id} value={slot}>
+                    {startTime.toString() + ' - ' + endTime.toString()}
                   </MenuItem>
                 );
               })}
