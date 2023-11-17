@@ -1671,7 +1671,82 @@ def get_departments():
                 'error': False,
                 'status_code': 201,
                 'result': departments,
-                'message': 'Retrieves a list of departments successfully.'
+                'message': 'Retrieved a list of departments successfully.'
+            }
+
+            status_code = 201
+
+        return jsonify(response), status_code
+    
+@version.route("/get_subjects_of_departments", methods = ['POST'])
+def get_subjects_of_departments():
+    data = request.get_json()  # get body data
+
+    # pulls a user's session_id and tutor_id from the browser
+    session_id = data.get('session_id')
+    department_list = data.get('departments')
+
+    # return str(type(department_list)), 201
+    
+    # validate session id
+    _, _, authorized = get_id(session_id)
+    
+    if not authorized:  # invalid session id
+        response = {
+            'error': True,
+            'status_code': 401,
+            'message': 'Unauthorized access.'
+        }
+
+        return jsonify(response), 401
+
+    if department_list == None or len(department_list) == 0:
+        response ={
+            'error': False,
+            'status_code': 200,
+            'message': 'No department was specified.'
+        }
+
+        return jsonify(response), 200
+
+    else:  # valid session id
+        # join department name together and create quotation marks
+        group_of_dept_name = "', '".join(department_list)
+        group_of_dept_name = "'" + group_of_dept_name + "'"
+
+        # query
+        query = text('''
+                    SELECT D.department_name, C.class_name
+                    FROM ota_db.departments D, ota_db.classes C
+                    WHERE D.department_id = C.department_id AND 
+                          D.department_name IN ({});
+                '''.format(group_of_dept_name))  # there is no user input -> safe to use format
+        
+        # execute query
+        result = db.session.execute(query)
+        rows = result.fetchall()
+
+        # make list of subjects in a form DEPARTMENT-subject
+        subject_list = list()
+        for row in rows: 
+            subject_list.append(f'{row[0]}-{row[1]}')
+
+        # make response
+        if len(subject_list) == 0:
+            response = {
+                'error': True,
+                'status_code': 200,
+                'message': 'Failed to retrieve a list of subjects.'
+            }
+
+            status_code = 200
+            
+        else:
+            response = {
+                'error': False,
+                'status_code': 201,
+                'result': subject_list,
+                'message': 'Retrieved a list of subjects successfully.'
             }
 
             status_code = 201
