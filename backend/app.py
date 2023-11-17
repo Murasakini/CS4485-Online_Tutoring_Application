@@ -1624,6 +1624,9 @@ def get_image():
     except FileNotFoundError:
         return None, 404
     
+
+#------------enroll/modify subjects------------
+# endpoint to return a list of departments name
 @version.route("/get_departments", methods = ['GET'])
 def get_departments():
     # pulls a user's session_id and tutor_id from the browser
@@ -1678,6 +1681,7 @@ def get_departments():
 
         return jsonify(response), status_code
     
+# endpoint to return list of subjects associated with their departments
 @version.route("/get_subjects_of_departments", methods = ['POST'])
 def get_subjects_of_departments():
     data = request.get_json()  # get body data
