@@ -19,6 +19,7 @@ services:
     environment:
       - HOST=0.0.0.0
       - WATCHPACK_POLLING=true
+      - WDS_SOCKET_PORT=0
 
   server:
     build: ./backend
