@@ -4,7 +4,6 @@
 git pull
 git checkout main
 git pull
-sudo docker-compose down
 sudo docker-compose -f docker-compose-prod.yml up --build -d
 
 # Clean up Docker environment
