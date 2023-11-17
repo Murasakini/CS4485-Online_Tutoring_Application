@@ -81,6 +81,7 @@ export default function EditProfileInfo(props) {
         name="name"
         value={props.accInfo.name}
         onChange={props.handleChange}
+        InputProps={{ readOnly: true }}
       />
       <TextField
         id="email"
@@ -88,6 +89,7 @@ export default function EditProfileInfo(props) {
         name="email"
         value={props.accInfo.email}
         onChange={props.handleChange}
+        InputProps={{ readOnly: true }}
       />
       <TextField
         id="phone"
@@ -95,6 +97,7 @@ export default function EditProfileInfo(props) {
         name="phone"
         value={props.accInfo.phone}
         onChange={props.handleChange}
+        InputProps={{ readOnly: true }}
       />
       <TextField
         id="about"
@@ -103,6 +106,7 @@ export default function EditProfileInfo(props) {
         value={props.accInfo.about}
         onChange={props.handleChange}
         multiline
+        InputProps={{ readOnly: true }}
       />
       <TextField
         id="subject"
@@ -110,6 +114,7 @@ export default function EditProfileInfo(props) {
         name="subject"
         value={props.accInfo.subject}
         onChange={props.handleChange}
+        InputProps={{ readOnly: true }}
       />
 
       <div>
