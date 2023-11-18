@@ -744,7 +744,89 @@ def store_image_path(path, user_id, tutor_id):
         # return to previous 
         db.session.rollback()
         return False
-       
+
+'''
+This function updates subjects associated with the provided user/tutor id.
+:param user_id: id of user
+:param tutor_id: id of tutor
+:param dept_subj_dict: dictionary with key is department, and value is a list of subjects
+:return: true if update successfully; otherwise, false
+'''
+def update_subjects(user_id, tutor_id, dept_subj_dict):
+    successful = False  # hold indicator of whether update successfully
+    # check with type of id is used
+    if user_id == None:  # tutor id
+        table = 'tutor_classes'
+        id_type = 'tutor_id'
+        id = tutor_id
+
+    else:  # user id
+        table = 'user_classes'
+        id_type = 'user_id'
+        id = user_id
+
+    # delete old subjects before updating
+    sql = text("""
+                DELETE FROM ota_db.{} 
+                WHERE {} = :id;
+            """.format(table, id_type))  # no user input for these value -> safe to use format
+    
+    data = {'id': id}
+
+    try:
+        # execute query
+        result = db.session.execute(sql, data)
+        db.session.commit()
+
+        # check returned data
+        if result == None:  # error occured while deleting
+            return False
+
+        else:  # no error while deleting
+
+            # process each subject in each department
+            for department, subjects in dept_subj_dict.items():
+                for subject in subjects:
+                    # insert subjects
+                    sql = text("""
+                                INSERT INTO ota_db.{} ({}, class_num, department_id) 
+                                SELECT {}, C.class_num, C.department_id
+                                FROM ota_db.classes C, ota_db.departments D
+                                WHERE C.department_id = D.department_id AND 
+                                    D.department_name = :department AND C.class_name = :subject
+                            """.format(table, id_type, id))  # no user input for these value -> safe to use format
+                    
+                    data = {
+                        'department': department,
+                        'subject': subject
+                        }
+
+                    try:
+                        # execute query
+                        result = db.session.execute(sql, data)
+                        db.session.commit()
+
+                        # check returned data
+                        if result == None:  # error occured while updating
+                            return False
+                        
+                        else:  # no error
+                            successful = True
+                        
+                    except:
+                        # return to previous 
+                        db.session.rollback()
+                        return False
+        
+        # end of loop of subject list
+        return successful
+    
+    # handle exception
+    except:
+        # return to previous 
+        db.session.rollback()
+        return False
+
 #####################
 # Routes
 #####################
@@ -1572,7 +1654,7 @@ def media_upload():
                 'file_path': file_path
             }
 
-            status_code = 201
+            status_code = 409
 
             return jsonify(response), status_code
         
@@ -1689,11 +1771,9 @@ def get_subjects_of_departments():
     # pulls a user's session_id and tutor_id from the browser
     session_id = data.get('session_id')
     department_list = data.get('departments')
-
-    # return str(type(department_list)), 201
     
     # validate session id
-    _, _, authorized = get_id(session_id)
+    user_id, tutor_id, authorized = get_id(session_id)
     
     if not authorized:  # invalid session id
         response = {
@@ -1705,7 +1785,7 @@ def get_subjects_of_departments():
         return jsonify(response), 401
 
     if department_list == None or len(department_list) == 0:
-        response ={
+        response = {
             'error': False,
             'status_code': 200,
             'result': department_list,
@@ -1756,6 +1836,64 @@ def get_subjects_of_departments():
             }
 
             status_code = 201
+
+        return jsonify(response), status_code
+    
+# endpoint to update subject to account
+@version.route("/update_subject", methods = ['POST'])
+def update_subject():
+    data = request.get_json()  # get body data
+
+    # pulls a user's session_id and tutor_id from the browser
+    session_id = data.get('session_id')
+    subject_list = data.get('subjects')
+    
+    # validate session id
+    user_id, tutor_id, authorized = get_id(session_id)
+    
+    if not authorized:  # invalid session id
+        response = {
+            'error': True,
+            'status_code': 401,
+            'message': 'Unauthorized access.'
+        }
+
+        return jsonify(response), 401
+    
+    if subject_list == None or len(subject_list) == 0:  # no subject list provided
+        response = {
+            'error': False,
+            'status_code': 200,
+            'result': subject_list,
+            'message': 'No subject was specified.'
+        }
+
+        return jsonify(response), 200
+    
+    # update subjects 
+    subject_list = {'SCIENCE': ['Physics'], 
+                    }
+    successful = update_subjects(user_id=user_id, tutor_id=tutor_id, dept_subj_dict=subject_list)
+
+    if successful:  # delete successfully
+            response = {
+                'error': False,
+                'status_code': 201,
+                'message': 'Updated subjects successfully.'
+            }
+
+            status_code = 201
+
+            return jsonify(response), status_code
+        
+    else:  # fail to store path
+        response = {
+            'error': True,
+            'status_code': 409,
+            'message': 'Failed to update subjects.',
+        }
+
+        status_code = 409
 
         return jsonify(response), status_code
 
