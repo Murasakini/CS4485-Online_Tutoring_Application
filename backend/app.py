@@ -559,6 +559,27 @@ def get_tutoring_hours(tutor_id):
         return rows[0]
 
 '''
+This function retrieves tutoring hours of user
+:param tutor_id: tutor id
+:return: number of tutoring hours of user
+'''
+def get_user_tutoring_hours(user_id):
+    sql = text('''
+            SELECT num_hours
+            FROM ota_db.user_leaderboard
+            WHERE user_id = {};
+        '''.format(user_id))
+    
+    # execute query
+    result = db.session.execute(sql)
+    rows = result.fetchone()
+
+    if rows == None:
+        return 0
+    else:
+        return rows[0]
+    
+'''
 This function retrieves user/tutor id associated to the session id.
 :param session_id: session id
 :return authorized: true if session id is valid; otherwise, false
@@ -621,7 +642,31 @@ def get_user_profile(user_id):
         profile = None
         status_code = 200
 
+        return profile, status_code
+
     else:   # data returned
+        # retrieve subjects of user
+        validate_auth_table()
+        sql = text("""
+                SELECT class_name
+                FROM ota_db.user_classes_readable
+                WHERE user_id = {};
+            """.format(user_id))
+        
+        # execute query
+        result = db.session.execute(sql)
+        subjects = result.fetchall()
+
+        # check returned data
+        if subjects == None:  # no data returned
+            subject_list = []
+
+        else:
+            # create list of subjects
+            subject_list = []
+            for subject in subjects:
+                subject_list.append(subject[0])
+
         # create profile
         profile = {
             'name': row[1] + ' ' + row[2], 
@@ -629,7 +674,9 @@ def get_user_profile(user_id):
             'email': row[4],
             'phone_num': row[5],
             'image_path': row[6],
-            'tutor_id': row[0]
+            'tutor_id': row[0],
+            'num_hours': get_user_tutoring_hours(user_id),
+            'subject': subject_list
         }
 
         status_code = 201
@@ -818,7 +865,7 @@ def update_subjects(user_id, tutor_id, dept_subj_dict):
                                 SELECT {}, C.class_num, C.department_id
                                 FROM ota_db.classes C, ota_db.departments D
                                 WHERE C.department_id = D.department_id AND 
-                                    D.department_name = :department AND C.class_name = :subject
+                                    D.department_name = :department AND C.class_name = :subject;
                             """.format(table, id_type, id))  # no user input for these value -> safe to use format
                     
                     data = {
