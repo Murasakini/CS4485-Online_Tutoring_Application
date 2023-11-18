@@ -158,9 +158,6 @@ const MyAccount = () => {
                         />
                     </React.Fragment>}
                 />}
-
-            {/* data is not ready -> display loading...  */}
-            {!accInfo && <p>Loading...</p>}
         </React.Fragment>
     );
 }
