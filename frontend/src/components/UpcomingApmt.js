@@ -12,8 +12,10 @@ function UpcomingApmt() {
     const fetchUpcomingAppointments = async () => {
     // TODO: change to switch ; link to homepage
       try {
-        const response = await FrontAPI.fetchUpcomingAppointments();
+        const session_id = document.cookie.split("; ").find((row) => row.startsWith("sessionCookie="))?.split("=")[1];
+        const response = await FrontAPI.fetchUpcomingAppointments(session_id);
         setUpcomingAppointments(response);
+        
       } catch (error) {
         console.error('Error fetching upcoming appointments:', error);
         setSnackbarMessage('Error fetching upcoming appointments');
@@ -29,23 +31,25 @@ function UpcomingApmt() {
   }
 
   return (
-    <Container>
+    <Container  sx={{textAlign: 'center'}}>
       <Typography variant="h4">Upcoming Appointments</Typography>
-      <TableContainer component={Paper}>
+      <TableContainer sx={{marginTop: "25px", marginBottom: "25px"}} component={Paper}>
         <Table>
           <TableHead>
             <TableRow>
-              <TableCell>Time</TableCell>
-              <TableCell>Tutor Name</TableCell>
-              <TableCell>Subject</TableCell>
+              <TableCell><b>Time</b></TableCell>
+              <TableCell><b>Tutor Name</b></TableCell>
+              <TableCell><b>Student Name</b></TableCell>
+              <TableCell><b>Subject</b></TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
             {upcomingAppointments.map((appointment, index) => (
               <TableRow key={index}>
-                <TableCell>{appointment.time}</TableCell>
+                <TableCell>{appointment.meeting_time}</TableCell>
                 <TableCell>{appointment.tutor_name}</TableCell>
-                <TableCell>{appointment.subject}</TableCell>
+                <TableCell>{appointment.student_name}</TableCell>
+                <TableCell>{appointment.class_name}</TableCell>
               </TableRow>
             ))}
           </TableBody>
@@ -57,6 +61,7 @@ function UpcomingApmt() {
           message={snackbarMessage}
           onClose={() => setSnackbarOpen(false)}
         />
+        <br/>
     </Container>
     
   );

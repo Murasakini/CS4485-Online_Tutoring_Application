@@ -1,15 +1,16 @@
 import React from "react";
 import Header from "./components/Header";
-import MenuList from "./components/MenuList";
 import UpcomingApmt from "./components/UpcomingApmt"; // Import the UpcomingApmt component
+import Body from "./components/Body";
 
 const Home = () => {
   return (
-    <div>
+    <React.Fragment>
       <Header title="HOME" />
-      <MenuList />
-      <UpcomingApmt />
-    </div>
+      <Body content={
+        <UpcomingApmt />
+      } />
+    </React.Fragment>
   );
 };
 

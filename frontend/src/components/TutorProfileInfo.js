@@ -72,7 +72,7 @@ export default function MyProfileInfo(props) {
             <TextField
             id="subject"
             label="Subject List"
-            defaultValue={data.subject ? data.subject.map((subj) => (' ' + subj)) : 'N/A'}
+            defaultValue={data.subject ? data.subject.map((subj) => (' ' + subj.class_name)) : 'N/A'}
             multiline
             InputProps={{ readOnly: true }}
         />
