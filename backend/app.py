@@ -746,6 +746,30 @@ def store_image_path(path, user_id, tutor_id):
         return False
 
 '''
+This function returns dictionary of department as key and list of subjects as value
+:param subject_list: list of subjects in a form DEPARTMENT-subject
+:return: dictionary of department as key and list of subjects as value
+'''
+def list_to_dict(subject_list):
+    dept_subj_dict = {}
+
+    # process each item (DEPARTMENT-subject)
+    for item in subject_list:
+        # split on '-'
+        dept_subj = item.split('-')
+        department = dept_subj[0].lower()  # key: department
+        subject = dept_subj[1]  # value: subject
+
+        # add subject into dict
+        if department in dept_subj_dict:  # department exists as key
+            dept_subj_dict[department].append(subject)  # append subject into current list
+        
+        else:  # department not exist as key
+            dept_subj_dict[department] = [subject]  # add new key with list of 1 subject
+
+    return dept_subj_dict
+
+'''
 This function updates subjects associated with the provided user/tutor id.
 :param user_id: id of user
 :param tutor_id: id of tutor
@@ -754,6 +778,7 @@ This function updates subjects associated with the provided user/tutor id.
 '''
 def update_subjects(user_id, tutor_id, dept_subj_dict):
     successful = False  # hold indicator of whether update successfully
+    
     # check with type of id is used
     if user_id == None:  # tutor id
         table = 'tutor_classes'
@@ -1871,9 +1896,8 @@ def update_subject():
         return jsonify(response), 200
     
     # update subjects 
-    subject_list = {'SCIENCE': ['Physics'], 
-                    }
-    successful = update_subjects(user_id=user_id, tutor_id=tutor_id, dept_subj_dict=subject_list)
+    dept_subj_dict = list_to_dict(subject_list)  # get dictionary department as key and list of subjects as value
+    successful = update_subjects(user_id=user_id, tutor_id=tutor_id, dept_subj_dict=dept_subj_dict)
 
     if successful:  # delete successfully
             response = {
