@@ -31,14 +31,15 @@ function UpcomingApmt() {
   }
 
   return (
-    <Container>
+    <Container  sx={{textAlign: 'center'}}>
       <Typography variant="h4">Upcoming Appointments</Typography>
-      <TableContainer component={Paper}>
+      <TableContainer sx={{marginTop: "25px", marginBottom: "25px"}} component={Paper}>
         <Table>
           <TableHead>
             <TableRow>
               <TableCell>Time</TableCell>
               <TableCell>Tutor Name</TableCell>
+              <TableCell>Student Name</TableCell>
               <TableCell>Subject</TableCell>
             </TableRow>
           </TableHead>
@@ -47,6 +48,7 @@ function UpcomingApmt() {
               <TableRow key={index}>
                 <TableCell>{appointment.meeting_time}</TableCell>
                 <TableCell>{appointment.tutor_name}</TableCell>
+                <TableCell>{appointment.student_name}</TableCell>
                 <TableCell>{appointment.class_name}</TableCell>
               </TableRow>
             ))}
@@ -59,6 +61,7 @@ function UpcomingApmt() {
           message={snackbarMessage}
           onClose={() => setSnackbarOpen(false)}
         />
+        <br/>
     </Container>
     
   );
