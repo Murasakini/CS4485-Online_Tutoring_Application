@@ -37,10 +37,10 @@ function UpcomingApmt() {
         <Table>
           <TableHead>
             <TableRow>
-              <TableCell>Time</TableCell>
-              <TableCell>Tutor Name</TableCell>
-              <TableCell>Student Name</TableCell>
-              <TableCell>Subject</TableCell>
+              <TableCell><b>Time</b></TableCell>
+              <TableCell><b>Tutor Name</b></TableCell>
+              <TableCell><b>Student Name</b></TableCell>
+              <TableCell><b>Subject</b></TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
