@@ -65,7 +65,12 @@ const MyAccount = () => {
             setProfileImg(objectURL);
           })
           .catch(error => {
+            // display messsage
             console.error('There profile image is not found.', error);
+            console.log('There profile image is not found.');
+            setSeverity('error');
+            setSnackbarMessage('There profile image is not found.');
+            setSnackbarOpen(true);
           });
     };
 
@@ -153,9 +158,6 @@ const MyAccount = () => {
                         />
                     </React.Fragment>}
                 />}
-
-            {/* data is not ready -> display loading...  */}
-            {!accInfo && <p>Loading...</p>}
         </React.Fragment>
     );
 }

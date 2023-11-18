@@ -630,6 +630,27 @@ def get_tutoring_hours(tutor_id):
         return rows[0]
 
 '''
+This function retrieves tutoring hours of user
+:param tutor_id: tutor id
+:return: number of tutoring hours of user
+'''
+def get_user_tutoring_hours(user_id):
+    sql = text('''
+            SELECT num_hours
+            FROM ota_db.user_leaderboard
+            WHERE user_id = {};
+        '''.format(user_id))
+    
+    # execute query
+    result = db.session.execute(sql)
+    rows = result.fetchone()
+
+    if rows == None:
+        return 0
+    else:
+        return rows[0]
+    
+'''
 This function retrieves user/tutor id associated to the session id.
 :param session_id: session id
 :return authorized: true if session id is valid; otherwise, false
@@ -692,7 +713,31 @@ def get_user_profile(user_id):
         profile = None
         status_code = 200
 
+        return profile, status_code
+
     else:   # data returned
+        # retrieve subjects of user
+        validate_auth_table()
+        sql = text("""
+                SELECT class_name
+                FROM ota_db.user_classes_readable
+                WHERE user_id = {};
+            """.format(user_id))
+        
+        # execute query
+        result = db.session.execute(sql)
+        subjects = result.fetchall()
+
+        # check returned data
+        if subjects == None:  # no data returned
+            subject_list = []
+
+        else:
+            # create list of subjects
+            subject_list = []
+            for subject in subjects:
+                subject_list.append(subject[0])
+
         # create profile
         profile = {
             'name': row[1] + ' ' + row[2], 
@@ -700,7 +745,9 @@ def get_user_profile(user_id):
             'email': row[4],
             'phone_num': row[5],
             'image_path': row[6],
-            'tutor_id': row[0]
+            'tutor_id': row[0],
+            'num_hours': get_user_tutoring_hours(user_id),
+            'subject': subject_list
         }
 
         status_code = 201
@@ -815,6 +862,114 @@ def store_image_path(path, user_id, tutor_id):
         # return to previous 
         db.session.rollback()
         return False
+
+'''
+This function returns dictionary of department as key and list of subjects as value
+:param subject_list: list of subjects in a form DEPARTMENT-subject
+:return: dictionary of department as key and list of subjects as value
+'''
+def list_to_dict(subject_list):
+    dept_subj_dict = {}
+
+    # process each item (DEPARTMENT-subject)
+    for item in subject_list:
+        # split on '-'
+        dept_subj = item.split('-')
+        department = dept_subj[0].lower()  # key: department
+        subject = dept_subj[1]  # value: subject
+
+        # add subject into dict
+        if department in dept_subj_dict:  # department exists as key
+            dept_subj_dict[department].append(subject)  # append subject into current list
+        
+        else:  # department not exist as key
+            dept_subj_dict[department] = [subject]  # add new key with list of 1 subject
+
+    return dept_subj_dict
+
+'''
+This function updates subjects associated with the provided user/tutor id.
+:param user_id: id of user
+:param tutor_id: id of tutor
+:param dept_subj_dict: dictionary with key is department, and value is a list of subjects
+:return: true if update successfully; otherwise, false
+'''
+def update_subjects(user_id, tutor_id, dept_subj_dict):
+    successful = False  # hold indicator of whether update successfully
+    
+    # check with type of id is used
+    if user_id == None:  # tutor id
+        table = 'tutor_classes'
+        id_type = 'tutor_id'
+        id = tutor_id
+
+    else:  # user id
+        table = 'user_classes'
+        id_type = 'user_id'
+        id = user_id
+
+    # delete old subjects before updating
+    sql = text("""
+                DELETE FROM ota_db.{} 
+                WHERE {} = :id;
+            """.format(table, id_type))  # no user input for these value -> safe to use format
+    
+    data = {'id': id}
+
+    try:
+        # execute query
+        result = db.session.execute(sql, data)
+        db.session.commit()
+
+        # check returned data
+        if result == None:  # error occured while deleting
+            return False
+
+        else:  # no error while deleting
+
+            # process each subject in each department
+            for department, subjects in dept_subj_dict.items():
+                for subject in subjects:
+                    # insert subjects
+                    sql = text("""
+                                INSERT INTO ota_db.{} ({}, class_num, department_id) 
+                                SELECT {}, C.class_num, C.department_id
+                                FROM ota_db.classes C, ota_db.departments D
+                                WHERE C.department_id = D.department_id AND 
+                                    D.department_name = :department AND C.class_name = :subject;
+                            """.format(table, id_type, id))  # no user input for these value -> safe to use format
+                    
+                    data = {
+                        'department': department,
+                        'subject': subject
+                        }
+
+                    try:
+                        # execute query
+                        result = db.session.execute(sql, data)
+                        db.session.commit()
+
+                        # check returned data
+                        if result == None:  # error occured while updating
+                            return False
+                        
+                        else:  # no error
+                            successful = True
+                        
+                    except:
+                        # return to previous 
+                        db.session.rollback()
+                        return False
+        
+        # end of loop of subject list
+        return successful
+    
+    # handle exception
+    except:
+        # return to previous 
+        db.session.rollback()
+        return False
+
 #####################
 # Routes
 #####################
@@ -1684,7 +1839,7 @@ def media_upload():
                 'file_path': file_path
             }
 
-            status_code = 201
+            status_code = 409
 
             return jsonify(response), status_code
         
@@ -1735,6 +1890,196 @@ def get_image():
     
     except FileNotFoundError:
         return None, 404
+    
+
+#------------enroll/modify subjects------------
+# endpoint to return a list of departments name
+@version.route("/get_departments", methods = ['GET'])
+def get_departments():
+    # pulls a user's session_id and tutor_id from the browser
+    session_id = request.args.get('session_id')
+    
+    # validate session id
+    _, _, authorized = get_id(session_id)
+    
+    if not authorized:  # invalid session id
+        response = {
+            'error': True,
+            'status_code': 401,
+            'message': 'Unauthorized access.'
+        }
+
+        return jsonify(response), 401
+
+    else:  # valid session id
+        query = text('''
+                    SELECT department_name 
+                    FROM ota_db.departments;
+                ''')
+        
+        # execute query
+        result = db.session.execute(query)
+        rows = result.fetchall()
+
+        # make list of departments
+        departments = list()
+        for row in rows:
+            departments.append(row[0])
+
+        # make response
+        if len(departments) == 0:
+            response = {
+                'error': True,
+                'status_code': 200,
+                'message': 'Failed to retrieve a list of departments.'
+            }
+
+            status_code = 200
+            
+        else:
+            response = {
+                'error': False,
+                'status_code': 201,
+                'result': departments,
+                'message': 'Retrieved a list of departments successfully.'
+            }
+
+            status_code = 201
+
+        return jsonify(response), status_code
+    
+# endpoint to return list of subjects associated with their departments
+@version.route("/get_subjects_of_departments", methods = ['POST'])
+def get_subjects_of_departments():
+    data = request.get_json()  # get body data
+
+    # pulls a user's session_id and tutor_id from the browser
+    session_id = data.get('session_id')
+    department_list = data.get('departments')
+    
+    # validate session id
+    user_id, tutor_id, authorized = get_id(session_id)
+    
+    if not authorized:  # invalid session id
+        response = {
+            'error': True,
+            'status_code': 401,
+            'message': 'Unauthorized access.'
+        }
+
+        return jsonify(response), 401
+
+    if department_list == None or len(department_list) == 0:
+        response = {
+            'error': False,
+            'status_code': 200,
+            'result': department_list,
+            'message': 'No department was specified.'
+        }
+
+        return jsonify(response), 200
+
+    else:  # valid session id
+        # join department name together and create quotation marks
+        group_of_dept_name = "', '".join(department_list)
+        group_of_dept_name = "'" + group_of_dept_name + "'"
+
+        # query
+        query = text('''
+                    SELECT D.department_name, C.class_name
+                    FROM ota_db.departments D, ota_db.classes C
+                    WHERE D.department_id = C.department_id AND 
+                          D.department_name IN ({});
+                '''.format(group_of_dept_name))  # there is no user input -> safe to use format
+        
+        # execute query
+        result = db.session.execute(query)
+        rows = result.fetchall()
+
+        # make list of subjects in a form DEPARTMENT-subject
+        subject_list = list()
+        for row in rows: 
+            subject_list.append(f'{row[0]}-{row[1]}')
+
+        # make response
+        if len(subject_list) == 0:
+            response = {
+                'error': True,
+                'status_code': 200,
+                'result': subject_list,
+                'message': 'Failed to retrieve a list of subjects.'
+            }
+
+            status_code = 200
+            
+        else:
+            response = {
+                'error': False,
+                'status_code': 201,
+                'result': subject_list,
+                'message': 'Retrieved a list of subjects successfully.'
+            }
+
+            status_code = 201
+
+        return jsonify(response), status_code
+    
+# endpoint to update subject to account
+@version.route("/update_subject", methods = ['POST'])
+def update_subject():
+    data = request.get_json()  # get body data
+
+    # pulls a user's session_id and tutor_id from the browser
+    session_id = data.get('session_id')
+    subject_list = data.get('subjects')
+    
+    # validate session id
+    user_id, tutor_id, authorized = get_id(session_id)
+    
+    if not authorized:  # invalid session id
+        response = {
+            'error': True,
+            'status_code': 401,
+            'message': 'Unauthorized access.'
+        }
+
+        return jsonify(response), 401
+    
+    if subject_list == None or len(subject_list) == 0:  # no subject list provided
+        response = {
+            'error': False,
+            'status_code': 200,
+            'result': subject_list,
+            'message': 'No subject was specified.'
+        }
+
+        return jsonify(response), 200
+    
+    # update subjects 
+    dept_subj_dict = list_to_dict(subject_list)  # get dictionary department as key and list of subjects as value
+    successful = update_subjects(user_id=user_id, tutor_id=tutor_id, dept_subj_dict=dept_subj_dict)
+
+    if successful:  # delete successfully
+            response = {
+                'error': False,
+                'status_code': 201,
+                'message': 'Updated subjects successfully.'
+            }
+
+            status_code = 201
+
+            return jsonify(response), status_code
+        
+    else:  # fail to store path
+        response = {
+            'error': True,
+            'status_code': 409,
+            'message': 'Failed to update subjects.',
+        }
+
+        status_code = 409
+
+        return jsonify(response), status_code
 
 #####################
 # Main

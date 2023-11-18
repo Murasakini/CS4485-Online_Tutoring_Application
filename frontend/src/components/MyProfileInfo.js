@@ -1,5 +1,6 @@
 import * as React from "react";
 import { TextField, Box, Button } from "@mui/material/";
+import { Link } from "react-router-dom";
 
 export default function MyProfileInfo(props) {
   const data = {
@@ -10,7 +11,8 @@ export default function MyProfileInfo(props) {
     subject: props.accInfo.subject,
     tutor_id: props.accInfo.tutor_id,
     num_hours: props.accInfo.num_hours,
-    netID: props.accInfo.netID
+    netID: props.accInfo.netID,
+    image: props.profileImg
   }
   return (
     <Box
@@ -24,14 +26,16 @@ export default function MyProfileInfo(props) {
     >
       {/* profile photo */}
       <Box>
-        <img style= {{width: 300, height: 300, marginLeft:"6px", marginTop:"6px", objectFit:"contain"}} 
-        src={props.profileImg} alt={data.name} /> 
+        <img style= {{width: 250, height: 250, marginLeft:"6px", marginTop:"6px", objectFit:"contain"}} 
+        src={data.image} alt={data.name} /> 
 
         <br />
+        <input type="file" name="myImage" onChange={props.fileSelectHandler} />
 
-        <input type="file" name="myImage" onChange={props.fileSelectHandler}/>
-        <button onClick={props.handleUpload}>Upload</button>
-
+        <Button onClick={props.handleUpload}
+        variant="contained" size="small" style={{ marginBottom:"8px" }}>
+          Upload
+        </Button>
       </Box> 
 
       <TextField
@@ -76,7 +80,7 @@ export default function MyProfileInfo(props) {
           <TextField
           id="subject"
           label="Subject List"
-          defaultValue={data.subject ? data.subject.map((subj) => (' ' + subj)) : 'N/A'}
+          defaultValue={data.subject ? data.subject.join(', ') : 'N/A'}
           multiline
           InputProps={{ readOnly: true }}
         />
@@ -90,6 +94,12 @@ export default function MyProfileInfo(props) {
         InputProps={{ readOnly: true }}
         />
       }
+
+      <br/>
+      <Button component={Link} to='/EditMyProfile' state={{ fromMyAccount: {data}}}
+        variant="contained" size="large" style={{ marginBottom:"8px" }}>
+          Edit
+      </Button>
     </Box>
   );
 }
