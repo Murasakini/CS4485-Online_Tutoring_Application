@@ -157,13 +157,20 @@ def clean_avail():
 # finds list of subjects given tutor_id
 def subjects_of_tutor(tutor_id):
     sql = text("""
-               SELECT class_name FROM ota_db.tutor_classes_readable WHERE tutor_id = {}
-        """.format(tutor_id))
-    result = db.session.execute(sql)
-    class_list = list()
+               SELECT class_name, class_num, department_id, department_name FROM ota_db.tutor_classes_readable WHERE tutor_id = :tutor_id
+        """)
+    result = db.session.execute(sql, {'tutor_id': tutor_id})
+    if result == None:
+        response = {
+            'error': True,
+            'status_code': 200,
+            'message': 'No subjects found.'
+        }
+        return response
+    response = list()
     for row in result:
-        class_list.append(row[0])
-    return class_list
+        response.append({'class_name': row[0], 'class_num': row[1], 'department_id': row[2], 'department_name': row[3]})
+    return response
 
 # finds list of tutors given class_num, department_id
 def tutors_of_subject(class_num, department_id):
@@ -190,17 +197,15 @@ def tutors_of_subject(class_num, department_id):
 
     return response
 
-def subjects_of_user(session_id):
+def subjects_of_user(user_id):
     # finds available classes based on session id
-    validate_auth_table()
     sql = text("""
             SELECT user_classes_readable.class_name, user_classes_readable.class_num, user_classes_readable.department_id, user_classes_readable.department_name
-                FROM ota_db.user_classes_readable 
-                LEFT JOIN ota_db.auth_table ON user_classes_readable.user_id=auth_table.user_id 
-                WHERE auth_table.session_id = '{}';
-        """.format(session_id))
+                FROM ota_db.user_classes_readable
+                WHERE user_classes_readable.user_id = :user_id;
+        """)
     
-    result = db.session.execute(sql)
+    result = db.session.execute(sql, {'user_id': user_id})
 
     if result == None:
         response = {
@@ -213,7 +218,67 @@ def subjects_of_user(session_id):
     # jsonify sql result
     response = list()
     for row in result:
-        response.append({'class_name': row[0], 'class_num': row[1], 'department_id': row[2], 'department_name': row[3], 'session_id': session_id})
+        response.append({'class_name': row[0], 'class_num': row[1], 'department_id': row[2], 'department_name': row[3]})
+    return response
+
+'''
+This function takes a session_id to determine a user/tutor, and returns a readable version of the user/tutor's upcoming appointments.
+:param session_id: session cookie id
+'''
+def get_upcoming_appointments(session_id):
+    # finds available classes based on session id
+    user_id, tutor_id, authorized = get_id(session_id)
+
+    if not authorized:  # invalid session id
+        response = {
+            'error': True,
+            'status_code': 401,
+            'message': 'Unauthorized access.',
+            'result': None
+        }
+
+        return jsonify(response), 401
+    
+    formatted_data = {
+        'user_id': user_id,
+        'tutor_id': tutor_id
+    }
+
+    if user_id != None:
+        sql = text("""
+                SELECT upcoming_appointments.user_first_name, upcoming_appointments.user_last_name, upcoming_appointments.tutor_first_name, upcoming_appointments.tutor_first_name,
+                    upcoming_appointments.class_name, upcoming_appointments.meeting_time, upcoming_appointments.appointment_id
+                    FROM ota_db.upcoming_appointments 
+                    WHERE upcoming_appointments.user_id = :user_id;
+            """)
+        result = db.session.execute(sql, formatted_data)
+    else: # assume tutor_id exists
+        sql = text("""
+                SELECT upcoming_appointments.user_first_name, upcoming_appointments.user_last_name, upcoming_appointments.tutor_first_name, upcoming_appointments.tutor_first_name,
+                    upcoming_appointments.class_name, upcoming_appointments.meeting_time, upcoming_appointments.appointment_id
+                    FROM ota_db.upcoming_appointments 
+                    WHERE upcoming_appointments.tutor_id = :tutor_id;
+            """)
+        result = db.session.execute(sql, formatted_data)
+
+    if result == None:
+        response = {
+            'error': True,
+            'status_code': 200,
+            'message': 'No subjects found.'
+        }
+        return response
+
+    # jsonify sql result
+    response = list()
+    for row in result:
+        response.append({
+            'student_name': row[0] + " " + row[1], 
+            'tutor_name': row[2] + " " + row[3], 
+            'class_name': row[4], 
+            'meeting_time': row[5],
+            'appointment_id': row[6]
+            })
     return response
 
 def insert_user(data):
@@ -284,8 +349,8 @@ def insert_user_favorite(data):
     query = text('''
         INSERT INTO ota_db.user_favorites (user_id, tutor_id) 
         VALUES ((SELECT user_id FROM ota_db.auth_table 
-                 WHERE auth_table.session_id = '{}'), :tutor_id);
-    '''.format(data.get('session_id')))
+                 WHERE auth_table.session_id = :session_id), :tutor_id);
+    ''')
         
     try:
         # execute query
@@ -307,9 +372,9 @@ def delete_user_favorite(data):
     query = text('''
         DELETE FROM ota_db.user_favorites 
             WHERE user_id = (SELECT user_id FROM ota_db.auth_table 
-                WHERE auth_table.session_id = '{}') 
+                WHERE auth_table.session_id = :session_id) 
                 AND tutor_id = :tutor_id;
-    '''.format(data.get('session_id')))
+    ''')
 
     try:
         # execute query
@@ -498,17 +563,23 @@ def in_favorites_list(session_id, tutor_id):
     query = text('''
             SELECT F.user_id, F.tutor_id 
             FROM ota_db.user_favorites as F, ota_db.auth_table as A 
-            WHERE A.user_id = F.user_id AND F.tutor_id = '{}' AND A.session_id = '{}';
-            '''.format(tutor_id, session_id))
+            WHERE A.user_id = F.user_id AND F.tutor_id = :tutor_id AND A.session_id = :session_id;
+            ''')
+    
+    formatted_data = {
+        'tutor_id': tutor_id,
+        'session_id': session_id
+    }
     
     # execute query
-    result = db.session.execute(query)
+    result = db.session.execute(query, formatted_data)
     # True if found, False if not found
     return result.fetchone() != None
 
-"""
+'''
 This function takes a session_id to determine a user, and returns a readable version of the user's list of tutors and their subjects.
-"""
+:param session_id: session cookie id
+'''
 def user_favorite_query(session_id):
     # retrieve list of favorite tutors
     validate_auth_table()
@@ -518,11 +589,11 @@ def user_favorite_query(session_id):
             FROM ota_db.user_favorites_readable 
             LEFT JOIN ota_db.auth_table ON user_favorites_readable.user_id = auth_table.user_id
             LEFT JOIN ota_db.tutors ON user_favorites_readable.tutor_id = tutors.tutor_id
-            WHERE auth_table.session_id = '{}';
-        """.format(session_id))
+            WHERE auth_table.session_id = :session_id;
+        """)
     
     # execute query
-    result = db.session.execute(sql)
+    result = db.session.execute(sql, {'session_id': session_id})
     rows = result.fetchall()
 
     # append each returned row into response
@@ -546,11 +617,11 @@ def get_tutoring_hours(tutor_id):
     sql = text('''
             SELECT num_hours
             FROM ota_db.tutor_leaderboard
-            WHERE tutor_id = {};
-        '''.format(tutor_id))
+            WHERE tutor_id = :tutor_id;
+        ''')
     
     # execute query
-    result = db.session.execute(sql)
+    result = db.session.execute(sql, {'tutor_id': tutor_id})
     rows = result.fetchone()
 
     if rows == None:
@@ -592,11 +663,11 @@ def get_id(session_id):
     sql = text("""
             SELECT user_id, tutor_id
             FROM ota_db.auth_table
-            WHERE session_id = '{}';
-        """.format(session_id))
+            WHERE session_id = :session_id;
+        """)
     
     # execute query
-    result = db.session.execute(sql)
+    result = db.session.execute(sql, {'session_id': session_id})
     row = result.fetchone()
 
     # check returned data
@@ -630,11 +701,11 @@ def get_user_profile(user_id):
     sql = text("""
             SELECT user_id, first_name, last_name, netID, email, phone_num, image_path
             FROM ota_db.users
-            WHERE user_id = {};
-        """.format(user_id))
+            WHERE user_id = :user_id;
+        """)
     
     # execute query
-    result = db.session.execute(sql)
+    result = db.session.execute(sql, {'user_id': user_id})
     row = result.fetchone()
 
     # check returned data
@@ -694,11 +765,11 @@ def get_tutor_profile(tutor_id):
     sql = text("""
             SELECT tutor_id, first_name, last_name, netID, email, phone_num, about_me, image_path
             FROM ota_db.tutors
-            WHERE tutor_id = {};
-        """.format(tutor_id))
+            WHERE tutor_id = :tutor_id;
+        """)
     
     # execute query
-    result = db.session.execute(sql)
+    result = db.session.execute(sql, {'tutor_id': tutor_id})
     row = result.fetchone()
 
     # check returned data
@@ -909,6 +980,12 @@ def index():
         "message": "Hello Worldsss!"
     }
 
+@version.route("/hello", methods=["GET"])
+def hello():
+    return {
+        "message": "Hello World! From Nginx"
+    }
+
 @version.before_request
 def verify_session():
 
@@ -922,8 +999,8 @@ def verify_session():
         # SQL query first deletes expired session_ids, then checks if session_id exists in table
         validate_auth_table()
         sql = text("""
-            SELECT COUNT(1) FROM auth_table WHERE session_id = '{}';
-        """.format(session_id))
+            SELECT COUNT(1) FROM auth_table WHERE session_id = :session_id;
+        """)
         result = db.session.execute(sql, {"session_id": session_id}).fetchone()
         print(result, flush=True)
 
@@ -953,8 +1030,8 @@ def verify_session_manual():
     # SQL query first deletes expired session_ids, then checks if session_id exists in table
     validate_auth_table()
     sql = text("""
-        SELECT COUNT(1) FROM auth_table WHERE session_id = '{}';
-    """.format(session_id))
+        SELECT COUNT(1) FROM auth_table WHERE session_id = :session_id;
+    """)
     result = db.session.execute(sql, {"session_id": session_id}).fetchone()
     print(result, flush=True)
 
@@ -970,9 +1047,6 @@ def verify_session_manual():
             'error': True,
             'status_code': 401,
             'message': 'Invalid or expired session.',
-            'sql': """
-                SELECT COUNT(1) FROM auth_table WHERE session_id = '{}';
-            """.format(session_id),
             'result': result[0]
         }
         return jsonify(response), 401
@@ -1025,8 +1099,24 @@ def subj_tutors():
     class_num = subject[1]
     department_id = subject[0]
     
-    response = subjects_of_tutor(class_num, department_id)
+    response = tutors_of_subject(class_num, department_id)
     
+    return jsonify(response), 200
+
+@version.route("/upcoming_appointments", methods=["GET"])
+def upcoming_appointments():
+    if not validate_fields(request.args, {'session_id'}):
+        response = {
+            'error': True,
+            'status_code': 400,
+            'message': 'Invalid or missing fields in request.'
+        }
+        return jsonify(response), 400
+    
+    # pulls a user's session_id from the browser
+    session_id = request.args.get('session_id')
+
+    response = get_upcoming_appointments(session_id)
     return jsonify(response), 200
 
 
@@ -1044,9 +1134,31 @@ def subjects():
     # pulls a user's session_id from the browser
     session_id = request.args.get('session_id')
 
-    response = subjects_of_user(session_id)
+    user_id, tutor_id, authorized = get_id(session_id)
+
+    if not authorized:
+        response = {
+            'error': True,
+            'status_code': 401,
+            'message': 'Invalid login.'
+        }
+        return jsonify(response), 401
+
+    if user_id != None:
+        response = subjects_of_user(user_id)
+        return jsonify(response), 200
+    elif tutor_id != None:
+        response = subjects_of_tutor(tutor_id)
+        return jsonify(response), 200
+    else:
+        response = {
+            'error': True,
+            'status_code': 401,
+            'message': 'Invalid login.'
+        }
+        return jsonify(response), 401
     
-    return jsonify(response), 200
+    
 
 @version.route("/tutor_timeslots", methods=["GET"])
 def tutor_timeslots():
@@ -1064,10 +1176,10 @@ def tutor_timeslots():
     # finds available times for a tutor
     clean_avail()
     sql = text("""
-            SELECT time_available FROM ota_db.tutors_availability WHERE tutor_id= {};
-        """.format(tutor_id))
+            SELECT time_available FROM ota_db.tutors_availability WHERE tutor_id = :tutor_id;
+        """)
     
-    result = db.session.execute(sql)
+    result = db.session.execute(sql, {'tutor_id': tutor_id})
 
     if result == None:
         response = {
@@ -1196,9 +1308,10 @@ def create_appointment():
     if success:
         # remove tutor's availability from the database
         sql = text("""
-                DROP * FROM ota_db.tutors_availability WHERE time_available = "{}" AND tutor_id = :tutor_id;
-        """.format(request.args.get("timeSlot")))
+                DELETE FROM ota_db.tutors_availability WHERE time_available = :meeting_time AND tutor_id = :tutor_id;
+        """)
         db.session.execute(sql, formatted_data)
+        db.session.commit()
 
         response = {
             'error': False,
@@ -1473,7 +1586,7 @@ def find_tutors():
         if key == 'session_id' or len(value) == 0:
             continue
         
-        where_conditions += ' AND ' + str(key) + ' = \'' + data.get(str(key)) + '\''
+        where_conditions += ' AND ' + str(key) + ' = :' +  str(key)
 
     # case 1: class name is not included
     if data.get('class_name') == None or data.get('class_name') == '':
@@ -1483,11 +1596,11 @@ def find_tutors():
         sql = text("""
                 SELECT tutor_id, first_name, last_name, image_path
                 FROM ota_db.tutors
-                WHERE EXISTS (SELECT * FROM ota_db.auth_table WHERE session_id = '{}')
-            """.format(data.get('session_id')) + where_conditions + ';')
+                WHERE EXISTS (SELECT * FROM ota_db.auth_table WHERE session_id = :session_id)
+            """ + where_conditions + ';')
         
         # execute query
-        result = db.session.execute(sql)
+        result = db.session.execute(sql, data)
         rows = result.fetchall()
 
         # create list of tutors returned from db 
@@ -1526,11 +1639,11 @@ def find_tutors():
         sql = text("""
                 SELECT R.tutor_id, R.first_name, R.last_name, R.class_name, T.image_path
                 FROM ota_db.tutor_classes_readable as R, ota_db.tutors as T
-                WHERE R.tutor_id = T.tutor_id AND EXISTS (SELECT * FROM ota_db.auth_table WHERE session_id = '{}')
-            """.format(data.get('session_id')) + where_conditions + ';')
+                WHERE R.tutor_id = T.tutor_id AND EXISTS (SELECT * FROM ota_db.auth_table WHERE session_id = '{}') 
+            """ + where_conditions + ';')
         
         # execute query
-        result = db.session.execute(sql)
+        result = db.session.execute(sql, data)
         rows = result.fetchall()
 
         if len(rows) == 0:  # no data found

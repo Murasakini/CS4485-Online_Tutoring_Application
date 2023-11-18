@@ -13,6 +13,7 @@ import AppointmentScheduler from './AppointmentScheduler.js';
 import Favorite from './Favorite.js';
 import Leaderboard from './Leaderboard.js';
 import TutorProfile from './TutorProfile.js';
+import TutorScheduler from './TutorScheduler.js'
 
 
 function App() {
@@ -29,6 +30,7 @@ function App() {
             <Route path='/Favorite' element={<Favorite />} />
             <Route path='/TutorProfile' element={<TutorProfile />} />
             <Route path='/AppointmentScheduler' element={<AppointmentScheduler />} />
+            <Route path='/TutorScheduler' element={<TutorScheduler />} />
             <Route path='/FindTutor' element={<FindTutor />} />
             <Route path='/MyAccount' element={<MyAccount />} />
             <Route path='/EditMyAccount' element={<EditMyAccount />} />
