@@ -12,8 +12,10 @@ function UpcomingApmt() {
     const fetchUpcomingAppointments = async () => {
     // TODO: change to switch ; link to homepage
       try {
-        const response = await FrontAPI.fetchUpcomingAppointments();
+        const session_id = document.cookie.split("; ").find((row) => row.startsWith("sessionCookie="))?.split("=")[1];
+        const response = await FrontAPI.fetchUpcomingAppointments(session_id);
         setUpcomingAppointments(response);
+        
       } catch (error) {
         console.error('Error fetching upcoming appointments:', error);
         setSnackbarMessage('Error fetching upcoming appointments');
@@ -43,9 +45,9 @@ function UpcomingApmt() {
           <TableBody>
             {upcomingAppointments.map((appointment, index) => (
               <TableRow key={index}>
-                <TableCell>{appointment.time}</TableCell>
+                <TableCell>{appointment.meeting_time}</TableCell>
                 <TableCell>{appointment.tutor_name}</TableCell>
-                <TableCell>{appointment.subject}</TableCell>
+                <TableCell>{appointment.class_name}</TableCell>
               </TableRow>
             ))}
           </TableBody>
