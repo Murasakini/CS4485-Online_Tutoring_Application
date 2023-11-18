@@ -30,15 +30,12 @@ export default function MyProfileInfo(props) {
         src={data.image} alt={data.name} /> 
 
         <br />
-        <input type="file" name="myImage" onChange={props.fileSelectHandler}/>
-        
+        <input type="file" name="myImage" onChange={props.fileSelectHandler} />
+
         <Button onClick={props.handleUpload}
-        variant="contained" size="large" style={{ marginBottom:"8px" }}>
+        variant="contained" size="small" style={{ marginBottom:"8px" }}>
           Upload
         </Button>
-        
-        {/* <button onClick={props.handleUpload}>Upload</button> */}
-
       </Box> 
 
       <TextField
