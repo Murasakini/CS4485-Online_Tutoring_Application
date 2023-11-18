@@ -40,7 +40,7 @@ const EditMyProfile = () => {
           return response?.result;
 
         case 200:  // no list returned
-          console.log(response.message);
+          console.log(response?.message);
           break;
 
         default:
@@ -69,13 +69,13 @@ const EditMyProfile = () => {
     switch(response?.status_code) {
         case 201:  // success
           console.log(response);
-          setSubjectList(response.result);
+          setSubjectList(response?.result);
           console.log(subjectList);
           return response?.result;
 
         case 200:  // no list returned
           setSubjectList([]);  // reset 
-          console.log(response.message);
+          console.log(response?.message);
           break;
 
         default:
@@ -111,11 +111,28 @@ const EditMyProfile = () => {
       })
   };
 
-  // do something when clicking save button (submit)
-  const handleSaveSubmit = (e) => {
-      e.preventDefault();
-      accInfo['subjects'] = subjects;
-      console.log(accInfo);
+  // submit updating subject request
+  const handleSaveSubmit = async (e) => {
+    e.preventDefault();
+    // api GET to get list of favorite tutors
+    const session_id = document.cookie.split("; ").find((row) => row.startsWith("sessionCookie="))?.split("=")[1];
+    const response = await FrontAPI.updateSubject(session_id, subjects);
+
+    switch(response?.status_code) {
+        case 201:  // success
+          console.log(response);
+          return response?.result;
+
+        case 409:  // update fail
+          console.log(response?.message);
+          break;
+
+        default:
+            console.log('Some errors happened from the server.');
+    }
+
+    accInfo['subjects'] = subjects;
+    console.log(accInfo);
   }
 
   // store tutor list retrieved

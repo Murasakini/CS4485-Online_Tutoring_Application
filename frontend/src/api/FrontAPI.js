@@ -615,6 +615,32 @@ const FrontAPI = {
       }
     }
   },
+
+  // get list of subjects along with their department
+  updateSubject: async (session_id, subjectList) => {
+    try {
+      // POST request to send updated subjects to the endpoint
+      const response = await axiosInstance.post('/api/v1/update_subject', {
+          session_id: session_id,
+          subjects: subjectList
+      });
+      return response.data;
+      
+    } catch (error) {
+      if (error.response) {
+        console.error('Error response status:', error.response.status);
+        console.error('Error response data:', error.response.data);
+        return error.data.status_code;
+        
+      } else if (error.request) {
+        console.error('No response received:', error.request);
+        return error.data.status_code;
+      } else {
+        console.error('Error message:', error.message);
+        return error.data.status_code;
+      }
+    }
+  },
 };
 
 export default FrontAPI;
