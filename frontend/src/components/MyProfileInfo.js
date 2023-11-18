@@ -77,10 +77,13 @@ export default function MyProfileInfo(props) {
       }
 
       {data.subject &&
-          <TextField
+        <TextField
           id="subject"
           label="Subject List"
-          defaultValue={data.subject ? data.subject.join(', ') : 'N/A'}
+          defaultValue={data.subject[0].class_name ? 
+                        data.subject.map((subj) => (' ' + subj.class_name)) : 
+                        data.subject.length > 0 ?
+                          data.subject.join(', ') : 'N/A'}
           multiline
           InputProps={{ readOnly: true }}
         />
@@ -88,10 +91,10 @@ export default function MyProfileInfo(props) {
 
       {(data.num_hours != null) &&
         <TextField
-        id="num_hours"
-        label="Total Tutoring hours"
-        defaultValue={data.num_hours}
-        InputProps={{ readOnly: true }}
+          id="num_hours"
+          label="Total Tutoring hours"
+          defaultValue={data.num_hours}
+          InputProps={{ readOnly: true }}
         />
       }
 
