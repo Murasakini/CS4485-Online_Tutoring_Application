@@ -1,9 +1,11 @@
+import React from 'react';
 import { useEffect, useState,  } from 'react';
 import { useLocation } from 'react-router-dom';
 import Header from './components/Header.js';
 import Body from './components/Body.js';
 import EditMyProfileInfo from './components/EditMyProfileInfo.js'
 import FrontAPI from './api/FrontAPI.js';
+import CustomSnackbar from './components/CustomSnackbar.js';
 
 const EditMyProfile = () => {
   // get data passed from MyAccount page
@@ -27,6 +29,11 @@ const EditMyProfile = () => {
 
   const [subjectList, setSubjectList] = useState([]);  // store list of departments from server
   const [subjects, setSubjects] = useState([]);
+
+  // display error msg to the user
+  const [severity, setSeverity] = useState('error');
+  const [snackbarOpen, setSnackbarOpen] = useState(false);
+  const [snackbarMessage, setSnackbarMessage] = useState('');
 
   // retrieve data from db
   const getDepartmentList = async () => {
@@ -114,21 +121,33 @@ const EditMyProfile = () => {
   // submit updating subject request
   const handleSaveSubmit = async (e) => {
     e.preventDefault();
-    // api GET to get list of favorite tutors
+    // api POST to update subjects
     const session_id = document.cookie.split("; ").find((row) => row.startsWith("sessionCookie="))?.split("=")[1];
     const response = await FrontAPI.updateSubject(session_id, subjects);
 
     switch(response?.status_code) {
-        case 201:  // success
-          console.log(response);
-          return response?.result;
+      case 201:  // success
+        console.log(response);
+        setSnackbarMessage(response?.message);
+        setSnackbarOpen(true);
+        setSeverity('success');  // set level of severity of message
+        return response?.result;
 
-        case 409:  // update fail
-          console.log(response?.message);
-          break;
+      case 409:  // update fail
+        // display messsage
+        console.log(response?.message);
+        setSeverity('error');
+        setSnackbarMessage(response?.message);
+        setSnackbarOpen(true);
+        break;
 
-        default:
-            console.log('Some errors happened from the server.');
+      default:
+        // display messsage
+        console.log(response?.message);
+        setSeverity('error');
+        setSnackbarMessage('Some errors happened from the server.');
+        setSnackbarOpen(true);
+        console.log('Some errors happened from the server.');
     }
 
     accInfo['subjects'] = subjects;
@@ -154,15 +173,26 @@ const EditMyProfile = () => {
     <div>
       <Header title="MY ACCOUNT" />
       <Body content={
-        <EditMyProfileInfo
-        accInfo={accInfo}
-        departmentList={departmentList} subjectList={subjectList}
-        handleChange={handleChange}
-        subjects={subjects} departments={departments}
-        handleChangeDepartments={handleChangeDepartments}
-        handleChangeSubjects={handleChangeSubjects}
-        handleSaveSubmit={handleSaveSubmit}
-        />}
+        <React.Fragment>
+          <EditMyProfileInfo
+            accInfo={accInfo}
+            departmentList={departmentList} subjectList={subjectList}
+            handleChange={handleChange}
+            subjects={subjects} departments={departments}
+            handleChangeDepartments={handleChangeDepartments}
+            handleChangeSubjects={handleChangeSubjects}
+            handleSaveSubmit={handleSaveSubmit}
+          />
+
+            {/* CustomSnackbar for displaying error messages */}
+            <CustomSnackbar
+              open={snackbarOpen}
+              message={snackbarMessage}
+              onClose={() => setSnackbarOpen(false)}
+              severity={severity}
+            />
+        </React.Fragment>
+        }
       />
     </div>
   );
