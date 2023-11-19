@@ -55,65 +55,65 @@ function Leaderboard() {
 
   return (
     <React.Fragment>
-    {!verified ?
-      <Navigate to='/SignIn' replace={true} /> :
-    
-      <Container>
-        <Typography variant="h4">Leaderboards</Typography>
-        <div style={{ display: "flex" }}>
-          <TableContainer component={Paper} style={{ marginRight: "20px" }}>
-            <Typography variant="h6">Tutor Leaderboard</Typography>
-            <Table>
-              <TableHead>
-                <TableRow>
-                  <TableCell>Rank</TableCell>
-                  <TableCell>Name</TableCell>
-                  <TableCell>Hours</TableCell>
-                </TableRow>
-              </TableHead>
-              <TableBody>
-                {tutorLeaderboard.map((entry, index) => (
-                  <TableRow key={index}>
-                    <TableCell>{index + 1}</TableCell>
-                    <TableCell>{entry.name}</TableCell>
-                    <TableCell>{entry.num_hours}</TableCell>
+      {!verified ?
+        <Navigate to='/SignIn' replace={true} /> :
+      
+        <Container>
+          <Typography variant="h4">Leaderboards</Typography>
+          <div style={{ display: "flex" }}>
+            <TableContainer component={Paper} style={{ marginRight: "20px" }}>
+              <Typography variant="h6">Tutor Leaderboard</Typography>
+              <Table>
+                <TableHead>
+                  <TableRow>
+                    <TableCell>Rank</TableCell>
+                    <TableCell>Name</TableCell>
+                    <TableCell>Hours</TableCell>
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </TableContainer>
+                </TableHead>
+                <TableBody>
+                  {tutorLeaderboard.map((entry, index) => (
+                    <TableRow key={index}>
+                      <TableCell>{index + 1}</TableCell>
+                      <TableCell>{entry.name}</TableCell>
+                      <TableCell>{entry.num_hours}</TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </TableContainer>
 
-          <TableContainer component={Paper}>
-            <Typography variant="h6">User Leaderboard</Typography>
-            <Table>
-              <TableHead>
-                <TableRow>
-                  <TableCell>Rank</TableCell>
-                  <TableCell>Name</TableCell>
-                  <TableCell>Hours</TableCell>
-                </TableRow>
-              </TableHead>
-              <TableBody>
-                {userLeaderboard.map((entry, index) => (
-                  <TableRow key={index}>
-                    <TableCell>{index + 1}</TableCell>
-                    <TableCell>{entry.name}</TableCell>
-                    <TableCell>{entry.num_hours}</TableCell>
+            <TableContainer component={Paper}>
+              <Typography variant="h6">User Leaderboard</Typography>
+              <Table>
+                <TableHead>
+                  <TableRow>
+                    <TableCell>Rank</TableCell>
+                    <TableCell>Name</TableCell>
+                    <TableCell>Hours</TableCell>
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </TableContainer>
+                </TableHead>
+                <TableBody>
+                  {userLeaderboard.map((entry, index) => (
+                    <TableRow key={index}>
+                      <TableCell>{index + 1}</TableCell>
+                      <TableCell>{entry.name}</TableCell>
+                      <TableCell>{entry.num_hours}</TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </TableContainer>
 
-          {/* CustomSnackbar for displaying error messages */}
-          <CustomSnackbar
-            open={snackbarOpen}
-            message={snackbarMessage}
-            onClose={() => setSnackbarOpen(false)}
-          />
-        </div>
-      </Container>
-    }
+            {/* CustomSnackbar for displaying error messages */}
+            <CustomSnackbar
+              open={snackbarOpen}
+              message={snackbarMessage}
+              onClose={() => setSnackbarOpen(false)}
+            />
+          </div>
+        </Container>
+      }
     </React.Fragment>
   );
 }
