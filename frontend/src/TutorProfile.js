@@ -1,6 +1,6 @@
 import React from 'react';
 import { useState, useEffect } from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
+import { Navigate, useLocation, useNavigate } from 'react-router-dom';
 import Header from './components/Header.js';
 import Body from './components/Body.js';
 import TutorProfileInfo from './components/TutorProfileInfo.js';
@@ -97,22 +97,25 @@ const TutorAccount = () => {
     return (
         <React.Fragment>
             <Header title="TUTOR ACCOUNT" />
-            {/* return information only if retrieving data  is ready */}
-            {accInfo && 
-                <Body content={
-                    <React.Fragment>
-                        <TutorProfileInfo 
-                        accInfo={accInfo} 
-                        history={history}
-                        profileImg={profileImg}/>
+            {!fromSearch_FavoriteTutor ? 
+                <Navigate to='/Home' /> :
+            
+                /* return information only if retrieving data  is ready */
+                accInfo && 
+                    <Body content={
+                        <React.Fragment>
+                            <TutorProfileInfo 
+                            accInfo={accInfo} 
+                            history={history}
+                            profileImg={profileImg}/>
 
-                        {/* CustomSnackbar for displaying error messages */}
-                        <CustomSnackbar
-                        open={snackbarOpen}
-                        message={snackbarMessage}
-                        onClose={() => setSnackbarOpen(false)}
-                        severity={severity}/>
-                    </React.Fragment>}
+                            {/* CustomSnackbar for displaying error messages */}
+                            <CustomSnackbar
+                            open={snackbarOpen}
+                            message={snackbarMessage}
+                            onClose={() => setSnackbarOpen(false)}
+                            severity={severity}/>
+                        </React.Fragment>}
                 />}
         </React.Fragment>
     );

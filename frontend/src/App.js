@@ -32,7 +32,6 @@ function App() {
             <Route path='/AppointmentScheduler' element={<AppointmentScheduler />} />
             <Route path='/TutorScheduler' element={<TutorScheduler />} />
             <Route path='/FindTutor' element={<FindTutor />} />
-            <Route path='/MyAccount' element={<MyAccount />} />
             <Route path='/EditMyAccount' element={<EditMyAccount />} />
             <Route path='/Leaderboard' element={<Leaderboard />} />
           </Routes>
