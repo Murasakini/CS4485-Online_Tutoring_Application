@@ -13,8 +13,10 @@ const TutorAccount = () => {
 
     // get data passed from MyAccount page
     const location = useLocation();
-    const {fromSearch_FavoriteTutor} = location.state;  // get value passed from previous page
-    const tutor_id = fromSearch_FavoriteTutor.info.tutor_id;  // return tutor_id from previous page
+    let fromSearch_FavoriteTutor = null;
+    if (location.state)  // check if no value from previous page passed
+        ({fromSearch_FavoriteTutor} = location.state);  // get value passed from previous page
+    const tutor_id = fromSearch_FavoriteTutor?.info.tutor_id;  // return tutor_id from previous page
 
     // hold json data from db and function to store data
     const [accInfo, setAccInfo] = useState(null);
@@ -98,7 +100,7 @@ const TutorAccount = () => {
         <React.Fragment>
             <Header title="TUTOR ACCOUNT" />
             {!fromSearch_FavoriteTutor ? 
-                <Navigate to='/Home' /> :
+                <Navigate to='/' /> :
             
                 /* return information only if retrieving data  is ready */
                 accInfo && 
