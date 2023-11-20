@@ -8,6 +8,7 @@ import FrontAPI from './api/FrontAPI.js';
 import CustomSnackbar from './components/CustomSnackbar.js';
 
 const TutorAccount = () => {
+    const[verified, setVerified] = useState(true);   // hold status of session id
     // store previous page
     const history = useNavigate();
 
@@ -84,6 +85,19 @@ const TutorAccount = () => {
 
         // define function to get tutor list
         const tutorProfile = async () => {
+
+            // validate session id
+            const session_id = document.cookie.split("; ").find((row) => row.startsWith("sessionCookie="))?.split("=")[1];
+            const verify = await FrontAPI.verifySession(session_id);
+            console.log("verfiy", verify);
+
+            if (verify.status_code === 400 || verify.status_code === 401)  {// invalid or missing session id
+                setVerified(false);
+                return;
+            }
+
+            setVerified(true);
+
             // call function to get tutor list
             const profile = await getTutorProfile(); 
             await getProfileImage(); 
@@ -101,24 +115,28 @@ const TutorAccount = () => {
             <Header title="TUTOR ACCOUNT" />
             {!fromSearch_FavoriteTutor ? 
                 <Navigate to='/' /> :
-            
-                /* return information only if retrieving data  is ready */
-                accInfo && 
-                    <Body content={
-                        <React.Fragment>
-                            <TutorProfileInfo 
-                            accInfo={accInfo} 
-                            history={history}
-                            profileImg={profileImg}/>
 
-                            {/* CustomSnackbar for displaying error messages */}
-                            <CustomSnackbar
-                            open={snackbarOpen}
-                            message={snackbarMessage}
-                            onClose={() => setSnackbarOpen(false)}
-                            severity={severity}/>
-                        </React.Fragment>}
-                />}
+                // check session id status
+                !verified ?
+                    <Navigate to='/SignIn' replace={true} /> :
+
+                    accInfo && 
+                        <Body content={
+                            <React.Fragment>
+                                <TutorProfileInfo 
+                                accInfo={accInfo} 
+                                history={history}
+                                profileImg={profileImg}/>
+
+                                {/* CustomSnackbar for displaying error messages */}
+                                <CustomSnackbar
+                                open={snackbarOpen}
+                                message={snackbarMessage}
+                                onClose={() => setSnackbarOpen(false)}
+                                severity={severity}/>
+                            </React.Fragment>}
+                        />
+            }
         </React.Fragment>
     );
 }

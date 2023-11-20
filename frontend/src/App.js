@@ -5,7 +5,6 @@ import EditMyProfile from './EditMyProfile.js'
 //import Appointments from './Appointments.js';
 import FindTutor from './FindTutor.js';
 import './App.css'
-import MyAccount from './MyAccount.js';
 import EditMyAccount from './EditMyAccount.js'
 import SignIn from './SignIn.js';
 import SignUp from './SignUp.js';
