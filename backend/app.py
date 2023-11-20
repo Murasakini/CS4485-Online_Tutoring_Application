@@ -658,6 +658,9 @@ This function retrieves user/tutor id associated to the session id.
 :return tutor_id: tutor id if session id belongs to user; otherwise, None 
 '''
 def get_id(session_id):
+    if session_id == None:
+        return None, None, False
+
     # retrieve id associated with session id
     validate_auth_table()
     sql = text("""
@@ -1535,6 +1538,17 @@ def remove_favorite_tutor():
     session_id = data.get("session_id")  
     tutor_id = data.get("tutor_id")
 
+    # validate session id
+    _, _, authorized = get_id(session_id)
+    if not authorized:  # invalid session id
+        response = {
+            'error': True,
+            'status_code': 401,
+            'message': 'Unauthorized access.'
+        }
+
+        return jsonify(response), 401
+    
     formatted_data = {
         "session_id": session_id,
         "tutor_id": tutor_id
@@ -1580,6 +1594,16 @@ def find_tutors():
     # get data sent along with the request
     data = request.get_json()
 
+    _, _, authorized = get_id(data.get('session_id'))
+    if not authorized:  # invalid session id
+        response = {
+            'error': True,
+            'status_code': 401,
+            'message': 'Unauthorized access.'
+        }
+
+        return jsonify(response), 401
+
     # define conditions in where clause
     where_conditions = ''
     for key, value in data.items():
@@ -1616,11 +1640,11 @@ def find_tutors():
         if len(tutor_list) == 0:
             response = {
                 'error': False,
-                'status_code': 201,
+                'status_code': 200,
                 'message': 'No data found.',
                 'result': []
             }
-            status_code = 201
+            status_code = 200
 
         else:
             response = {
