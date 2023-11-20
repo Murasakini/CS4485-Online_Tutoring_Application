@@ -13,8 +13,11 @@ import CustomSnackbar from './components/CustomSnackbar';
 import Header from './components/Header.js';
 import {Box, Grid, Paper} from '@mui/material';
 import MenuList from './components/MenuList.js';
+import { Navigate } from "react-router-dom";
 
 export default function TutorAppointmentScheduler() {
+  const[verified, setVerified] = useState(true);   // hold status of session id
+
   // start date (rounded up to the next hour). used for determining possible time slots
   const currentDateTime = new Date();
   const roundedUpHour = new Date(currentDateTime);
@@ -35,23 +38,45 @@ export default function TutorAppointmentScheduler() {
   const [cooldown, setCooldown] = useState(false);
 
   useEffect(() => {
-    // fetch the list of subjects. unconditional 
+    // validate session id
     const session_id = document.cookie.split("; ").find((row) => row.startsWith("sessionCookie="))?.split("=")[1];
-    FrontAPI.fetchSubjects(session_id)
-      .then((data) => {
-        if (data.error) {
-          // custom error handling
-          setSnackbarMessage(data.message);
-          setSnackbarOpen(true);
-        } else {
-          setSubjects(data);
+    FrontAPI.verifySession(session_id)
+    .then((data) => {
+      if (data.error) {
+        // custom error handling
+        setVerified(false);
+        setSnackbarMessage(data.message);
+        setSnackbarOpen(true);
+
+      } 
+      
+      else {
+        // fetch the list of subjects. unconditional 
+        const session_id = document.cookie.split("; ").find((row) => row.startsWith("sessionCookie="))?.split("=")[1];
+        FrontAPI.fetchSubjects(session_id)
+          .then((data) => {
+            if (data.error) {
+              // custom error handling
+              setSnackbarMessage(data.message);
+              setSnackbarOpen(true);
+            } else {
+              setSubjects(data);
+            }
+          })
+          .catch((error) => {
+            // network error
+            setSnackbarMessage('Network error. Please try again.');
+            setSnackbarOpen(true);
+          });
         }
       })
+  
+      // catch invalid session id
       .catch((error) => {
-        // network error
-        setSnackbarMessage('Network error. Please try again.');
-        setSnackbarOpen(true);
-      });
+        setVerified(false);
+        console.log(error);
+        return;
+      });  
   }, []);
   
   useEffect(() => {
@@ -201,6 +226,9 @@ export default function TutorAppointmentScheduler() {
             </Paper>
           </Grid>
 
+          {!verified ?
+          <Navigate to='/SignIn' replace={true} /> :
+
           <Grid sx={{textAlign: "center"}} item xs={10}>
             <Paper>
               <h2>Schedule an Appointment for Tutor</h2>
@@ -282,6 +310,7 @@ export default function TutorAppointmentScheduler() {
               <CalendarDisplay events={events} />
             </Paper>
           </Grid>
+        }
         </Grid>        
       </Box>
     </div>

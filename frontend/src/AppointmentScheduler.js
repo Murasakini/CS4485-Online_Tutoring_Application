@@ -49,7 +49,9 @@ export default function AppointmentScheduler() {
         setSnackbarMessage(data.message);
         setSnackbarOpen(true);
 
-      } else {
+      } 
+      
+      else {
         // fetch the list of subjects. unconditional 
         FrontAPI.fetchSubjects(session_id)
         .then((data) => {
