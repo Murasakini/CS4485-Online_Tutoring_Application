@@ -1799,6 +1799,69 @@ def resend_2fa():
         }
         return jsonify(response)
 
+#------------favorite tutors and search tutors------------
+# get favorite tutor list endpoint
+@version.route("/favorite_tutors", methods=["GET"])
+def get_favorite_tutors():
+    
+    # pulls a user's session_id from the browser
+    session_id = request.args.get('session_id')
+    
+    # get list of user favorites
+    fav_list = user_favorite_query(session_id)
+
+    response = {
+        'error': False,
+        'status_code': 201,
+        'message': 'Retrieve favorite tutors list successfully.',
+        'result': fav_list
+    }
+
+    return jsonify(response), 201
+    
+# endpoint to add a tutor into favorite list
+@version.route("/add_favorite_tutors", methods=["POST"])
+def add_favorite_tutors():
+
+    # get data sent along with the request
+    data = request.get_json()
+    session_id = data.get("session_id")  
+    tutor_id = data.get("tutor_id")
+
+    formatted_data = {
+        "session_id": session_id,
+        "tutor_id": tutor_id
+    }
+    # session_id = 'bc5fddbc24c7434a94d4c9f2ee217e23'
+    # tutor_id = 106
+
+    # check if the tutor is already in user's favorite list
+    if not in_favorites_list(session_id=session_id, tutor_id=tutor_id):  # tutor wasn't in list
+        inserted_data, success = insert_user_favorite(formatted_data)
+        if success:
+                response = {
+                    'error': False,
+                    'status_code': 201,
+                    'message': 'Added tutor to the list successfully.'
+                }
+                status_code = 201
+        else:
+            response = {
+                'error': True,
+                'status_code': 409,
+                'message': inserted_data
+            }
+            status_code = 409
+    else:  # tutor existed
+        response = response = {
+            'error': False,
+            'status_code': 403,
+            'message': 'The tutor is already in the list.'
+        }
+        status_code = 403
+
+    return jsonify(response), status_code
+
 # endpoint to remove a tutor from the favorite list
 @version.route("/remove_favorite_tutor", methods=["POST"])
 def remove_favorite_tutor():
@@ -2039,86 +2102,6 @@ def tutor_profile():
             }
 
         return jsonify(response), status_code
-    
-# endpoint to get tutor profile
-@version.route("/media_upload", methods=["POST"])
-def media_upload():
-    session_id = request.form['session_id']  
-
-    # validate session id
-    user_id, tutor_id, authorized = get_id(session_id)
-    
-    if not authorized:  # invalid session id
-        response = {
-            'error': True,
-            'status_code': 401,
-            'message': 'Unauthorized access.'
-        }
-
-        return jsonify(response), 401
-      
-    # check if file is alongs with the request
-    if 'file' not in request.files:  # file not in the request
-        return jsonify(response)
-    
-    # file in the request
-    file = request.files['file']  # store file 
-
-    # check if filename is missing
-    if file.filename == '':  # missing filename
-        response = {
-            'error': True,
-            'status_code': 400,
-            'message': 'No image was selected.'
-        }
-
-        status_code = 400
-
-        return jsonify(response), status_code
-    
-    # check if file not null and extension is legit
-    if file and allowed_file(file.filename):
-        filename = create_filename(user_id=user_id, tutor_id=tutor_id)
-        file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
-        file_path = app.config['UPLOAD_FOLDER'] + '/' + filename
-
-        # save image path to db
-        successful = store_image_path(file_path, user_id=user_id, tutor_id=tutor_id)
-
-        if successful:  # store path successfully
-            response = {
-                'error': False,
-                'status_code': 201,
-                'message': 'Image uploaded successfully.',
-                'file_path': file_path
-            }
-
-            status_code = 201
-
-            return jsonify(response), status_code
-        
-        else:  # fail to store path
-            response = {
-                'error': True,
-                'status_code': 409,
-                'message': 'Failed to store the image path in database.',
-                'file_path': file_path
-            }
-
-            status_code = 409
-
-            return jsonify(response), status_code
-        
-    else:  # invalid file extension or file is none
-        response = {
-            'error': True,
-            'status_code': 400,
-            'message': 'File extension is invalid, or error occurred while uploading the image.'
-        }
-
-        status_code = 400
-
-        return jsonify(response), status_code
 
 @version.route("/get_image", methods = ['GET'])
 def get_image():
@@ -2157,624 +2140,6 @@ def get_image():
     except FileNotFoundError:
         return None, 404
     
-
-#------------enroll/modify subjects------------
-# endpoint to return a list of departments name
-@version.route("/get_departments", methods = ['GET'])
-def get_departments():
-    # pulls a user's session_id and tutor_id from the browser
-    session_id = request.args.get('session_id')
-    
-    # validate session id
-    _, _, authorized = get_id(session_id)
-    
-    if not authorized:  # invalid session id
-        response = {
-            'error': True,
-            'status_code': 401,
-            'message': 'Unauthorized access.'
-        }
-
-        return jsonify(response), 401
-
-    else:  # valid session id
-        query = text('''
-                    SELECT department_name 
-                    FROM ota_db.departments;
-                ''')
-        
-        # execute query
-        result = db.session.execute(query)
-        rows = result.fetchall()
-
-        # make list of departments
-        departments = list()
-        for row in rows:
-            departments.append(row[0])
-
-        # make response
-        if len(departments) == 0:
-            response = {
-                'error': True,
-                'status_code': 200,
-                'message': 'Failed to retrieve a list of departments.'
-            }
-
-            status_code = 200
-            
-        else:
-            response = {
-                'error': False,
-                'status_code': 201,
-                'result': departments,
-                'message': 'Retrieved a list of departments successfully.'
-            }
-
-            status_code = 201
-
-        return jsonify(response), status_code
-    
-# endpoint to return list of subjects associated with their departments
-@version.route("/get_subjects_of_departments", methods = ['POST'])
-def get_subjects_of_departments():
-    data = request.get_json()  # get body data
-
-    # pulls a user's session_id and tutor_id from the browser
-    session_id = data.get('session_id')
-    department_list = data.get('departments')
-    
-    # validate session id
-    user_id, tutor_id, authorized = get_id(session_id)
-    
-    if not authorized:  # invalid session id
-        response = {
-            'error': True,
-            'status_code': 401,
-            'message': 'Unauthorized access.'
-        }
-
-        return jsonify(response), 401
-
-    if department_list == None or len(department_list) == 0:
-        response = {
-            'error': False,
-            'status_code': 200,
-            'result': department_list,
-            'message': 'No department was specified.'
-        }
-
-        return jsonify(response), 200
-
-    else:  # valid session id
-        # join department name together and create quotation marks
-        group_of_dept_name = "', '".join(department_list)
-        group_of_dept_name = "'" + group_of_dept_name + "'"
-
-        # query
-        query = text('''
-                    SELECT D.department_name, C.class_name
-                    FROM ota_db.departments D, ota_db.classes C
-                    WHERE D.department_id = C.department_id AND 
-                          D.department_name IN ({});
-                '''.format(group_of_dept_name))  # there is no user input -> safe to use format
-        
-        # execute query
-        result = db.session.execute(query)
-        rows = result.fetchall()
-
-        # make list of subjects in a form DEPARTMENT-subject
-        subject_list = list()
-        for row in rows: 
-            subject_list.append(f'{row[0]}-{row[1]}')
-
-        # make response
-        if len(subject_list) == 0:
-            response = {
-                'error': True,
-                'status_code': 200,
-                'result': subject_list,
-                'message': 'Failed to retrieve a list of subjects.'
-            }
-
-            status_code = 200
-            
-        else:
-            response = {
-                'error': False,
-                'status_code': 201,
-                'result': subject_list,
-                'message': 'Retrieved a list of subjects successfully.'
-            }
-
-            status_code = 201
-
-        return jsonify(response), status_code
-    
-# endpoint to update subject to account
-@version.route("/update_subject", methods = ['POST'])
-def update_subject():
-    data = request.get_json()  # get body data
-
-    # pulls a user's session_id and tutor_id from the browser
-    session_id = data.get('session_id')
-    subject_list = data.get('subjects')
-    
-    # validate session id
-    user_id, tutor_id, authorized = get_id(session_id)
-    
-    if not authorized:  # invalid session id
-        response = {
-            'error': True,
-            'status_code': 401,
-            'message': 'Unauthorized access.'
-        }
-
-        return jsonify(response), 401
-    
-    if subject_list == None or len(subject_list) == 0:  # no subject list provided
-        response = {
-            'error': False,
-            'status_code': 200,
-            'result': subject_list,
-            'message': 'No subject was specified.'
-        }
-
-        return jsonify(response), 200
-    
-    # update subjects 
-    dept_subj_dict = list_to_dict(subject_list)  # get dictionary department as key and list of subjects as value
-    successful = update_subjects(user_id=user_id, tutor_id=tutor_id, dept_subj_dict=dept_subj_dict)
-
-    if successful:  # delete successfully
-            response = {
-                'error': False,
-                'status_code': 201,
-                'message': 'Updated subjects successfully.'
-            }
-
-            status_code = 201
-
-            return jsonify(response), status_code
-        
-    else:  # fail to store path
-        response = {
-            'error': True,
-            'status_code': 409,
-            'message': 'Failed to update subjects.',
-        }
-
-        status_code = 409
-
-        return jsonify(response), status_code
-    
-#------------favorite tutors and search tutors------------
-# get favorite tutor list endpoint
-@version.route("/favorite_tutors", methods=["GET"])
-def get_favorite_tutors():
-    
-    # pulls a user's session_id from the browser
-    session_id = request.args.get('session_id')
-    
-    # get list of user favorites
-    fav_list = user_favorite_query(session_id)
-
-    response = {
-        'error': False,
-        'status_code': 201,
-        'message': 'Retrieve favorite tutors list successfully.',
-        'result': fav_list
-    }
-
-    return jsonify(response), 201
-    
-# endpoint to add a tutor into favorite list
-@version.route("/add_favorite_tutors", methods=["POST"])
-def add_favorite_tutors():
-
-    # get data sent along with the request
-    data = request.get_json()
-    session_id = data.get("session_id")  
-    tutor_id = data.get("tutor_id")
-
-    formatted_data = {
-        "session_id": session_id,
-        "tutor_id": tutor_id
-    }
-    # session_id = 'bc5fddbc24c7434a94d4c9f2ee217e23'
-    # tutor_id = 106
-
-    # check if the tutor is already in user's favorite list
-    if not in_favorites_list(session_id=session_id, tutor_id=tutor_id):  # tutor wasn't in list
-        inserted_data, success = insert_user_favorite(formatted_data)
-        if success:
-                response = {
-                    'error': False,
-                    'status_code': 201,
-                    'message': 'Added tutor to the list successfully.'
-                }
-                status_code = 201
-        else:
-            response = {
-                'error': True,
-                'status_code': 409,
-                'message': inserted_data
-            }
-            status_code = 409
-    else:  # tutor existed
-        response = response = {
-            'error': False,
-            'status_code': 403,
-            'message': 'The tutor is already in the list.'
-        }
-        status_code = 403
-
-    return jsonify(response), status_code
-
-# endpoint to remove a tutor from the favorite list
-@version.route("/remove_favorite_tutor", methods=["POST"])
-def remove_favorite_tutor():
-
-    # get data sent along with the request
-    data = request.get_json()
-    session_id = data.get("session_id")  
-    tutor_id = data.get("tutor_id")
-
-    formatted_data = {
-        "session_id": session_id,
-        "tutor_id": tutor_id
-    }
-
-    # check if the tutor is actually in user's favorite list
-    if in_favorites_list(session_id=session_id, tutor_id=tutor_id):  
-        deleted_data, success = delete_user_favorite(formatted_data)
-        if success:
-                response = {
-                    'error': False,
-                    'status_code': 201,
-                    'message': 'Removed tutor from the list successfully.'
-                }
-                status_code = 201
-        else:
-            response = {
-                'error': True,
-                'status_code': 409,
-                'message': deleted_data
-            }
-            status_code = 409
-
-    else:  # tutor wasn't in list
-        response = response = {
-            'error': False,
-            'status_code': 403,
-            'message': 'The tutor is not in your favorite list.'
-        }
-        status_code = 403
-
-    return jsonify(response), status_code
-
-# endpoint to find tutors
-@version.route("/find_tutors", methods=["POST"])
-def find_tutors():
-    ###
-    # Due to multiple classes can a tutor register, if class name is included in the search field, 
-    # we use different SQL query to retrieve data 
-    ###
-
-    # pulls a user's session_id from the browser
-    # get data sent along with the request
-    data = request.get_json()
-
-    # define conditions in where clause
-    where_conditions = ''
-    for key, value in data.items():
-        if key == 'session_id' or len(value) == 0:
-            continue
-        
-        where_conditions += ' AND ' + str(key) + ' = \'' + data.get(str(key)) + '\''
-
-    # case 1: class name is not included
-    if data.get('class_name') == None or data.get('class_name') == '':
-        
-        # retrieve list of tutors based on search fields
-        validate_auth_table()
-        sql = text("""
-                SELECT tutor_id, first_name, last_name, image_path
-                FROM ota_db.tutors
-                WHERE EXISTS (SELECT * FROM ota_db.auth_table WHERE session_id = '{}')
-            """.format(data.get('session_id')) + where_conditions + ';')
-        
-        # execute query
-        result = db.session.execute(sql)
-        rows = result.fetchall()
-
-        # create list of tutors returned from db 
-        tutor_list = list()
-        for row in rows:
-            tutor_list.append({
-                'name': row[1] + ' ' + row[2], 
-                'subject': subjects_of_tutor(row[0]),
-                'image_path': row[3],
-                'tutor_id': row[0]
-            })
-
-        if len(tutor_list) == 0:
-            response = {
-                'error': False,
-                'status_code': 201,
-                'message': 'No data found.',
-                'result': []
-            }
-            status_code = 201
-
-        else:
-            response = {
-                'error': False,
-                'status_code': 201,
-                'message': 'Found tutors.',
-                'result': tutor_list
-            }
-            status_code = 201
-    # end of case 1
-
-    # case 2: class name is included       
-    else:
-        # retrieve list of tutors based on search fields
-        validate_auth_table()
-        sql = text("""
-                SELECT tutor_id, first_name, last_name, class_name
-                FROM ota_db.tutor_classes_readable
-                WHERE EXISTS (SELECT * FROM ota_db.auth_table WHERE session_id = '{}')
-            """.format(data.get('session_id')) + where_conditions + ';')
-        
-        # execute query
-        result = db.session.execute(sql)
-        rows = result.fetchall()
-
-        if len(rows) == 0:  # no data found
-            response = {
-                'error': False,
-                'status_code': 201,
-                'message': 'No data found.',
-                'result': []
-            }
-            status_code = 201
-
-        else:   # at least 1 data found
-            # create list of tutors returned from db 
-            tutor_list = list()
-            for row in rows:
-                subject_list = [row[3]]  # put subject into a list
-                tutor_list.append({
-                    'name': row[1] + ' ' + row[2], 
-                    'subject': subject_list,
-                    'image_path': row[4],
-                    'tutor_id': row[0]
-                })
-            
-            response = {
-                'error': False,
-                'status_code': 201,
-                'message': 'Found tutors.',
-                'result': tutor_list
-            }
-            status_code = 201
-
-    return jsonify(response), status_code
-
-#------------my profile------------
-# endpoint to get my profile
-@version.route("/my_profile", methods=["GET"])
-def my_profile():
-    # pulls a user's session_id from the browser
-    session_id = request.args.get('session_id')
-    
-    # determine session id belongs to tutor or user
-    user_id, tutor_id, authorized = get_id(session_id)
-
-    if not authorized:  # invalid session id
-        response = {
-            'error': True,
-            'status_code': 401,
-            'message': 'Unauthorized access.'
-        }
-
-        return jsonify(response), 401
-
-    # valid session id
-    elif user_id == None:  # not user account -> tutor account
-        # get profile
-        profile, status_code = get_tutor_profile(tutor_id)
-    
-    else:  # user account
-        # get profile
-        profile, status_code = get_user_profile(user_id)
-
-    # build response
-    if profile == None:  # no profile found
-        response = {
-            'error': True,
-            'status_code': status_code,  # 200
-            'message': 'Some problems occurred while retrieving the profile.',
-            'result': None
-        }
-
-    else:  # profile found
-        response = {
-            'error': False,
-            'status_code': status_code,  # 201
-            'message': 'Retrieve profile information successfully.',
-            'result': profile
-        }
-
-    return jsonify(response), status_code
-
-# endpoint to get tutor profile
-@version.route("/tutor_profile", methods=["GET"])
-def tutor_profile():
-    # pulls a user's session_id and tutor_id from the browser
-    session_id = request.args.get('session_id')
-    tutor_id = request.args.get('tutor_id')
-    
-    # validate session id
-    _, _, authorized = get_id(session_id)
-    
-    if not authorized:  # invalid session id
-        response = {
-            'error': True,
-            'status_code': 401,
-            'message': 'Unauthorized access.'
-        }
-
-        return jsonify(response), 401
-
-    else:  # valid session id
-        # get profile
-        profile, status_code = get_tutor_profile(tutor_id)
-
-        # build response
-        if profile == None:  # no profile found
-            response = {
-                'error': True,
-                'status_code': status_code,  # 200
-                'message': 'Some problems occurred while retrieving the profile.',
-                'result': None
-            }
-
-        else:  # profile found
-            response = {
-                'error': False,
-                'status_code': status_code,   # 201
-                'message': 'Retrieve profile information successfully.',
-                'result': profile
-            }
-
-        return jsonify(response), status_code
-    
-# endpoint to get tutor profile
-@version.route("/media_upload", methods=["POST"])
-def media_upload():
-    session_id = request.form['session_id']  
-
-    # validate session id
-    user_id, tutor_id, authorized = get_id(session_id)
-    
-    if not authorized:  # invalid session id
-        response = {
-            'error': True,
-            'status_code': 401,
-            'message': 'Unauthorized access.'
-        }
-
-        return jsonify(response), 401
-      
-    # check if file is alongs with the request
-    if 'file' not in request.files:  # file not in the request
-        response = {
-            'error': True,
-            'status_code': 400,
-            'message': 'An image is not provided.'
-        }
-
-        status_code = 400
-
-        return jsonify(response), status_code
-    
-    # file in the request
-    file = request.files['file']  # store file 
-
-    # check if filename is missing
-    if file.filename == '':  # missing filename
-        response = {
-            'error': True,
-            'status_code': 400,
-            'message': 'No image was selected.'
-        }
-
-        status_code = 400
-
-        return jsonify(response), status_code
-    
-    # check if file not null and extension is legit
-    if file and allowed_file(file.filename):
-        filename = create_filename(user_id=user_id, tutor_id=tutor_id)
-        file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
-        file_path = app.config['UPLOAD_FOLDER'] + '/' + filename
-
-        # save image path to db
-        successful = store_image_path(file_path, user_id=user_id, tutor_id=tutor_id)
-
-        if successful:  # store path successfully
-            response = {
-                'error': False,
-                'status_code': 201,
-                'message': 'Image uploaded successfully.',
-                'file_path': file_path
-            }
-
-            status_code = 201
-
-            return jsonify(response), status_code
-        
-        else:  # fail to store path
-            response = {
-                'error': True,
-                'status_code': 409,
-                'message': 'Failed to store the image path in database.',
-                'file_path': file_path
-            }
-
-            status_code = 409
-
-            return jsonify(response), status_code
-        
-    else:  # invalid file extension or file is none
-        response = {
-            'error': True,
-            'status_code': 400,
-            'message': 'File extension is invalid, or error occurred while uploading the image.'
-        }
-
-        status_code = 400
-
-        return jsonify(response), status_code
-
-@version.route("/get_image", methods = ['GET'])
-def get_image():
-    # pulls a user's session_id and tutor_id from the browser
-    session_id = request.args.get('session_id')
-    tutor_id = request.args.get('tutor_id')
-    user_id = None  # initialize 
-
-    # get id from session id
-    if tutor_id == None:  # tutor id is not provided -> my profile
-        # determine type of account
-        user_id, tutor_id, authorized = get_id(session_id)
-
-    else:  # tutor id is provided -> tutor profile
-        # check authorized only
-        _, _, authorized = get_id(session_id)
-
-    if not authorized:  # invalid session id
-        response = {
-            'error': True,
-            'status_code': 401,
-            'message': 'Unauthorized access.'
-        }
-
-        return jsonify(response), 401
-    
-    # get filename 
-    filename = create_filename(user_id=user_id, tutor_id=tutor_id)
-
-    # return file
-    try:
-        image = send_from_directory(directory=app.config["UPLOAD_FOLDER"], path=filename, as_attachment=True)
-       
-        return image, 201
-    
-    except FileNotFoundError:
-        return None, 404
-
 
 #------------enroll/modify subjects------------
 # endpoint to return a list of departments name
