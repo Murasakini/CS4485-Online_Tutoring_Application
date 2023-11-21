@@ -2,8 +2,7 @@ import axios from 'axios';
 import { SHA256 } from 'crypto-js';
 
 const baseURL = '';
-//const baseURL = 'https://7bff-64-189-201-9.ngrok-free.app/';
-//const baseURL = 'http://localhost:5000/';
+// const baseURL = 'http://localhost:5000';
 
 const axiosInstance = axios.create({
   baseURL,
@@ -113,10 +112,10 @@ const FrontAPI = {
         return error.response.data;
       } else if (error.request) {
         console.error('No response received:', error.request);
-        return error.response.data;
+        return { status_code: -1, message: 'Network error occurred' };
       } else {
         console.error('Error message:', error.message);
-        return error.response.data;
+        return { status_code: -1, message: 'Network error occurred' };
       }
     }
   },

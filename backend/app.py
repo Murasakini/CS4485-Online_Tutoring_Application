@@ -16,7 +16,6 @@ from Google import Create_Service
 from flask import * 
 ###########################################################
 
-
 #####################
 # Global Variables and Setup
 #####################
@@ -65,6 +64,7 @@ def datetime_to_str(expire_datetime):
     Converts a datetime object to a string in the format 'YYYY-MM-DD HH:MM:SS'.
     """
     return expire_datetime.strftime('%Y-%m-%d %H:%M:%S')
+
 
 def str_to_datetime(expire_str):
     """
@@ -428,14 +428,12 @@ def authenticate(email, password):
     if tutor_result:
         user_type = 'tutor'
         user_id = tutor_result[0]
-        #return redirect(url_for(server_email.your_target_function, user_id=user_id))   
     else:
         # If not a tutor, try to authenticate as a user
         user_result = db.session.execute(user_sql, {"email": email, "password": password}).fetchone()
         if user_result:
             user_type = 'user'
             user_id = user_result[0]
-            
         else:
             return None, False  # Authentication failed
 
@@ -484,6 +482,7 @@ def authenticate_user(email, password):
         return data, True
     else:
         return None, False  # Authentication failed
+
 
 def authenticate_tutor(email, password):
     tutor_sql = text("""
@@ -1293,6 +1292,8 @@ def signup_user():
             'message': inserted_data  # This will contain the error message
         }
         return jsonify(response), 409 
+
+
 
 @version.route("/subj_tutors", methods=["GET"])
 def subj_tutors():
@@ -2722,7 +2723,7 @@ def media_upload():
                 'file_path': file_path
             }
 
-            status_code = 201
+            status_code = 409
 
             return jsonify(response), status_code
         
@@ -2773,6 +2774,196 @@ def get_image():
     
     except FileNotFoundError:
         return None, 404
+
+
+#------------enroll/modify subjects------------
+# endpoint to return a list of departments name
+@version.route("/get_departments", methods = ['GET'])
+def get_departments():
+    # pulls a user's session_id and tutor_id from the browser
+    session_id = request.args.get('session_id')
+    
+    # validate session id
+    _, _, authorized = get_id(session_id)
+    
+    if not authorized:  # invalid session id
+        response = {
+            'error': True,
+            'status_code': 401,
+            'message': 'Unauthorized access.'
+        }
+
+        return jsonify(response), 401
+
+    else:  # valid session id
+        query = text('''
+                    SELECT department_name 
+                    FROM ota_db.departments;
+                ''')
+        
+        # execute query
+        result = db.session.execute(query)
+        rows = result.fetchall()
+
+        # make list of departments
+        departments = list()
+        for row in rows:
+            departments.append(row[0])
+
+        # make response
+        if len(departments) == 0:
+            response = {
+                'error': True,
+                'status_code': 200,
+                'message': 'Failed to retrieve a list of departments.'
+            }
+
+            status_code = 200
+            
+        else:
+            response = {
+                'error': False,
+                'status_code': 201,
+                'result': departments,
+                'message': 'Retrieved a list of departments successfully.'
+            }
+
+            status_code = 201
+
+        return jsonify(response), status_code
+    
+# endpoint to return list of subjects associated with their departments
+@version.route("/get_subjects_of_departments", methods = ['POST'])
+def get_subjects_of_departments():
+    data = request.get_json()  # get body data
+
+    # pulls a user's session_id and tutor_id from the browser
+    session_id = data.get('session_id')
+    department_list = data.get('departments')
+    
+    # validate session id
+    user_id, tutor_id, authorized = get_id(session_id)
+    
+    if not authorized:  # invalid session id
+        response = {
+            'error': True,
+            'status_code': 401,
+            'message': 'Unauthorized access.'
+        }
+
+        return jsonify(response), 401
+
+    if department_list == None or len(department_list) == 0:
+        response = {
+            'error': False,
+            'status_code': 200,
+            'result': department_list,
+            'message': 'No department was specified.'
+        }
+
+        return jsonify(response), 200
+
+    else:  # valid session id
+        # join department name together and create quotation marks
+        group_of_dept_name = "', '".join(department_list)
+        group_of_dept_name = "'" + group_of_dept_name + "'"
+
+        # query
+        query = text('''
+                    SELECT D.department_name, C.class_name
+                    FROM ota_db.departments D, ota_db.classes C
+                    WHERE D.department_id = C.department_id AND 
+                          D.department_name IN ({});
+                '''.format(group_of_dept_name))  # there is no user input -> safe to use format
+        
+        # execute query
+        result = db.session.execute(query)
+        rows = result.fetchall()
+
+        # make list of subjects in a form DEPARTMENT-subject
+        subject_list = list()
+        for row in rows: 
+            subject_list.append(f'{row[0]}-{row[1]}')
+
+        # make response
+        if len(subject_list) == 0:
+            response = {
+                'error': True,
+                'status_code': 200,
+                'result': subject_list,
+                'message': 'Failed to retrieve a list of subjects.'
+            }
+
+            status_code = 200
+            
+        else:
+            response = {
+                'error': False,
+                'status_code': 201,
+                'result': subject_list,
+                'message': 'Retrieved a list of subjects successfully.'
+            }
+
+            status_code = 201
+
+        return jsonify(response), status_code
+    
+# endpoint to update subject to account
+@version.route("/update_subject", methods = ['POST'])
+def update_subject():
+    data = request.get_json()  # get body data
+
+    # pulls a user's session_id and tutor_id from the browser
+    session_id = data.get('session_id')
+    subject_list = data.get('subjects')
+    
+    # validate session id
+    user_id, tutor_id, authorized = get_id(session_id)
+    
+    if not authorized:  # invalid session id
+        response = {
+            'error': True,
+            'status_code': 401,
+            'message': 'Unauthorized access.'
+        }
+
+        return jsonify(response), 401
+    
+    if subject_list == None or len(subject_list) == 0:  # no subject list provided
+        response = {
+            'error': False,
+            'status_code': 200,
+            'result': subject_list,
+            'message': 'No subject was specified.'
+        }
+
+        return jsonify(response), 200
+    
+    # update subjects 
+    dept_subj_dict = list_to_dict(subject_list)  # get dictionary department as key and list of subjects as value
+    successful = update_subjects(user_id=user_id, tutor_id=tutor_id, dept_subj_dict=dept_subj_dict)
+
+    if successful:  # delete successfully
+            response = {
+                'error': False,
+                'status_code': 201,
+                'message': 'Updated subjects successfully.'
+            }
+
+            status_code = 201
+
+            return jsonify(response), status_code
+        
+    else:  # fail to store path
+        response = {
+            'error': True,
+            'status_code': 409,
+            'message': 'Failed to update subjects.',
+        }
+
+        status_code = 409
+
+        return jsonify(response), status_code
 
 #####################
 # Main
