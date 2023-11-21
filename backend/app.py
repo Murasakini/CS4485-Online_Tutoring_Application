@@ -1904,7 +1904,6 @@ def remove_favorite_tutor():
 
     return jsonify(response), status_code
 
-
 # endpoint to find tutors
 @version.route("/find_tutors", methods=["POST"])
 def find_tutors():
@@ -2100,6 +2099,93 @@ def tutor_profile():
                 'message': 'Retrieve profile information successfully.',
                 'result': profile
             }
+
+        return jsonify(response), status_code
+    
+@version.route("/media_upload", methods=["POST"])
+def media_upload():
+    session_id = request.form['session_id']  
+
+    # validate session id
+    user_id, tutor_id, authorized = get_id(session_id)
+
+    if not authorized:  # invalid session id
+        response = {
+            'error': True,
+            'status_code': 401,
+            'message': 'Unauthorized access.'
+        }
+
+        return jsonify(response), 401
+
+    # check if file is alongs with the request
+    if 'file' not in request.files:  # file not in the request
+        response = {
+            'error': True,
+            'status_code': 400,
+            'message': 'An image is not provided.'
+        }
+
+        status_code = 400
+
+        return jsonify(response), status_code
+
+    # file in the request
+    file = request.files['file']  # store file 
+
+    # check if filename is missing
+    if file.filename == '':  # missing filename
+        response = {
+            'error': True,
+            'status_code': 400,
+            'message': 'No image was selected.'
+        }
+
+        status_code = 400
+
+        return jsonify(response), status_code
+
+    # check if file not null and extension is legit
+    if file and allowed_file(file.filename):
+        filename = create_filename(user_id=user_id, tutor_id=tutor_id)
+        file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+        file_path = app.config['UPLOAD_FOLDER'] + '/' + filename
+
+        # save image path to db
+        successful = store_image_path(file_path, user_id=user_id, tutor_id=tutor_id)
+
+        if successful:  # store path successfully
+            response = {
+                'error': False,
+                'status_code': 201,
+                'message': 'Image uploaded successfully.',
+                'file_path': file_path
+            }
+
+            status_code = 201
+
+            return jsonify(response), status_code
+
+        else:  # fail to store path
+            response = {
+                'error': True,
+                'status_code': 409,
+                'message': 'Failed to store the image path in database.',
+                'file_path': file_path
+            }
+
+            status_code = 409
+
+            return jsonify(response), status_code
+
+    else:  # invalid file extension or file is none
+        response = {
+            'error': True,
+            'status_code': 400,
+            'message': 'File extension is invalid, or error occurred while uploading the image.'
+        }
+
+        status_code = 400
 
         return jsonify(response), status_code
 
