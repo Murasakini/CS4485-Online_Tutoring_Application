@@ -207,7 +207,7 @@ export default function SignUp() {
                 flexDirection: 'column',
                 alignItems: 'center',
               }}> 
-            <Link to="/">
+            <Link href="https://www.utdallas.edu/">
               <Avatar sx={{ bgcolor: 'primary.main', width: 60, height: 60 }}>
                 <h4>UTD</h4>
               </Avatar>

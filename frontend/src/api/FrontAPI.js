@@ -85,6 +85,7 @@ const FrontAPI = {
   signIn: async (formData) => {
     try {
       let response;
+      let response_2fa; // for 2fa reponse
       if (formData.userType === "student") {
         response = await axiosInstance.post('/api/v1/login/user', {
           email: formData.email,
@@ -95,6 +96,13 @@ const FrontAPI = {
             email: formData.email,
             password: SHA256(formData.password).toString(),
           });
+      }
+      ////// 2FA call //////
+      if (response.status === 200) {
+        response_2fa = await axiosInstance.post('/api/v1/TwoFactorAuthentication/SendEmail', {
+          userType: formData.userType, 
+          email: formData.email
+        }); // dont know what to do with response_2fa
       }
       return response.data;
     } catch (error) {
@@ -108,6 +116,56 @@ const FrontAPI = {
       } else {
         console.error('Error message:', error.message);
         return { status_code: -1, message: 'Network error occurred' };
+      }
+    }
+  },
+
+  // validate 2FA code
+  validate2FA: async (formData) => {
+    try {
+      const response = await axiosInstance.post('/api/v1/TwoFactorAuthentication/validate', {
+        code: formData.code,
+        email: formData.email,
+        userType: formData.userType
+      });
+
+      return response.data;
+    } catch (error) {
+      // Copied from signIn
+      if (error.response) { 
+        console.error('Error response status:', error.response.status);
+        console.error('Error response data:', error.response.data);
+        return error.response.data;
+      } else if (error.request) {
+        console.error('No response received:', error.request);
+        return error.response.data;
+      } else {
+        console.error('Error message:', error.message);
+        return error.response.data;
+      }
+    }
+  },
+
+  // resends 2FA code 
+  resend2FA: async (formData) => {
+    try {
+      const response = await axiosInstance.post('/api/v1/TwoFactorAuthentication/ResendCode', {
+        email: formData.email,
+        userType: formData.userType
+      });
+
+      return response
+    } catch (error) {
+      if (error.response) { 
+        console.error('Error response status:', error.response.status);
+        console.error('Error response data:', error.response.data);
+        return error.response;
+      } else if (error.request) {
+        console.error('No response received:', error.request);
+        return error.response;
+      } else {
+        console.error('Error message:', error.message);
+        return error.response;
       }
     }
   },

@@ -11,7 +11,7 @@ import Box from '@mui/material/Box';
 import CustomSnackbar from './components/CustomSnackbar.js';
 import { ThemeProvider, createTheme } from '@mui/material/styles';
 import './App.css';
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import FrontAPI from './api/FrontAPI.js';
 import List from '@mui/material/List';
 import ListItem from '@mui/material/ListItem';
@@ -84,8 +84,6 @@ export default function SignIn() {
     switch (response.status_code) {
       case 200:
         // success
-        // cookie hardcoded to last an hour ## TODO: make max age dependant on cookie_data.expire minus current time
-        document.cookie = `sessionCookie=${response.cookie_data.session_id}; max-age=3600`
         setSuccessful(true);
         console.log('Login successful');
         break;
@@ -110,8 +108,8 @@ export default function SignIn() {
   return (
     <React.Fragment>
       {isSuccessful ?
-        // navigate to the home page
-        <Navigate to="/" /> :
+        //If id&pw is correct, go to 2FA page 
+        <Navigate to={`/TwoFactorAuthentication?email=${formData.email}&userType=${formData.userType}`} /> : //////////////
 
         // display input form
         <ThemeProvider theme={theme}>

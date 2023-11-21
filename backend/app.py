@@ -1,4 +1,4 @@
-from flask import Flask, jsonify, Blueprint, request, send_from_directory
+from flask import Flask, jsonify, Blueprint, request, send_from_directory, redirect, url_for
 from flask_sqlalchemy import SQLAlchemy
 from flask_cors import CORS
 from sqlalchemy import text
@@ -7,6 +7,14 @@ from datetime import datetime, timedelta
 import yaml
 import uuid
 import os
+################# FOR 2FA & Sending Email #################
+import base64 
+import random 
+from email.mime.multipart import MIMEMultipart 
+from email.mime.text import MIMEText 
+from Google import Create_Service 
+from flask import * 
+###########################################################
 
 #####################
 # Global Variables and Setup
@@ -35,6 +43,17 @@ PROTECTED_ENDPOINTS = ['v1.test_protected'] #, 'v1.subjects']
 SEARCH_FIELDS = {"first_name", "last_name", "subject"}
 UPLOAD_FOLDER = 'static/profile_image'
 ALLOWED_EXTENSIONS = set(['png', 'jpg', 'jpeg','svg'])
+PROTECTED_ENDPOINTS = ['v1.test_protected', 'v1.subjects']
+
+# Gmail setting 
+CLIENT_SECRET_FILE = 'client_secret.json'
+API_NAME = 'gmail'
+API_VERSION = 'v1'
+SCOPES = ['https://mail.google.com/']
+
+# Create Gmail service 
+service = Create_Service(CLIENT_SECRET_FILE, API_NAME, API_VERSION, SCOPES)
+
 
 #####################
 # Helper Functions
@@ -452,24 +471,12 @@ def authenticate_user(email, password):
     if user_result:
         user_type = 'user'
         user_id = user_result[0]
-            # Generate a unique session_id
-        session_id = uuid.uuid4().hex
-        
-        # Set an expiration time for the session
-        expire = datetime.utcnow() + timedelta(hours=1)
-        
-        # Save the session to the database
-        a, b = save_session_to_db(session_id, user_id, user_type, expire)
-        
-        print("session result message: " + str(a), flush=True)
-        print("success in inserting session: " + str(b), flush=True)
+            # Session_id generation moved to validate_2fa()
 
         data = {
             "user_type": user_type,
             "user_id": user_id,
-            "email": email,
-            "session_id": session_id,
-            "expire": expire
+            "email": email
         }
         
         return data, True
@@ -489,24 +496,12 @@ def authenticate_tutor(email, password):
     if tutor_result:
         user_type = 'tutor'
         user_id = tutor_result[0]
-            # Generate a unique session_id
-        session_id = uuid.uuid4().hex
-        
-        # Set an expiration time for the session
-        expire = datetime.utcnow() + timedelta(hours=1)
-        
-        # Save the session to the database
-        a, b = save_session_to_db(session_id, user_id, user_type, expire)
-        
-        print("session result message: " + str(a), flush=True)
-        print("success in inserting session: " + str(b), flush=True)
+            # Session_id generation moved to validate_2fa()
 
         data = {
             "user_type": user_type,
             "user_id": user_id,
-            "email": email,
-            "session_id": session_id,
-            "expire": expire
+            "email": email
         }
         
         return data, True
@@ -551,6 +546,223 @@ def save_session_to_db(session_id, account_id, account_type, expire):
     except IntegrityError:  # Catch any IntegrityError (like unique constraint violations)
         db.session.rollback()
         return "An error occurred while inserting the user.", False    
+
+#####################
+# 2FA Functions 
+#####################
+
+def search_email_user(user_id):
+    sql = text("""
+               SELECT users.email 
+               FROM users 
+               WHERE user_id = :user_id
+               """)
+    result = db.session.execute(sql, {"user_id": user_id})
+    user_email_address = result.first()[0]
+
+    return user_email_address
+
+def search_email_tutor(tutor_id):
+    sql = text("""
+               SELECT tutors.email 
+               FROM tutors 
+               WHERE tutor_id = :tutor_id
+               """)
+    result = db.session.execute(sql, {"tutor_id": tutor_id})
+    tutor_email_address = result.first()[0]
+
+    return tutor_email_address
+
+def search_id_user(email):
+    sql = text("""
+               SELECT users.user_id 
+               FROM users 
+               WHERE email = :email
+               """)
+    
+    result = db.session.execute(sql, {"email": email})
+    user_id_num = result.first()[0]
+    
+    return user_id_num
+
+def search_id_tutor(email):
+    sql = text("""
+               SELECT tutors.tutor_id 
+               FROM tutors 
+               WHERE email = :email
+               """)
+    
+    result = db.session.execute(sql, {"email": email})
+    tutor_id_num = result.first()[0]
+
+    return tutor_id_num
+
+def insert_2fa_user(rand, exp_time, user_id):
+    sql = text("""
+            INSERT INTO 2fa_table (2fa_code, expire, user_id, tutor_id)
+            VALUES (:2fa_code, :expire, :user_id, NULL)
+                """)
+    data_to_insert = {
+        '2fa_code': rand,
+        'expire': exp_time,
+        'user_id': user_id
+    }
+
+    result = db.session.execute(sql, data_to_insert)
+    db.session.commit()
+
+    if result.rowcount == 1:
+        print(result.rowcount, "record inserted.")
+
+def insert_2fa_tutor(rand, exp_time, tutor_id):
+    sql = text("""
+            INSERT INTO 2fa_table (2fa_code, expire, user_id, tutor_id)
+            VALUES (:2fa_code, :expire, NULL, :tutor_id)
+                """)
+    
+    data_to_insert = {
+        '2fa_code': rand,
+        'expire': exp_time,
+        'tutor_id': tutor_id
+    }
+
+    result = db.session.execute(sql, data_to_insert)
+    db.session.commit()
+
+    if result.rowcount == 1:
+        print(result.rowcount, "record inserted.")
+
+def delete_expired_2fa():
+    procedure = "validate_2fa"
+    sql = text("CALL " + procedure)
+
+    result = db.session.execute(sql)
+    db.session.commit()
+
+    if result.rowcount:
+        print(result.rowcount, "expired 2FA code(s) deleted.")
+
+def delete_2fa_by_code(code):
+    sql = text("""
+            DELETE FROM 2fa_table
+            WHERE 2fa_code = :code
+            """)
+    result = db.session.execute(sql, {"code": code})
+    db.session.commit()
+
+    if result.rowcount == 1:
+        print(result.rowcount, "2FA code deleted.")
+
+def delete_2fa_by_userid(user_id):
+    sql = text("""
+            DELETE FROM 2fa_table
+            WHERE user_id = :user_id
+            """)
+    result = db.session.execute(sql, {"user_id": user_id})
+    db.session.commit()
+
+    if result:
+        print(result.rowcount, "2FA code(s) deleted.")
+        return True
+
+def delete_2fa_by_tutorid(tutor_id):
+    sql = text("""
+            DELETE FROM 2fa_table
+            WHERE tutor_id = :tutor_id
+            """)
+    result = db.session.execute(sql, {"tutor_id": tutor_id})
+    db.session.commit()
+
+    if result:
+        print(result.rowcount, "2FA code(s) deleted.")
+        return True
+
+def send_email(email, rand):
+    emailMsg = 'You have requested a secure verification code to log into your account.\n\nPlease enter this secure verification code: ' \
+        + str(rand) + '\n\nIf you are not attempting to log into your account, please reset your password.\nPLEASE DO NOT REPLY TO THIS MESSAGE'
+    mimeMessage = MIMEMultipart()
+    mimeMessage['to'] = email
+    #mimeMessage['to'] = email[0][0]
+    #mimeMessage['to'] = 'jxp163630@utdallas.edu'   # testing utd email address
+    mimeMessage['subject'] = 'Secure two-step verification notification'
+    mimeMessage.attach(MIMEText(emailMsg, 'plain'))
+    raw_string = base64.urlsafe_b64encode(mimeMessage.as_bytes()).decode()
+
+    message = service.users().messages().send(userId='me', body={'raw': raw_string}).execute()
+    print(message)
+
+def send_email_user(user_id):
+
+    sql = text("""
+            DELETE FROM 2fa_table
+            WHERE user_id = :user_id
+            """)
+    result = db.session.execute(sql, {"user_id": user_id})
+    db.session.commit()
+
+    email = search_email_user(user_id)             # search user's email address
+    rand = random.randint(100000,999999)           # generates 6-digit random integer
+    send_email(email, rand)                        # send 2fa code
+
+    # record 2fa to database 
+    # timedelta adds 10 minutes to datetime.now()
+    insert_2fa_user(rand, (datetime.now() + timedelta(minutes=10)), user_id)
+    delete_expired_2fa()
+
+    return True
+
+def send_email_tutor(tutor_id):
+
+    sql = text("""
+            DELETE FROM 2fa_table
+            WHERE tutor_id = :tutor_id
+            """)
+    result = db.session.execute(sql, {"tutor_id": tutor_id})
+    db.session.commit()
+
+    email = search_email_tutor(tutor_id)           # search tutor's email address
+    rand = random.randint(100000,999999)           # generates 6-digit random integer
+    send_email(email, rand)                        # send 2fa code
+
+    # record 2fa to database 
+    # timedelta adds 10 minutes to datetime.now()
+    insert_2fa_tutor(rand, (datetime.now() + timedelta(minutes=10)), tutor_id)
+    delete_expired_2fa()
+
+    return True
+
+def check_2fa_code(code, user_type, user_id_num):
+    if user_type == 'user':
+        sql = text("""
+            SELECT 2fa_table.2fa_code
+            FROM 2fa_table
+            WHERE 2fa_table.user_id = :user_id_num
+            AND 2fa_table.2fa_code = :code
+        """)
+    elif user_type == 'tutor':
+        sql = text("""
+            SELECT 2fa_table.2fa_code
+            FROM 2fa_table
+            WHERE 2fa_table.tutor_id = :user_id_num
+            AND 2fa_table.2fa_code = :code
+        """)
+    
+    validated = db.session.execute(sql, {"user_id_num": user_id_num, "code": code}).fetchone()
+
+    
+    ############################### DELETE IN FINAL VERSION ###############################
+    if code == '123456':
+        validated = True
+    #######################################################################################
+
+    if validated:
+        # Validation success
+        return True
+    else:
+        # Validation failed
+        return False 
+
+    return
 
 '''
 This function checks whether the tutor already in the list associated to the user.
@@ -1081,7 +1293,7 @@ def signup_user():
         }
         return jsonify(response), 409 
 
-    
+
 
 @version.route("/subj_tutors", methods=["GET"])
 def subj_tutors():
@@ -1412,10 +1624,13 @@ def login_user():
         response = {
             'error': False,
             'status_code': 200,
-            'message': 'Login successful, cookie created.',
-            'cookie_data': user_data
+            'message': 'Login successful.',
+            'user_data': user_data
         }
-        return response, 200
+        response_success = jsonify(response)
+        #response_success.set_cookie('sessionCookie', user_data.session_id, expires = user_data.expire) # cookie should be created after 2FA authentication
+
+        return response_success, 200
     else:
         response = {
             'error': True,
@@ -1445,10 +1660,12 @@ def login_tutor():
         response = {
             'error': False,
             'status_code': 200,
-            'message': 'Login successful, cookie created.',
-            'cookie_data': user_data
+            'message': 'Login successful.',
+            'user_data': user_data
         }
-        return response, 200
+        response_success = jsonify(response)
+        #response_success.set_cookie('sessionCookie', user_data.session_id, expires = user_data.expire)
+        return response_success, 200
     else:
         response = {
             'error': True,
@@ -1462,6 +1679,125 @@ def test_protected():
     return {
         "message": "This is a protected endpoint."
     }
+
+@version.route("/TwoFactorAuthentication/SendEmail", methods=["POST"])
+def send_2fa():
+
+    data = request.get_json()
+    userType= data.get("userType")
+    email = data.get("email")
+    sent = False
+
+    if userType == 'student':
+        user_id = search_id_user(email)
+        sent = send_email_user(user_id)
+    elif userType == 'tutor':
+        tutor_id = search_id_tutor(email)
+        sent = send_email_tutor(tutor_id)
+
+    if sent:
+        response = {
+            'error': False,
+            'status_code': 200,
+            'message': '2FA email sent successfully.'
+        }
+        return jsonify(response)
+    else:
+        response = {
+            'error': True,
+            'status_code': 400,
+            'message': 'Unable to send 2FA email'
+        }
+        return jsonify(response)
+
+@version.route("/TwoFactorAuthentication/validate", methods=["POST"])
+def validate_2fa():
+    data = request.get_json()
+    code = data.get("code")
+    email = data.get("email")
+    user_type= data.get("userType")
+
+    if user_type == 'student':
+        user_id = search_id_user(email)
+        user_type = 'user'
+    elif user_type == 'tutor':
+        user_id = search_id_tutor(email)
+
+    delete_expired_2fa()
+    authenticated = check_2fa_code(code, user_type, user_id)
+
+    if authenticated:
+
+        # Generate a unique session_id
+        session_id = uuid.uuid4().hex
+        
+        # Set an expiration time for the session
+        expire = datetime.utcnow() + timedelta(hours=1)
+            
+        # Save the session to the database
+        a, b = save_session_to_db(session_id, user_id, user_type, expire)
+        
+        print("session result message: " + str(a), flush=True)
+        print("success in inserting session: " + str(b), flush=True)
+
+        user_data = {
+            "user_type": user_type,
+            "user_id": user_id,
+            "email": email,
+            "session_id": session_id,
+            "expire": expire
+        }
+
+        response = {
+            'error': False,
+            'status_code': 200,
+            'message': '2FA code found.',
+            'cookie_data': user_data
+        }
+        delete_2fa_by_code(code)
+
+        return jsonify(response), 200
+    else:
+        response = {
+            'error': True,
+            'status_code': 401,
+            'message': 'Invalid 2FA code.'
+        }
+        return jsonify(response), 401
+    
+@version.route("/TwoFactorAuthentication/ResendCode", methods=["POST"])
+def resend_2fa():
+    data = request.get_json()
+    email = data.get("email")
+    userType = data.get("userType")
+
+    if userType == 'student':
+        user_id = search_id_user(email)
+        if delete_2fa_by_userid(user_id):
+            send_email_user(user_id)
+            response = {
+                'error': False,
+                'status_code': 200,
+                'message': 'Student 2FA code resent.'
+            }
+            return jsonify(response) ,200
+    elif userType == 'tutor':
+        tutor_id = search_id_tutor(email)
+        if delete_2fa_by_tutorid(tutor_id):
+            send_email_tutor(tutor_id)
+            response = {
+                'error': False,
+                'status_code': 200,
+                'message': 'Tutor 2FA code resent.'
+            }
+            return jsonify(response), 200
+    else:
+        response = {
+            'error': True,
+            'status_code': 400,
+            'message': 'Failed to resend 2FA code.'
+        }
+        return jsonify(response)
 
 #------------favorite tutors and search tutors------------
 # get favorite tutor list endpoint
@@ -1639,7 +1975,7 @@ def find_tutors():
         sql = text("""
                 SELECT R.tutor_id, R.first_name, R.last_name, R.class_name, T.image_path
                 FROM ota_db.tutor_classes_readable as R, ota_db.tutors as T
-                WHERE R.tutor_id = T.tutor_id AND EXISTS (SELECT * FROM ota_db.auth_table WHERE session_id = '{}') 
+                WHERE R.tutor_id = T.tutor_id AND EXISTS (SELECT * FROM ota_db.auth_table WHERE session_id = :session_id) 
             """ + where_conditions + ';')
         
         # execute query
@@ -1766,14 +2102,13 @@ def tutor_profile():
 
         return jsonify(response), status_code
     
-# endpoint to get tutor profile
 @version.route("/media_upload", methods=["POST"])
 def media_upload():
     session_id = request.form['session_id']  
 
     # validate session id
     user_id, tutor_id, authorized = get_id(session_id)
-    
+
     if not authorized:  # invalid session id
         response = {
             'error': True,
@@ -1782,7 +2117,7 @@ def media_upload():
         }
 
         return jsonify(response), 401
-      
+
     # check if file is alongs with the request
     if 'file' not in request.files:  # file not in the request
         response = {
@@ -1794,7 +2129,7 @@ def media_upload():
         status_code = 400
 
         return jsonify(response), status_code
-    
+
     # file in the request
     file = request.files['file']  # store file 
 
@@ -1809,7 +2144,7 @@ def media_upload():
         status_code = 400
 
         return jsonify(response), status_code
-    
+
     # check if file not null and extension is legit
     if file and allowed_file(file.filename):
         filename = create_filename(user_id=user_id, tutor_id=tutor_id)
@@ -1830,7 +2165,7 @@ def media_upload():
             status_code = 201
 
             return jsonify(response), status_code
-        
+
         else:  # fail to store path
             response = {
                 'error': True,
@@ -1842,7 +2177,7 @@ def media_upload():
             status_code = 409
 
             return jsonify(response), status_code
-        
+
     else:  # invalid file extension or file is none
         response = {
             'error': True,
