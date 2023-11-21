@@ -1975,7 +1975,7 @@ def find_tutors():
         sql = text("""
                 SELECT R.tutor_id, R.first_name, R.last_name, R.class_name, T.image_path
                 FROM ota_db.tutor_classes_readable as R, ota_db.tutors as T
-                WHERE R.tutor_id = T.tutor_id AND EXISTS (SELECT * FROM ota_db.auth_table WHERE session_id = '{}') 
+                WHERE R.tutor_id = T.tutor_id AND EXISTS (SELECT * FROM ota_db.auth_table WHERE session_id = :session_id) 
             """ + where_conditions + ';')
         
         # execute query
