@@ -29,7 +29,7 @@ username = creds["database"]["username"]
 password = creds["database"]["password"]
 
 app = Flask(__name__)
-CORS(app, supports_credentials=True, withCredentials=True)
+CORS(app, supports_credentials=True)
 app.config['SQLALCHEMY_DATABASE_URI'] = f'mysql+pymysql://{username}:{password}@online-tutoring-application.ccm0nvuvbmz8.us-east-2.rds.amazonaws.com:3306/ota_db'
 db = SQLAlchemy(app)
 app.config['UPLOAD_FOLDER'] = 'static/profile_image'
@@ -43,7 +43,6 @@ PROTECTED_ENDPOINTS = ['v1.test_protected'] #, 'v1.subjects']
 SEARCH_FIELDS = {"first_name", "last_name", "subject"}
 UPLOAD_FOLDER = 'static/profile_image'
 ALLOWED_EXTENSIONS = set(['png', 'jpg', 'jpeg','svg'])
-PROTECTED_ENDPOINTS = ['v1.test_protected', 'v1.subjects']
 
 # Gmail setting 
 CLIENT_SECRET_FILE = 'client_secret.json'
