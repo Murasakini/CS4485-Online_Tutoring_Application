@@ -16,6 +16,7 @@ export default function TutorAppointmentScheduler() {
   const currentDateTime = new Date();
   const roundedUpHour = new Date(currentDateTime);
   roundedUpHour.setHours(currentDateTime.getHours() + 1, 0, 0, 0);
+  const session_id = document.cookie.split("; ").find((row) => row.startsWith("sessionCookie="))?.split("=")[1];
 
   const [formData, setFormData] = useState({
     tutorId: '',
@@ -33,7 +34,6 @@ export default function TutorAppointmentScheduler() {
 
   useEffect(() => {
     // fetch the list of subjects. unconditional 
-    const session_id = document.cookie.split("; ").find((row) => row.startsWith("sessionCookie="))?.split("=")[1];
     FrontAPI.fetchSubjects(session_id)
       .then((data) => {
         if (data.error) {
@@ -188,7 +188,7 @@ export default function TutorAppointmentScheduler() {
 
   return (
     <div>
-      <h2>Schedule an Appointment for Tutor</h2>
+      <h2>Schedule Tutor Availability</h2>
       <form onSubmit={handleSubmit}>
         <FormControl fullWidth required>
           <TextField
