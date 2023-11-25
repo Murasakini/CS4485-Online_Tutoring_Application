@@ -125,10 +125,11 @@ const EditMyProfile = () => {
     e.preventDefault();
     // api POST to update subjects
     const session_id = document.cookie.split("; ").find((row) => row.startsWith("sessionCookie="))?.split("=")[1];
-    const response = await FrontAPI.updateSubject(session_id, subjects);
+    const response = await FrontAPI.updateSubject(session_id, accInfo);
 
     switch(response?.status_code) {
       case 201:  // success
+      case 200:
         setSnackbarMessage(response?.message);
         setSnackbarOpen(true);
         setSeverity('success');  // set level of severity of message

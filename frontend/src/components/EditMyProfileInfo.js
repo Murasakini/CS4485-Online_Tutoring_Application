@@ -66,7 +66,7 @@ export default function EditProfileInfo(props) {
         helperText="No edit allowed"
       /> */}
       
-      {props.accInfo.about_me &&
+      {props.accInfo.about_me != null &&
         <TextField
           id="about_me"
           label="About Me"
