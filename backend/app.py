@@ -787,7 +787,7 @@ def get_tutor_profile(tutor_id):
             'netID': row[3],
             'email': row[4],
             'phone_num': row[5],
-            'about_me': row[6],
+            'about_me': 'N/A' if row[6] == None else row[6],
             'image_path': row[7],
             'subject': subjects_of_tutor(row[0]),
             'num_hours': get_tutoring_hours(row[0]),
@@ -2049,8 +2049,8 @@ def get_subjects_of_departments():
         return jsonify(response), status_code
     
 # endpoint to update subject to account
-@version.route("/update_subject", methods = ['POST'])
-def update_subject():
+@version.route("/update_profile", methods = ['POST'])
+def update_profile():
     data = request.get_json()  # get body data
 
     # pulls a user's session_id and tutor_id from the browser

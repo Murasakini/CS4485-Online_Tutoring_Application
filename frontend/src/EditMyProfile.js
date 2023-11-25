@@ -16,11 +16,11 @@ const EditMyProfile = () => {
   const [accInfo, setAccInfo] = useState({
       image: fromMyAccount.data.image,
       name: fromMyAccount.data.name,
-      email: fromMyAccount.data.email, 
-      phone: fromMyAccount.data.phone,
-      about: fromMyAccount.data.about,
+      //email: fromMyAccount.data.email, 
+      //phone: fromMyAccount.data.phone,
+      about_me: fromMyAccount.data.about_me,
       subject: fromMyAccount.data.subject,
-      subjects: []
+      //subjects: []
   });
 
   // store department and subject selections
@@ -43,7 +43,6 @@ const EditMyProfile = () => {
 
     switch(response?.status_code) {
         case 201:  // success
-          console.log(response);
           return response?.result;
 
         case 200:  // no list returned
@@ -75,9 +74,7 @@ const EditMyProfile = () => {
 
     switch(response?.status_code) {
         case 201:  // success
-          console.log(response);
           setSubjectList(response?.result);
-          console.log(subjectList);
           return response?.result;
 
         case 200:  // no list returned
@@ -116,10 +113,15 @@ const EditMyProfile = () => {
       setAccInfo((prev) => {
       return {...prev, [name]: value}
       })
+
+      console.log(accInfo);
   };
 
   // submit updating subject request
   const handleSaveSubmit = async (e) => {
+    // append subject to accInfo
+    accInfo['subjects'] = subjects;
+    console.log('final', accInfo);
     e.preventDefault();
     // api POST to update subjects
     const session_id = document.cookie.split("; ").find((row) => row.startsWith("sessionCookie="))?.split("=")[1];
@@ -127,7 +129,6 @@ const EditMyProfile = () => {
 
     switch(response?.status_code) {
       case 201:  // success
-        console.log(response);
         setSnackbarMessage(response?.message);
         setSnackbarOpen(true);
         setSeverity('success');  // set level of severity of message
@@ -156,6 +157,7 @@ const EditMyProfile = () => {
 
   // store tutor list retrieved
   useEffect(() => {
+    console.log(accInfo);
     // define function to get tutor list
     const storeDepartmentList = async () => {
         // call function to get tutor list

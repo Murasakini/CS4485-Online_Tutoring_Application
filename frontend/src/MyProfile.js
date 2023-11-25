@@ -84,7 +84,6 @@ const MyAccount = () => {
             // validate session id
             const session_id = document.cookie.split("; ").find((row) => row.startsWith("sessionCookie="))?.split("=")[1];
             const verify = await FrontAPI.verifySession(session_id);
-            console.log("verfiy", verify);
 
             if (verify.status_code === 400 || verify.status_code === 401)  {// invalid or missing session id
                 setVerified(false);
