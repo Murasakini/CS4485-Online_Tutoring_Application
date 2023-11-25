@@ -973,6 +973,51 @@ def update_subjects(user_id, tutor_id, dept_subj_dict):
         db.session.rollback()
         return False
 
+def update_name(user_id, tutor_id, name):
+    # split first and last name
+    first_last = name.split(' ')
+    first = first_last[0]
+    last = first_last[1] if len(first_last) > 1 else ''
+
+    # check with type of id is used
+    if user_id == None:  # tutor id
+        table = 'tutors'
+        id_type = 'tutor_id'
+        id = tutor_id
+
+    else:  # user id
+        table = 'users'
+        id_type = 'user_id'
+        id = user_id
+
+    # update 
+    sql = text("""
+                UPDATE ota_db.{}
+                SET last_name = :last, first_name = :first 
+                WHERE {} = :id;
+            """.format(table, id_type))  # no user input for these value -> safe to use format
+    
+    data = {'last': last, 'first': first, 'id': id}
+
+    try:
+        # execute query
+        result = db.session.execute(sql, data)
+        db.session.commit()
+
+        # check returned data
+        if result == None:  # error occured while updating name
+            return False
+
+        else:  # no error while updating name
+            return True
+    
+    # handle exception
+    except:
+        # return to previous 
+        db.session.rollback()
+        return False
+
+
 #####################
 # Routes
 #####################
@@ -2055,8 +2100,12 @@ def update_profile():
 
     # pulls a user's session_id and tutor_id from the browser
     session_id = data.get('session_id')
-    subject_list = data.get('subjects')
-    
+    updated_info = {
+        'subject_list': data.get('updated_info')['subjects'],
+        'name': data.get('updated_info')['name'],
+        'about_me': data.get('updated_info')['about_me'],
+    }
+
     # validate session id
     user_id, tutor_id, authorized = get_id(session_id)
     
@@ -2069,41 +2118,49 @@ def update_profile():
 
         return jsonify(response), 401
     
-    if subject_list == None or len(subject_list) == 0:  # no subject list provided
-        response = {
-            'error': False,
-            'status_code': 200,
-            'result': subject_list,
-            'message': 'No subject was specified.'
-        }
+    # initialize response
+    error = False
+    message = ''
+    status_code = 200
 
-        return jsonify(response), 200
-    
     # update subjects 
-    dept_subj_dict = list_to_dict(subject_list)  # get dictionary department as key and list of subjects as value
-    successful = update_subjects(user_id=user_id, tutor_id=tutor_id, dept_subj_dict=dept_subj_dict)
+    if updated_info['subject_list'] != None and len(updated_info['subject_list']) > 0:  # no subject list provided
+        dept_subj_dict = list_to_dict(updated_info['subject_list'])  # get dictionary department as key and list of subjects as value
+        successful = update_subjects(user_id=user_id, tutor_id=tutor_id, dept_subj_dict=dept_subj_dict)  # update
 
-    if successful:  # delete successfully
-            response = {
-                'error': False,
-                'status_code': 201,
-                'message': 'Updated subjects successfully.'
-            }
-
+        if successful:  # update successfully
+            message = 'Updated subjects successfully. '
             status_code = 201
 
-            return jsonify(response), status_code
-        
-    else:  # fail to store path
-        response = {
-            'error': True,
-            'status_code': 409,
-            'message': 'Failed to update subjects.',
-        }
+        else:  # update fail
+            error = True
+            status_code = 409
+            message = 'Failed to update subjects. '
 
-        status_code = 409
+    # update name
+    if updated_info['name'] != None and len(updated_info['name']) > 0:  # no subject list provided
+        successful = update_name(user_id=user_id, tutor_id=tutor_id, name=updated_info['name'])
 
-        return jsonify(response), status_code
+        if successful:  # update successfully
+            message += 'Updated name successfully. '
+            status_code = 201 if status_code != 409 else 409
+
+        else:  # update fail
+            error = True
+            status_code = 409
+            message = 'Failed to update name. '
+
+    # update about me
+
+    # build response
+    # initialize response
+    response = {
+                'error': error,
+                'status_code': status_code,
+                'message': 'No update was made.' if len(message) == 0 else message
+            }
+
+    return jsonify(response), status_code
 
 #####################
 # Main
