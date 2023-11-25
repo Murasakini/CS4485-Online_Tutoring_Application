@@ -973,6 +973,13 @@ def update_subjects(user_id, tutor_id, dept_subj_dict):
         db.session.rollback()
         return False
 
+'''
+This function updates name associated with the provided user/tutor id.
+:param user_id: id of user
+:param tutor_id: id of tutor
+:param name: a name 
+:return: true if update successfully; otherwise, false
+'''
 def update_name(user_id, tutor_id, name):
     # split first and last name
     first_last = name.split(' ')
@@ -990,7 +997,7 @@ def update_name(user_id, tutor_id, name):
         id_type = 'user_id'
         id = user_id
 
-    # update 
+    # update name
     sql = text("""
                 UPDATE ota_db.{}
                 SET last_name = :last, first_name = :first 
@@ -1009,6 +1016,41 @@ def update_name(user_id, tutor_id, name):
             return False
 
         else:  # no error while updating name
+            return True
+    
+    # handle exception
+    except:
+        # return to previous 
+        db.session.rollback()
+        return False
+    
+'''
+This function updates about me associated with the provided user/tutor id.
+:param user_id: id of user
+:param tutor_id: id of tutor
+:param about_me: about me  
+:return: true if update successfully; otherwise, false
+'''
+def update_about_me(tutor_id, about_me):
+    # update about me
+    sql = text("""
+                UPDATE ota_db.tutors
+                SET about_me = :about_me 
+                WHERE tutor_id = :id;
+            """)
+    
+    data = {'about_me': about_me, 'id': tutor_id}
+
+    try:
+        # execute query
+        result = db.session.execute(sql, data)
+        db.session.commit()
+
+        # check returned data
+        if result == None:  # error occured while updating about me
+            return False
+
+        else:  # no error while updating about me
             return True
     
     # handle exception
@@ -2101,9 +2143,9 @@ def update_profile():
     # pulls a user's session_id and tutor_id from the browser
     session_id = data.get('session_id')
     updated_info = {
-        'subject_list': data.get('updated_info')['subjects'],
-        'name': data.get('updated_info')['name'],
-        'about_me': data.get('updated_info')['about_me'],
+        'subject_list': data.get('updated_info').get('subjects'),
+        'name': data.get('updated_info').get('name'),
+        'about_me': data.get('updated_info').get('about_me'),
     }
 
     # validate session id
@@ -2151,6 +2193,17 @@ def update_profile():
             message = 'Failed to update name. '
 
     # update about me
+    if tutor_id != None and updated_info['about_me'] != None and len(updated_info['about_me']) > 0:  # no subject list provided
+        successful = update_about_me(tutor_id=tutor_id, about_me=updated_info['about_me'])
+
+        if successful:  # update successfully
+            message += 'Updated about me successfully. '
+            status_code = 201 if status_code != 409 else 409
+
+        else:  # update fail
+            error = True
+            status_code = 409
+            message = 'Failed to update about me. '
 
     # build response
     # initialize response
