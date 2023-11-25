@@ -2166,9 +2166,9 @@ def update_profile():
     status_code = 200
 
     # update subjects 
-    if updated_info['subject_list'] != None and len(updated_info['subject_list']) > 0:  # no subject list provided
+    if updated_info['subject_list'] != None and len(updated_info['subject_list']) > 0:  # updated subject list was provided
         dept_subj_dict = list_to_dict(updated_info['subject_list'])  # get dictionary department as key and list of subjects as value
-        successful = update_subjects(user_id=user_id, tutor_id=tutor_id, dept_subj_dict=dept_subj_dict)  # update
+        successful = update_subjects(user_id=user_id, tutor_id=tutor_id, dept_subj_dict=dept_subj_dict)  # call function to update
 
         if successful:  # update successfully
             message = 'Updated subjects successfully. '
@@ -2180,8 +2180,8 @@ def update_profile():
             message = 'Failed to update subjects. '
 
     # update name
-    if updated_info['name'] != None and len(updated_info['name']) > 0:  # no subject list provided
-        successful = update_name(user_id=user_id, tutor_id=tutor_id, name=updated_info['name'])
+    if updated_info['name'] != None and len(updated_info['name']) > 0:   # updated name was provided
+        successful = update_name(user_id=user_id, tutor_id=tutor_id, name=updated_info['name'])  # call function to update
 
         if successful:  # update successfully
             message += 'Updated name successfully. '
@@ -2193,8 +2193,8 @@ def update_profile():
             message = 'Failed to update name. '
 
     # update about me
-    if tutor_id != None and updated_info['about_me'] != None and len(updated_info['about_me']) > 0:  # no subject list provided
-        successful = update_about_me(tutor_id=tutor_id, about_me=updated_info['about_me'])
+    if tutor_id != None and updated_info['about_me'] != None and len(updated_info['about_me']) > 0:  # updated about me was provided
+        successful = update_about_me(tutor_id=tutor_id, about_me=updated_info['about_me'])  # call function to update
 
         if successful:  # update successfully
             message += 'Updated about me successfully. '
