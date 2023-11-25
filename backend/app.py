@@ -2206,7 +2206,6 @@ def update_profile():
             message = 'Failed to update about me. '
 
     # build response
-    # initialize response
     response = {
                 'error': error,
                 'status_code': status_code,
