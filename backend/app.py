@@ -1026,7 +1026,6 @@ def update_name(user_id, tutor_id, name):
     
 '''
 This function updates about me associated with the provided user/tutor id.
-:param user_id: id of user
 :param tutor_id: id of tutor
 :param about_me: about me  
 :return: true if update successfully; otherwise, false
@@ -2003,7 +2002,7 @@ def get_image():
         return None, 404
     
 
-#------------enroll/modify subjects------------
+#------------enroll subjects/modify profile------------
 # endpoint to return a list of departments name
 @version.route("/get_departments", methods = ['GET'])
 def get_departments():
@@ -2069,7 +2068,7 @@ def get_subjects_of_departments():
     department_list = data.get('departments')
     
     # validate session id
-    user_id, tutor_id, authorized = get_id(session_id)
+    _, _, authorized = get_id(session_id)
     
     if not authorized:  # invalid session id
         response = {
