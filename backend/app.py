@@ -1795,7 +1795,7 @@ def validate_2fa():
             "user_type": user_type,
             "user_id": user_id,
             "email": email,
-            "session_id": session_id,``
+            "session_id": session_id,
             "expire": expire
         }
 
