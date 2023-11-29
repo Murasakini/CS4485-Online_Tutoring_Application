@@ -254,7 +254,7 @@ def get_upcoming_appointments(session_id):
         result = db.session.execute(sql, formatted_data)
     else: # assume tutor_id exists
         sql = text("""
-                SELECT upcoming_appointments.user_first_name, upcoming_appointments.user_last_name, upcoming_appointments.tutor_first_name, upcoming_appointments.tutor_first_name,
+                SELECT upcoming_appointments.user_first_name, upcoming_appointments.user_last_name, upcoming_appointments.tutor_first_name, upcoming_appointments.tutor_last_name,
                     upcoming_appointments.class_name, upcoming_appointments.meeting_time, upcoming_appointments.appointment_id
                     FROM ota_db.upcoming_appointments 
                     WHERE upcoming_appointments.tutor_id = :tutor_id;
