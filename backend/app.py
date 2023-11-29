@@ -246,7 +246,7 @@ def get_upcoming_appointments(session_id):
 
     if user_id != None:
         sql = text("""
-                SELECT upcoming_appointments.user_first_name, upcoming_appointments.user_last_name, upcoming_appointments.tutor_first_name, upcoming_appointments.tutor_first_name,
+                SELECT upcoming_appointments.user_first_name, upcoming_appointments.user_last_name, upcoming_appointments.tutor_first_name, upcoming_appointments.tutor_last_name,
                     upcoming_appointments.class_name, upcoming_appointments.meeting_time, upcoming_appointments.appointment_id
                     FROM ota_db.upcoming_appointments 
                     WHERE upcoming_appointments.user_id = :user_id;
