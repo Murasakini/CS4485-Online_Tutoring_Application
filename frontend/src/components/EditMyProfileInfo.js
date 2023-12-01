@@ -45,40 +45,50 @@ export default function EditProfileInfo(props) {
         name="name"
         value={props.accInfo.name}
         onChange={props.handleChange}
-        InputProps={{ readOnly: true }}
+        // InputProps={{ readOnly: true }}
       />
-      <TextField
+      {/* <TextField
         id="email"
         label="Email Address"
         name="email"
         value={props.accInfo.email}
         onChange={props.handleChange}
         InputProps={{ readOnly: true }}
-      />
-      <TextField
+        helperText="No edit allowed"
+      /> */}
+      {/* <TextField
         id="phone"
         label="Phone Number"
         name="phone"
         value={props.accInfo.phone}
         onChange={props.handleChange}
         InputProps={{ readOnly: true }}
-      />
-      <TextField
-        id="about"
-        label="About Me"
-        name="about"
-        value={props.accInfo.about}
-        onChange={props.handleChange}
-        multiline
-        InputProps={{ readOnly: true }}
-      />
+        helperText="No edit allowed"
+      /> */}
+      
+      {props.accInfo.about_me != null &&
+        <TextField
+          id="about_me"
+          label="About Me"
+          name="about_me"
+          value={props.accInfo.about_me}
+          onChange={props.handleChange}
+          multiline
+          // InputProps={{ readOnly: true }}
+        />
+      }
+
       <TextField
         id="subject"
         label="Subject List"
         name="subject"
-        value={props.accInfo.subject}
+        value={props.accInfo.subject[0].class_name ? 
+               props.accInfo.subject.map((subj) => (' ' + subj.class_name)) : 
+               props.accInfo.subject.length > 0 ?
+               props.accInfo.subject.join(', ') : 'N/A'}
         onChange={props.handleChange}
         InputProps={{ readOnly: true }}
+        helperText="Change subjects by selecting department(s) and the corresponding subject(s) in the dropdown menu below."
       />
 
       <div>

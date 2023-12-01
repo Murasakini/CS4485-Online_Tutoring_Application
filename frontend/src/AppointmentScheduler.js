@@ -12,8 +12,11 @@ import Header from './components/Header.js';
 import {Box, Grid, Paper} from '@mui/material';
 import MenuList from './components/MenuList.js';
 import CustomSnackbar from './components/CustomSnackbar.js';
+import { Navigate } from "react-router-dom";
 
 export default function AppointmentScheduler() {
+  const[verified, setVerified] = useState(true);   // hold status of session id
+
   const [formData, setFormData] = useState({
     subject: '',
     tutor: '',    // this is tutor_id
@@ -27,31 +30,56 @@ export default function AppointmentScheduler() {
   const [availableSlots, setAvailableSlots] = useState([]); // time slots
   //const [selectedTimeSlot, setSelectedTimeSlot] = useState('');
 
-    // display error msg to the user
-    const [snackbarOpen, setSnackbarOpen] = useState(false);
-    const [snackbarMessage, setSnackbarMessage] = useState('');
+  // display error msg to the user
+  const [snackbarOpen, setSnackbarOpen] = useState(false);
+  const [snackbarMessage, setSnackbarMessage] = useState('');
 
-    // disable submit if empty field
-    const isSubmitDisabled = !formData.subject || !formData.tutor || !formData.timeSlot;
+  // disable submit if empty field
+  const isSubmitDisabled = !formData.subject || !formData.tutor || !formData.timeSlot;
 
   useEffect(() => {
-    // fetch the list of subjects. unconditional 
+
+    // validate session id
     const session_id = document.cookie.split("; ").find((row) => row.startsWith("sessionCookie="))?.split("=")[1];
-    FrontAPI.fetchSubjects(session_id)
-      .then((data) => {
-        if (data.error) {
-          // custom error handling
-          setSnackbarMessage(data.message);
-          setSnackbarOpen(true);
-        } else {
-          setSubjects(data);
-        }
-      })
-      .catch((error) => {
-        // network error
-        setSnackbarMessage('Network error. Please try again.'); 
+    FrontAPI.verifySession(session_id)
+    .then((data) => {
+      if (data.error) {
+        // custom error handling
+        setVerified(false);
+        setSnackbarMessage(data.message);
         setSnackbarOpen(true);
-      });
+
+      } 
+      
+      else {
+        // fetch the list of subjects. unconditional 
+        FrontAPI.fetchSubjects(session_id)
+        .then((data) => {
+          if (data.error) {
+            // custom error handling
+            setSnackbarMessage(data.message);
+            setSnackbarOpen(true);
+          } else {
+            setSubjects(data);
+            setVerified(true);
+          }
+        })
+
+        // catch error getting subjects
+        .catch((error) => {
+          // network error
+          setSnackbarMessage('Network error. Please try again.'); 
+          setSnackbarOpen(true);
+        });
+      }
+    })
+
+    // catch invalid session id
+    .catch((error) => {
+      setVerified(false);
+      console.log(error);
+      return;
+    });  
   }, []);
   
   // handle when user change selected subject
@@ -207,7 +235,7 @@ export default function AppointmentScheduler() {
   return (
     <div>
       <Header title="SCHEDULE APPOINTMENT" />
-
+      
       <Box sx={{marginTop:"10px", marginLeft:"10px", marginRight:"10px", flexGrow: 1 }}>
         <Grid container spacing={3}>
           <Grid item xs={2}>
@@ -215,6 +243,9 @@ export default function AppointmentScheduler() {
               <MenuList />
             </Paper>
           </Grid>
+
+          {!verified ?
+          <Navigate to='/SignIn' replace={true} /> :
 
           <Grid item xs={10}>
             <Paper>
@@ -309,7 +340,8 @@ export default function AppointmentScheduler() {
               <CalendarDisplay events={events} />
             </Paper>
           </Grid>
-        </Grid>
+        } 
+        </Grid>        
       </Box>
     </div>
   );
