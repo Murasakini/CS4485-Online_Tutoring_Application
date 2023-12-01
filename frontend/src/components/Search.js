@@ -85,7 +85,7 @@ const Search = (props) => {
                                         {/* multiple subjects */}
                                         {info.subject.map((subj, i) => (
                                             <span key={i}>
-                                                <Typography component="span">{ subj }</Typography>
+                                                <Typography component="span">{ subj.class_name }</Typography>
                                                 <br/>
                                             </span>
                                         ))}

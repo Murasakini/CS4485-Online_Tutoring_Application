@@ -704,9 +704,9 @@ const FrontAPI = {
   updateSubject: async (session_id, subjectList) => {
     try {
       // POST request to send updated subjects to the endpoint
-      const response = await axiosInstance.post('/api/v1/update_subject', {
+      const response = await axiosInstance.post('/api/v1/update_profile', {
           session_id: session_id,
-          subjects: subjectList
+          updated_info: subjectList
       });
       return response.data;
       

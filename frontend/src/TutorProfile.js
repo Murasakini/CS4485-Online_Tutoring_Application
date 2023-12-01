@@ -1,6 +1,6 @@
 import React from 'react';
 import { useState, useEffect } from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
+import { Navigate, useLocation, useNavigate } from 'react-router-dom';
 import Header from './components/Header.js';
 import Body from './components/Body.js';
 import TutorProfileInfo from './components/TutorProfileInfo.js';
@@ -8,13 +8,16 @@ import FrontAPI from './api/FrontAPI.js';
 import CustomSnackbar from './components/CustomSnackbar.js';
 
 const TutorAccount = () => {
+    const[verified, setVerified] = useState(true);   // hold status of session id
     // store previous page
     const history = useNavigate();
 
     // get data passed from MyAccount page
     const location = useLocation();
-    const {fromSearch_FavoriteTutor} = location.state;  // get value passed from previous page
-    const tutor_id = fromSearch_FavoriteTutor.info.tutor_id;  // return tutor_id from previous page
+    let fromSearch_FavoriteTutor = null;
+    if (location.state)  // check if no value from previous page passed
+        ({fromSearch_FavoriteTutor} = location.state);  // get value passed from previous page
+    const tutor_id = fromSearch_FavoriteTutor?.info.tutor_id;  // return tutor_id from previous page
 
     // hold json data from db and function to store data
     const [accInfo, setAccInfo] = useState(null);
@@ -82,6 +85,19 @@ const TutorAccount = () => {
 
         // define function to get tutor list
         const tutorProfile = async () => {
+
+            // validate session id
+            const session_id = document.cookie.split("; ").find((row) => row.startsWith("sessionCookie="))?.split("=")[1];
+            const verify = await FrontAPI.verifySession(session_id);
+            console.log("verfiy", verify);
+
+            if (verify.status_code === 400 || verify.status_code === 401)  {// invalid or missing session id
+                setVerified(false);
+                return;
+            }
+
+            setVerified(true);
+
             // call function to get tutor list
             const profile = await getTutorProfile(); 
             await getProfileImage(); 
@@ -97,23 +113,30 @@ const TutorAccount = () => {
     return (
         <React.Fragment>
             <Header title="TUTOR ACCOUNT" />
-            {/* return information only if retrieving data  is ready */}
-            {accInfo && 
-                <Body content={
-                    <React.Fragment>
-                        <TutorProfileInfo 
-                        accInfo={accInfo} 
-                        history={history}
-                        profileImg={profileImg}/>
+            {!fromSearch_FavoriteTutor ? 
+                <Navigate to='/' /> :
 
-                        {/* CustomSnackbar for displaying error messages */}
-                        <CustomSnackbar
-                        open={snackbarOpen}
-                        message={snackbarMessage}
-                        onClose={() => setSnackbarOpen(false)}
-                        severity={severity}/>
-                    </React.Fragment>}
-                />}
+                // check session id status
+                !verified ?
+                    <Navigate to='/SignIn' replace={true} /> :
+
+                    accInfo && 
+                        <Body content={
+                            <React.Fragment>
+                                <TutorProfileInfo 
+                                accInfo={accInfo} 
+                                history={history}
+                                profileImg={profileImg}/>
+
+                                {/* CustomSnackbar for displaying error messages */}
+                                <CustomSnackbar
+                                open={snackbarOpen}
+                                message={snackbarMessage}
+                                onClose={() => setSnackbarOpen(false)}
+                                severity={severity}/>
+                            </React.Fragment>}
+                        />
+            }
         </React.Fragment>
     );
 }

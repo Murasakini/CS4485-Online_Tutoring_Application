@@ -1,12 +1,15 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import * as React from 'react';
 import Header from './components/Header.js'
 import Body from './components/Body.js'
 import Search from './components/Search.js'
 import FrontAPI from './api/FrontAPI.js';
 import CustomSnackbar from './components/CustomSnackbar.js';
+import { Navigate } from 'react-router-dom';
 
 const FindTutor = () => {
+    const[verified, setVerified] = useState(true);   // hold status of session id
+
     // create holder for values and function to update values
     const [searchInfo, setSearchInfo] = useState({});
     const [searchResult, setSearchResult] = useState([]);
@@ -16,6 +19,25 @@ const FindTutor = () => {
     const [severity, setSeverity] = useState('error');
     const [snackbarOpen, setSnackbarOpen] = useState(false);
     const [snackbarMessage, setSnackbarMessage] = useState('');
+
+    useEffect(() => {
+        // define function to get tutor list
+        const verifySession = async () => {
+            // validate session id
+            const session_id = document.cookie.split("; ").find((row) => row.startsWith("sessionCookie="))?.split("=")[1];
+            const verify = await FrontAPI.verifySession(session_id);
+            console.log("verfiy", verify);
+
+            if (verify.status_code === 400 || verify.status_code === 401)  {// invalid or missing session id
+                setVerified(false);
+                return;
+            }
+
+            setVerified(true);
+        }
+
+        verifySession();
+    }, []);
 
     // update values when any changes
     const handleChange = (e) => {
@@ -54,6 +76,27 @@ const FindTutor = () => {
 
                 break;
 
+            case 200:  // duplicate adding
+                // display messsage
+                console.log(response?.message);
+                setSeverity('info');  // set level of severity of message
+                setSnackbarMessage(response?.message);
+                setSnackbarOpen(true);
+                break;
+
+            case 401:  // invalid session id
+                setVerified(false);
+
+                // display messsage
+                console.log(response?.message);
+                setSeverity('error');
+                setSnackbarMessage(response?.message);
+                setSnackbarOpen(true);
+
+                // set status of progress/ for displaying waiting icon
+                setProgress(false);  // finish progress
+                break;
+
             default:
                 // display messsage
                 console.log('Some error happened');
@@ -83,6 +126,19 @@ const FindTutor = () => {
                 // set level of severity of message
                 setSeverity('success');
 
+                break;
+
+            case 401:  // invalid session id
+                setVerified(false);
+
+                // display messsage
+                console.log(response?.message);
+                setSeverity('error');
+                setSnackbarMessage(response?.message);
+                setSnackbarOpen(true);
+
+                // set status of progress/ for displaying waiting icon
+                setProgress(false);  // finish progress
                 break;
 
             case 403:  // duplicate adding
@@ -130,23 +186,28 @@ const FindTutor = () => {
     return (
         <React.Fragment>
             <Header title="FIND A TUTOR"/>
-            <Body content={
-                <React.Fragment>
-                    <Search 
-                    searchInfo={searchResult}
-                    handleChange={handleChange} 
-                    handleSearchSubmit={handleSearchSubmit}
-                    handleAddTutor={handleAddTutor}
-                    progress={progress}/>
 
-                    {/* CustomSnackbar for displaying error messages */}
-                    <CustomSnackbar
-                    open={snackbarOpen}
-                    message={snackbarMessage}
-                    onClose={() => setSnackbarOpen(false)}
-                    severity={severity}/>
-                </React.Fragment>
-            }/>
+            {!verified ?
+                <Navigate to='/SignIn' replace={true} /> :
+
+                <Body content={
+                    <React.Fragment>
+                        <Search 
+                        searchInfo={searchResult}
+                        handleChange={handleChange} 
+                        handleSearchSubmit={handleSearchSubmit}
+                        handleAddTutor={handleAddTutor}
+                        progress={progress}/>
+
+                        {/* CustomSnackbar for displaying error messages */}
+                        <CustomSnackbar
+                        open={snackbarOpen}
+                        message={snackbarMessage}
+                        onClose={() => setSnackbarOpen(false)}
+                        severity={severity}/>
+                    </React.Fragment>
+                }/>
+        }
         </React.Fragment>
     );
 }

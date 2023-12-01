@@ -265,7 +265,7 @@ def get_upcoming_appointments(session_id):
 
     if user_id != None:
         sql = text("""
-                SELECT upcoming_appointments.user_first_name, upcoming_appointments.user_last_name, upcoming_appointments.tutor_first_name, upcoming_appointments.tutor_first_name,
+                SELECT upcoming_appointments.user_first_name, upcoming_appointments.user_last_name, upcoming_appointments.tutor_first_name, upcoming_appointments.tutor_last_name,
                     upcoming_appointments.class_name, upcoming_appointments.meeting_time, upcoming_appointments.appointment_id
                     FROM ota_db.upcoming_appointments 
                     WHERE upcoming_appointments.user_id = :user_id;
@@ -273,7 +273,7 @@ def get_upcoming_appointments(session_id):
         result = db.session.execute(sql, formatted_data)
     else: # assume tutor_id exists
         sql = text("""
-                SELECT upcoming_appointments.user_first_name, upcoming_appointments.user_last_name, upcoming_appointments.tutor_first_name, upcoming_appointments.tutor_first_name,
+                SELECT upcoming_appointments.user_first_name, upcoming_appointments.user_last_name, upcoming_appointments.tutor_first_name, upcoming_appointments.tutor_last_name,
                     upcoming_appointments.class_name, upcoming_appointments.meeting_time, upcoming_appointments.appointment_id
                     FROM ota_db.upcoming_appointments 
                     WHERE upcoming_appointments.tutor_id = :tutor_id;
@@ -870,6 +870,9 @@ This function retrieves user/tutor id associated to the session id.
 :return tutor_id: tutor id if session id belongs to user; otherwise, None 
 '''
 def get_id(session_id):
+    if session_id == None:
+        return None, None, False
+
     # retrieve id associated with session id
     validate_auth_table()
     sql = text("""
@@ -996,7 +999,7 @@ def get_tutor_profile(tutor_id):
             'netID': row[3],
             'email': row[4],
             'phone_num': row[5],
-            'about_me': row[6],
+            'about_me': 'N/A' if row[6] == None else row[6],
             'image_path': row[7],
             'subject': subjects_of_tutor(row[0]),
             'num_hours': get_tutoring_hours(row[0]),
@@ -1181,6 +1184,92 @@ def update_subjects(user_id, tutor_id, dept_subj_dict):
         # return to previous 
         db.session.rollback()
         return False
+
+'''
+This function updates name associated with the provided user/tutor id.
+:param user_id: id of user
+:param tutor_id: id of tutor
+:param name: a name 
+:return: true if update successfully; otherwise, false
+'''
+def update_name(user_id, tutor_id, name):
+    # split first and last name
+    first_last = name.split(' ')
+    first = first_last[0]
+    last = first_last[1] if len(first_last) > 1 else ''
+
+    # check with type of id is used
+    if user_id == None:  # tutor id
+        table = 'tutors'
+        id_type = 'tutor_id'
+        id = tutor_id
+
+    else:  # user id
+        table = 'users'
+        id_type = 'user_id'
+        id = user_id
+
+    # update name
+    sql = text("""
+                UPDATE ota_db.{}
+                SET last_name = :last, first_name = :first 
+                WHERE {} = :id;
+            """.format(table, id_type))  # no user input for these value -> safe to use format
+    
+    data = {'last': last, 'first': first, 'id': id}
+
+    try:
+        # execute query
+        result = db.session.execute(sql, data)
+        db.session.commit()
+
+        # check returned data
+        if result == None:  # error occured while updating name
+            return False
+
+        else:  # no error while updating name
+            return True
+    
+    # handle exception
+    except:
+        # return to previous 
+        db.session.rollback()
+        return False
+    
+'''
+This function updates about me associated with the provided user/tutor id.
+:param tutor_id: id of tutor
+:param about_me: about me  
+:return: true if update successfully; otherwise, false
+'''
+def update_about_me(tutor_id, about_me):
+    # update about me
+    sql = text("""
+                UPDATE ota_db.tutors
+                SET about_me = :about_me 
+                WHERE tutor_id = :id;
+            """)
+    
+    data = {'about_me': about_me, 'id': tutor_id}
+
+    try:
+        # execute query
+        result = db.session.execute(sql, data)
+        db.session.commit()
+
+        # check returned data
+        if result == None:  # error occured while updating about me
+            return False
+
+        else:  # no error while updating about me
+            return True
+    
+    # handle exception
+    except:
+        # return to previous 
+        db.session.rollback()
+        return False
+
 
 #####################
 # Routes
@@ -1871,6 +1960,17 @@ def remove_favorite_tutor():
     session_id = data.get("session_id")  
     tutor_id = data.get("tutor_id")
 
+    # validate session id
+    _, _, authorized = get_id(session_id)
+    if not authorized:  # invalid session id
+        response = {
+            'error': True,
+            'status_code': 401,
+            'message': 'Unauthorized access.'
+        }
+
+        return jsonify(response), 401
+    
     formatted_data = {
         "session_id": session_id,
         "tutor_id": tutor_id
@@ -1916,6 +2016,16 @@ def find_tutors():
     # get data sent along with the request
     data = request.get_json()
 
+    _, _, authorized = get_id(data.get('session_id'))
+    if not authorized:  # invalid session id
+        response = {
+            'error': True,
+            'status_code': 401,
+            'message': 'Unauthorized access.'
+        }
+
+        return jsonify(response), 401
+
     # define conditions in where clause
     where_conditions = ''
     for key, value in data.items():
@@ -1952,11 +2062,11 @@ def find_tutors():
         if len(tutor_list) == 0:
             response = {
                 'error': False,
-                'status_code': 201,
+                'status_code': 200,
                 'message': 'No data found.',
                 'result': []
             }
-            status_code = 201
+            status_code = 200
 
         else:
             response = {
@@ -2227,7 +2337,7 @@ def get_image():
         return None, 404
     
 
-#------------enroll/modify subjects------------
+#------------enroll subjects/modify profile------------
 # endpoint to return a list of departments name
 @version.route("/get_departments", methods = ['GET'])
 def get_departments():
@@ -2293,7 +2403,7 @@ def get_subjects_of_departments():
     department_list = data.get('departments')
     
     # validate session id
-    user_id, tutor_id, authorized = get_id(session_id)
+    _, _, authorized = get_id(session_id)
     
     if not authorized:  # invalid session id
         response = {
@@ -2360,14 +2470,18 @@ def get_subjects_of_departments():
         return jsonify(response), status_code
     
 # endpoint to update subject to account
-@version.route("/update_subject", methods = ['POST'])
-def update_subject():
+@version.route("/update_profile", methods = ['POST'])
+def update_profile():
     data = request.get_json()  # get body data
 
     # pulls a user's session_id and tutor_id from the browser
     session_id = data.get('session_id')
-    subject_list = data.get('subjects')
-    
+    updated_info = {
+        'subject_list': data.get('updated_info').get('subjects'),
+        'name': data.get('updated_info').get('name'),
+        'about_me': data.get('updated_info').get('about_me'),
+    }
+
     # validate session id
     user_id, tutor_id, authorized = get_id(session_id)
     
@@ -2380,41 +2494,59 @@ def update_subject():
 
         return jsonify(response), 401
     
-    if subject_list == None or len(subject_list) == 0:  # no subject list provided
-        response = {
-            'error': False,
-            'status_code': 200,
-            'result': subject_list,
-            'message': 'No subject was specified.'
-        }
+    # initialize response
+    error = False
+    message = ''
+    status_code = 200
 
-        return jsonify(response), 200
-    
     # update subjects 
-    dept_subj_dict = list_to_dict(subject_list)  # get dictionary department as key and list of subjects as value
-    successful = update_subjects(user_id=user_id, tutor_id=tutor_id, dept_subj_dict=dept_subj_dict)
+    if updated_info['subject_list'] != None and len(updated_info['subject_list']) > 0:  # updated subject list was provided
+        dept_subj_dict = list_to_dict(updated_info['subject_list'])  # get dictionary department as key and list of subjects as value
+        successful = update_subjects(user_id=user_id, tutor_id=tutor_id, dept_subj_dict=dept_subj_dict)  # call function to update
 
-    if successful:  # delete successfully
-            response = {
-                'error': False,
-                'status_code': 201,
-                'message': 'Updated subjects successfully.'
-            }
-
+        if successful:  # update successfully
+            message = 'Updated subjects successfully. '
             status_code = 201
 
-            return jsonify(response), status_code
-        
-    else:  # fail to store path
-        response = {
-            'error': True,
-            'status_code': 409,
-            'message': 'Failed to update subjects.',
-        }
+        else:  # update fail
+            error = True
+            status_code = 409
+            message = 'Failed to update subjects. '
 
-        status_code = 409
+    # update name
+    if updated_info['name'] != None and len(updated_info['name']) > 0:   # updated name was provided
+        successful = update_name(user_id=user_id, tutor_id=tutor_id, name=updated_info['name'])  # call function to update
 
-        return jsonify(response), status_code
+        if successful:  # update successfully
+            message += 'Updated name successfully. '
+            status_code = 201 if status_code != 409 else 409
+
+        else:  # update fail
+            error = True
+            status_code = 409
+            message = 'Failed to update name. '
+
+    # update about me
+    if tutor_id != None and updated_info['about_me'] != None and len(updated_info['about_me']) > 0:  # updated about me was provided
+        successful = update_about_me(tutor_id=tutor_id, about_me=updated_info['about_me'])  # call function to update
+
+        if successful:  # update successfully
+            message += 'Updated about me successfully. '
+            status_code = 201 if status_code != 409 else 409
+
+        else:  # update fail
+            error = True
+            status_code = 409
+            message = 'Failed to update about me. '
+
+    # build response
+    response = {
+                'error': error,
+                'status_code': status_code,
+                'message': 'No update was made.' if len(message) == 0 else message
+            }
+
+    return jsonify(response), status_code
 
 #####################
 # Main

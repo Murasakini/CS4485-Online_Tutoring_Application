@@ -5,8 +5,11 @@ import Body from './components/Body.js';
 import MyProfileInfo from './components/MyProfileInfo.js';
 import FrontAPI from './api/FrontAPI.js';
 import CustomSnackbar from './components/CustomSnackbar.js';
+import { Navigate } from 'react-router-dom';
 
 const MyAccount = () => {
+    const[verified, setVerified] = useState(true);   // hold status of session id
+
     // hold json data from db and function to store data
     const [accInfo, setAccInfo] = useState(null);
     const [uploadImg, setUploadImg] = useState(null);
@@ -78,6 +81,17 @@ const MyAccount = () => {
     useEffect(() => {
         // define function to get tutor list
         const myProfile = async () => {
+            // validate session id
+            const session_id = document.cookie.split("; ").find((row) => row.startsWith("sessionCookie="))?.split("=")[1];
+            const verify = await FrontAPI.verifySession(session_id);
+
+            if (verify.status_code === 400 || verify.status_code === 401)  {// invalid or missing session id
+                setVerified(false);
+                return;
+            }
+
+            setVerified(true);
+
             // call function to get tutor list
             const profile = await getMyProfile();   // get profile info
             await getProfileImage();  // get image 
@@ -139,7 +153,10 @@ const MyAccount = () => {
         <React.Fragment>
             <Header title="MY PROFILE" />
             {/* return information only if retrieving data  is ready */}
-            {accInfo && 
+            {!verified ?
+                <Navigate to='/SignIn' replace={true} /> :
+
+                accInfo &&
                 <Body content={
                     <React.Fragment>
                         <MyProfileInfo 

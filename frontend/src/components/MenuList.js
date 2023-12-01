@@ -93,7 +93,8 @@ export default function BasicList() {
               <ListItemText primary="My Account" />
             </ListItemButton>
           </ListItem> */}
-          <ListItem disablePadding component={Link} to="/SignUp">
+
+          {/* <ListItem disablePadding component={Link} to="/SignUp">
             <ListItemButton>
               <ListItemText primary="Sign Up" />
             </ListItemButton>
@@ -103,7 +104,7 @@ export default function BasicList() {
             <ListItemButton>
               <ListItemText primary="Sign In" />
             </ListItemButton>
-          </ListItem>
+          </ListItem> */}
 
           <ListItem disablePadding>
             <ListItemButton>

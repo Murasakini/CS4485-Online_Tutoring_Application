@@ -5,7 +5,6 @@ import EditMyProfile from './EditMyProfile.js'
 //import Appointments from './Appointments.js';
 import FindTutor from './FindTutor.js';
 import './App.css'
-import MyAccount from './MyAccount.js';
 import EditMyAccount from './EditMyAccount.js'
 import SignIn from './SignIn.js';
 import SignUp from './SignUp.js';
@@ -33,7 +32,6 @@ function App() {
             <Route path='/AppointmentScheduler' element={<AppointmentScheduler />} />
             <Route path='/TutorScheduler' element={<TutorScheduler />} />
             <Route path='/FindTutor' element={<FindTutor />} />
-            <Route path='/MyAccount' element={<MyAccount />} />
             <Route path='/EditMyAccount' element={<EditMyAccount />} />
             <Route path='/TwoFactorAuthentication' element={<TwoFactorAuthentication/>} />
             <Route path='/Leaderboard' element={<Leaderboard />} />

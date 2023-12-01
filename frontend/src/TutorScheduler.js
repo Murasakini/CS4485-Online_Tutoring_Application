@@ -10,8 +10,14 @@ import CalendarDisplay from './components/CalendarDisplay';
 import TextField from '@mui/material/TextField';
 import {generateAllPossibleTimeSlots, calculateAvailableTimeSlots, addToDate, convertToMySQLTimestamp } from './Utils';
 import CustomSnackbar from './components/CustomSnackbar';
+import Header from './components/Header.js';
+import {Box, Grid, Paper} from '@mui/material';
+import MenuList from './components/MenuList.js';
+import { Navigate } from "react-router-dom";
 
 export default function TutorAppointmentScheduler() {
+  const[verified, setVerified] = useState(true);   // hold status of session id
+
   // start date (rounded up to the next hour). used for determining possible time slots
   const currentDateTime = new Date();
   const roundedUpHour = new Date(currentDateTime);
@@ -32,23 +38,45 @@ export default function TutorAppointmentScheduler() {
   const [cooldown, setCooldown] = useState(false);
 
   useEffect(() => {
-    // fetch the list of subjects. unconditional 
+    // validate session id
     const session_id = document.cookie.split("; ").find((row) => row.startsWith("sessionCookie="))?.split("=")[1];
-    FrontAPI.fetchSubjects(session_id)
-      .then((data) => {
-        if (data.error) {
-          // custom error handling
-          setSnackbarMessage(data.message);
-          setSnackbarOpen(true);
-        } else {
-          setSubjects(data);
+    FrontAPI.verifySession(session_id)
+    .then((data) => {
+      if (data.error) {
+        // custom error handling
+        setVerified(false);
+        setSnackbarMessage(data.message);
+        setSnackbarOpen(true);
+
+      } 
+      
+      else {
+        // fetch the list of subjects. unconditional 
+        const session_id = document.cookie.split("; ").find((row) => row.startsWith("sessionCookie="))?.split("=")[1];
+        FrontAPI.fetchSubjects(session_id)
+          .then((data) => {
+            if (data.error) {
+              // custom error handling
+              setSnackbarMessage(data.message);
+              setSnackbarOpen(true);
+            } else {
+              setSubjects(data);
+            }
+          })
+          .catch((error) => {
+            // network error
+            setSnackbarMessage('Network error. Please try again.');
+            setSnackbarOpen(true);
+          });
         }
       })
+  
+      // catch invalid session id
       .catch((error) => {
-        // network error
-        setSnackbarMessage('Network error. Please try again.');
-        setSnackbarOpen(true);
-      });
+        setVerified(false);
+        console.log(error);
+        return;
+      });  
   }, []);
   
   useEffect(() => {
@@ -188,83 +216,103 @@ export default function TutorAppointmentScheduler() {
 
   return (
     <div>
-      <h2>Schedule an Appointment for Tutor</h2>
-      <form onSubmit={handleSubmit}>
-        <FormControl fullWidth required>
-          <TextField
-            id="tutorId" 
-            label="Tutor ID"
-            name="tutorId" 
-            value={formData.tutorId}
-            onChange={handleTutorIdChange}
-            inputProps={{
-              maxLength: 45, // Limit to 45 characters
-            }}
-          />
-        </FormControl>
+      <Header title="TUTOR SCHEDULE AVAILABILITY" />
 
-        <FormControl fullWidth required>
-          <InputLabel>Subject</InputLabel>
-          <Select
-            label="Subject"
-            name="subject"
-            value={formData.subject}
-            onChange={handleSubjectChange}
-          >
-            <MenuItem value="">
-              <em>Select a subject</em>
-            </MenuItem>
-            {Array.isArray(subjects) && subjects.map((subject) => (
-              <MenuItem key={subject.class_name} value={`${subject.department_id}/${subject.class_num}`}>
-                {subject.department_name} - {subject.class_num} - {subject.class_name}
-              </MenuItem>
-            ))}
-          </Select>
-        </FormControl>
+      <Box sx={{marginTop:"10px", marginLeft:"10px", marginRight:"10px", flexGrow: 1 }}>
+        <Grid container spacing={3}>
+          <Grid item xs={2}>
+            <Paper>
+              <MenuList />
+            </Paper>
+          </Grid>
 
-        <FormControl fullWidth required>
-          <InputLabel>Time Slot</InputLabel>
-          <Select
-            label="Time Slot"
-            name="timeSlot"
-            value={formData.timeSlot}
-            onChange={handleTimeSlotChange}
-          >
-            <MenuItem value="">
-              <em>Select a time slot</em>
-            </MenuItem>
-            {/* add the available time slots as MenuItem options */}
-              {Array.isArray(availableSlots) && availableSlots.map((slot) => {
-                const startTime = new Date(slot);
-                const endTime = addToDate(startTime, 1);
-                return (
-                  <MenuItem key={slot.id} value={slot}>
-                    {startTime.toString() + ' - ' + endTime.toString()}
-                  </MenuItem>
-                );
-              })}
-          </Select>
-        </FormControl>
+          {!verified ?
+          <Navigate to='/SignIn' replace={true} /> :
 
-        <Button
-          type="submit"
-          variant="contained"
-          color="primary"
-          fullWidth
-          disabled={!formData.tutorId || !formData.subject || !formData.timeSlot}
-        >
-          {cooldown ? 'Cooldown (5s)' : 'Sign Up'}
-        </Button>
+          <Grid sx={{textAlign: "center"}} item xs={10}>
+            <Paper>
+              <h2>Schedule an Appointment for Tutor</h2>
+              <form onSubmit={handleSubmit}>
+                <FormControl fullWidth required>
+                  <TextField
+                    id="tutorId" 
+                    label="Tutor ID"
+                    name="tutorId" 
+                    value={formData.tutorId}
+                    onChange={handleTutorIdChange}
+                    inputProps={{
+                      maxLength: 45, // Limit to 45 characters
+                    }}
+                  />
+                </FormControl>
 
-        <CustomSnackbar
-          open={openSnackbar}
-          message={snackbarMessage}
-          onClose={() => setSnackbarOpen(false)}
-        />
-      </form>
+                <FormControl fullWidth required>
+                  <InputLabel>Subject</InputLabel>
+                  <Select
+                    label="Subject"
+                    name="subject"
+                    value={formData.subject}
+                    onChange={handleSubjectChange}
+                  >
+                    <MenuItem value="">
+                      <em>Select a subject</em>
+                    </MenuItem>
+                    {Array.isArray(subjects) && subjects.map((subject) => (
+                      <MenuItem key={subject.class_name} value={`${subject.department_id}/${subject.class_num}`}>
+                        {subject.department_name} - {subject.class_num} - {subject.class_name}
+                      </MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
 
-      {/* CalendarDisplay component */}
-      <CalendarDisplay events={events} />
+                <FormControl fullWidth required>
+                  <InputLabel>Time Slot</InputLabel>
+                  <Select
+                    label="Time Slot"
+                    name="timeSlot"
+                    value={formData.timeSlot}
+                    onChange={handleTimeSlotChange}
+                  >
+                    <MenuItem value="">
+                      <em>Select a time slot</em>
+                    </MenuItem>
+                    {/* add the available time slots as MenuItem options */}
+                      {Array.isArray(availableSlots) && availableSlots.map((slot) => {
+                        const startTime = new Date(slot);
+                        const endTime = addToDate(startTime, 1);
+                        return (
+                          <MenuItem key={slot.id} value={slot}>
+                            {startTime.toString() + ' - ' + endTime.toString()}
+                          </MenuItem>
+                        );
+                      })}
+                  </Select>
+                </FormControl>
+
+                <Button
+                  type="submit"
+                  variant="contained"
+                  color="primary"
+                  fullWidth
+                  disabled={!formData.tutorId || !formData.subject || !formData.timeSlot}
+                >
+                  {cooldown ? 'Cooldown (5s)' : 'Sign Up'}
+                </Button>
+
+                <CustomSnackbar
+                  open={openSnackbar}
+                  message={snackbarMessage}
+                  onClose={() => setSnackbarOpen(false)}
+                />
+              </form>
+
+              {/* CalendarDisplay component */}
+              <CalendarDisplay events={events} />
+            </Paper>
+          </Grid>
+        }
+        </Grid>        
+      </Box>
     </div>
   );
 }
