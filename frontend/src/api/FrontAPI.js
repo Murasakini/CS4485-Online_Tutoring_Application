@@ -1,13 +1,14 @@
 import axios from 'axios';
 import { SHA256 } from 'crypto-js';
 
-const baseURL = '';
-// const baseURL = 'http://localhost:5000';
+// const baseURL = '';
+ const baseURL = 'http://localhost:5000';
 
 const axiosInstance = axios.create({
   baseURL,
   headers: {
-    'Content-Type': 'application/json'
+    'Content-Type': 'application/json',
+    'withCredentials': 'True'
   }
 });
 
@@ -275,6 +276,30 @@ const FrontAPI = {
       }
     }
   },
+
+  // create a tutor availability entry
+  createAvailability: async (timeSlot, session_id) => {
+    try {
+      const response = await axiosInstance.post('/api/v1/create/appointment', {
+        session_id: session_id,
+        timeSlot: timeSlot,
+      });
+      return response.data;
+    } catch (error) {
+      if (error.response) {
+        console.error('Error response status:', error.response.status);
+        console.error('Error response data:', error.response.data);
+        return error.response.data;
+      } else if (error.request) {
+        console.error('No response received:', error.request);
+        return { status_code: -1, message: 'Network error occurred' };
+      } else {
+        console.error('Error message:', error.message);
+        return { status_code: -1, message: 'Network error occurred' };
+      }
+    }
+  },
+
 
   // verify session is valid
   verifySession: async (session_id) => {

@@ -29,7 +29,7 @@ username = creds["database"]["username"]
 password = creds["database"]["password"]
 
 app = Flask(__name__)
-CORS(app, supports_credentials=True, withCredentials=True)
+CORS(app, supports_credentials=True)
 app.config['SQLALCHEMY_DATABASE_URI'] = f'mysql+pymysql://{username}:{password}@online-tutoring-application.ccm0nvuvbmz8.us-east-2.rds.amazonaws.com:3306/ota_db'
 db = SQLAlchemy(app)
 app.config['UPLOAD_FOLDER'] = 'static/profile_image'
@@ -43,7 +43,6 @@ PROTECTED_ENDPOINTS = ['v1.test_protected'] #, 'v1.subjects']
 SEARCH_FIELDS = {"first_name", "last_name", "subject"}
 UPLOAD_FOLDER = 'static/profile_image'
 ALLOWED_EXTENSIONS = set(['png', 'jpg', 'jpeg','svg'])
-PROTECTED_ENDPOINTS = ['v1.test_protected', 'v1.subjects']
 
 # Gmail setting 
 CLIENT_SECRET_FILE = 'client_secret.json'
@@ -343,6 +342,25 @@ def insert_tutor(data):
         db.session.rollback()
         return "An error occurred while inserting the user.", False
     
+def insert_availability(data):
+    sql = text("""
+        INSERT INTO tutors_availability (tutor_id, time_available) 
+            VALUES (:tutor_id, :meeting_time);
+    """)
+    try:
+        result = db.session.execute(sql, data)
+        db.session.commit()
+
+        # Check if insert was successful
+        if result.rowcount == 1:
+            # Return the inserted data. 
+            return data, True
+        else:
+            return "The insert was unsuccessful", False
+    except IntegrityError:  # Catch any IntegrityError (like unique constraint violations)
+        db.session.rollback()
+        return "An error occurred while inserting the appointment.", False
+
 def insert_appointment(data):
     sql = text("""
         INSERT INTO appointments (user_id, tutor_id, class_num, department_id, meeting_time) 
@@ -355,7 +373,12 @@ def insert_appointment(data):
         # Check if insert was successful
         if result.rowcount == 1:
             # Return the inserted data. 
-            # If you need the actual row from the DB, you'll need to query it here.
+            # remove tutor's availability from the database
+            sql = text("""
+                DELETE FROM ota_db.tutors_availability WHERE time_available = :meeting_time AND tutor_id = :tutor_id;
+            """)
+            db.session.execute(sql, data)
+            db.session.commit()
             return data, True
         else:
             return "The insert was unsuccessful", False
@@ -1571,6 +1594,53 @@ def get_user_leaderboard():
         }
         return jsonify(response), 400
 
+@version.route("/create/availability", methods=["POST"])
+def create_availability():
+    data = request.get_json()
+
+    if not validate_fields(data, {'session_id', 'timeSlot'}):
+        response = {
+            'error': True,
+            'status_code': 400,
+            'message': 'Invalid or missing fields in request.'
+        }
+        return jsonify(response), 400
+    
+    # get tutor_id from session_id
+    session_id = data.get('session_id')
+    # determine session id belongs to tutor or user
+    user_id, tutor_id, authorized = get_id(session_id)
+
+    if not authorized or user_id != None:  # invalid session id for tutor
+        response = {
+            'error': True,
+            'status_code': 401,
+            'message': 'Unauthorized access.'
+        }
+        return jsonify(response), 401
+
+    formatted_data = {
+            "tutor_id": tutor_id,
+            "meeting_time": data.get("timeSlot")
+    }
+    
+     # If validation passes, you can continue with inserting the data into the database.
+    inserted_data, success = insert_availability(formatted_data)
+
+    if success:
+        response = {
+            'error': False,
+            'status_code': 201,
+            'result': inserted_data
+        }
+        return jsonify(response), 201
+    else:
+        response = {
+            'error': True,
+            'status_code': 409, # 409 is the status code for a conflict
+            'message': inserted_data  # This will contain the error message
+        }
+        return jsonify(response), 409
 
 
 @version.route("/create/appointment", methods=["POST"])
@@ -1607,13 +1677,6 @@ def create_appointment():
     inserted_data, success = insert_appointment(formatted_data)
 
     if success:
-        # remove tutor's availability from the database
-        sql = text("""
-                DELETE FROM ota_db.tutors_availability WHERE time_available = :meeting_time AND tutor_id = :tutor_id;
-        """)
-        db.session.execute(sql, formatted_data)
-        db.session.commit()
-
         response = {
             'error': False,
             'status_code': 201,
