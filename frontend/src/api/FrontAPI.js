@@ -1,8 +1,8 @@
 import axios from 'axios';
 import { SHA256 } from 'crypto-js';
 
-// const baseURL = '';
- const baseURL = 'http://localhost:5000';
+const baseURL = '';
+// const baseURL = 'http://localhost:5000';
 
 const axiosInstance = axios.create({
   baseURL,
