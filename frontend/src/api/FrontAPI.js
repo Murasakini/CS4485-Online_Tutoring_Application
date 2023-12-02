@@ -278,11 +278,11 @@ const FrontAPI = {
   },
 
   // create a tutor availability entry
-  createAvailability: async (timeSlot, session_id) => {
+  createAvailability: async (formData, session_id) => {
     try {
-      const response = await axiosInstance.post('/api/v1/create/appointment', {
+      const response = await axiosInstance.post('/api/v1/create/availability', {
         session_id: session_id,
-        timeSlot: timeSlot,
+        timeSlot: formData.timeSlot,
       });
       return response.data;
     } catch (error) {

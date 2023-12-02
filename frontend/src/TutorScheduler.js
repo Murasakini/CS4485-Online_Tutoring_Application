@@ -165,7 +165,7 @@ export default function TutorAppointmentScheduler() {
       return;
     }
     // createAppointment function from FrontAPI
-    const response = await FrontAPI.createAppointment(formData, session_id);
+    const response = await FrontAPI.createAvailability(formData, session_id);
 
     console.log(response);
     switch (response.status_code) {
