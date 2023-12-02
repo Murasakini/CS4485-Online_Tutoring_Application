@@ -310,7 +310,7 @@ export default function AppointmentScheduler() {
                         const endTime = addToDate(startTime, 1);
                         return (
                           <MenuItem key={slot.id} value={slot.timestamp}>
-                            {`${startTime.toLocaleTimeString()} - ${endTime.toLocaleTimeString()}`}
+                            {startTime.toString() + ' - ' + endTime.toString()}
                           </MenuItem>
                         );
                       })}
