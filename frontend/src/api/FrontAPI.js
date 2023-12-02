@@ -1,8 +1,8 @@
 import axios from 'axios';
 import { SHA256 } from 'crypto-js';
 
-// const baseURL = '';
- const baseURL = 'http://localhost:5000';
+const baseURL = '';
+// const baseURL = 'http://localhost:5000';
 
 const axiosInstance = axios.create({
   baseURL,
@@ -226,11 +226,12 @@ const FrontAPI = {
   },
 
   // get timeslot of tutor using tutor_id
-  fetchTimeSlots: async (tutor) => {
+  fetchTimeSlots: async (tutor, session_id) => {
     try {
       const response = await axiosInstance.get('/api/v1/tutor_timeslots', {
         params: {
           tutor_id: tutor,
+          session_id: session_id
         },  data:{
           message: 'dummy'
         }
@@ -278,11 +279,11 @@ const FrontAPI = {
   },
 
   // create a tutor availability entry
-  createAvailability: async (timeSlot, session_id) => {
+  createAvailability: async (formData, session_id) => {
     try {
-      const response = await axiosInstance.post('/api/v1/create/appointment', {
+      const response = await axiosInstance.post('/api/v1/create/availability', {
         session_id: session_id,
-        timeSlot: timeSlot,
+        timeSlot: formData.timeSlot,
       });
       return response.data;
     } catch (error) {
