@@ -226,11 +226,12 @@ const FrontAPI = {
   },
 
   // get timeslot of tutor using tutor_id
-  fetchTimeSlots: async (tutor) => {
+  fetchTimeSlots: async (tutor, session_id) => {
     try {
       const response = await axiosInstance.get('/api/v1/tutor_timeslots', {
         params: {
           tutor_id: tutor,
+          session_id: session_id
         },  data:{
           message: 'dummy'
         }

@@ -16,6 +16,7 @@ import { Navigate } from "react-router-dom";
 
 export default function AppointmentScheduler() {
   const[verified, setVerified] = useState(true);   // hold status of session id
+  const session_id = document.cookie.split("; ").find((row) => row.startsWith("sessionCookie="))?.split("=")[1];
 
   const [formData, setFormData] = useState({
     subject: '',
@@ -128,7 +129,7 @@ export default function AppointmentScheduler() {
   
     if (selectedTutor) {
       // fetch available time slots for selected tutor and subject
-      FrontAPI.fetchTimeSlots(selectedTutor)
+      FrontAPI.fetchTimeSlots(selectedTutor, session_id)
       .then((data) => {
         if (data.error) {
           // custom error handling

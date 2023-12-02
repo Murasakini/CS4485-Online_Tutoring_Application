@@ -81,9 +81,9 @@ export default function TutorAppointmentScheduler() {
   }, []);
   
   useEffect(() => {
-    if (formData.tutorId) {
+    if (true) {
       // tutor's time slots (already have) with user input tutor ID
-      FrontAPI.fetchTimeSlots(formData.tutorId)
+      FrontAPI.fetchTimeSlots(formData.tutorId, session_id)
         .then((data) => {
           if (data.error) {
             // custom error handling
@@ -234,7 +234,7 @@ export default function TutorAppointmentScheduler() {
             <Paper>
               <h2>Schedule an Appointment for Tutor</h2>
               <form onSubmit={handleSubmit}>
-                <FormControl fullWidth required>
+                {/* <FormControl fullWidth required>
                   <TextField
                     id="tutorId" 
                     label="Tutor ID"
@@ -245,7 +245,7 @@ export default function TutorAppointmentScheduler() {
                       maxLength: 45, // Limit to 45 characters
                     }}
                   />
-                </FormControl>
+                </FormControl> */}
 
                 <FormControl fullWidth required>
                   <InputLabel>Subject</InputLabel>
@@ -295,7 +295,7 @@ export default function TutorAppointmentScheduler() {
                   variant="contained"
                   color="primary"
                   fullWidth
-                  disabled={!formData.tutorId || !formData.subject || !formData.timeSlot}
+                  disabled={!formData.subject || !formData.timeSlot}  // {!formData.tutorID || !formData.subject || !formData.timeSlot}
                 >
                   {cooldown ? 'Cooldown (5s)' : 'Sign Up'}
                 </Button>
