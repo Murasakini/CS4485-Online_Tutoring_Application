@@ -1487,7 +1487,7 @@ def subjects():
 @version.route("/tutor_timeslots", methods=["GET"])
 def tutor_timeslots():
     
-    if not validate_fields(request.args, {'tutor_id'}):
+    if not validate_fields(request.args, {'tutor_id', 'session_id'}):
         response = {
             'error': True,
             'status_code': 400,
@@ -1495,7 +1495,12 @@ def tutor_timeslots():
         }
         return jsonify(response), 400
     
-    tutor_id = request.args.get('tutor_id')
+    # check user or tutor make the request based on session id
+    session_id = request.args.get('session_id')
+    _, tutor_id, _ = get_id(session_id)  # try to get tutor id from session id
+
+    if tutor_id == None:  # user makes requests
+        tutor_id = request.args.get('tutor_id')  # get tutor id from frontend
 
     # finds available times for a tutor
     clean_avail()
