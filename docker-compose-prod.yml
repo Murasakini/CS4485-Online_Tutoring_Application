@@ -13,7 +13,6 @@ services:
     build: 
       context: .
       dockerfile: frontend/Dockerfile.prod
-    mem_limit: 256m
     cpus: 0.5
 
   server:

@@ -1,5 +1,6 @@
 from flask import Flask, jsonify, Blueprint, request, send_from_directory, redirect, url_for
 from flask_sqlalchemy import SQLAlchemy
+from sqlalchemy.exc import SQLAlchemyError
 from flask_cors import CORS
 from sqlalchemy import text
 from sqlalchemy.exc import IntegrityError
@@ -569,6 +570,26 @@ def save_session_to_db(session_id, account_id, account_type, expire):
     except IntegrityError:  # Catch any IntegrityError (like unique constraint violations)
         db.session.rollback()
         return "An error occurred while inserting the user.", False    
+    
+def delete_session_from_db(session_id):
+    sql = text("""
+        DELETE FROM auth_table
+        WHERE session_id = :session_id
+    """)
+
+    try:
+        result = db.session.execute(sql, {"session_id": session_id})
+        db.session.commit()
+
+        # Check if delete was successful
+        if result.rowcount == 1:
+            return "Session successfully deleted.", True
+        else:
+            return "No session found with the given session ID.", False
+    except SQLAlchemyError as e:  # Catch any SQLAlchemyError
+        db.session.rollback()
+        return str(e), False
+
 
 #####################
 # 2FA Functions 
@@ -1830,6 +1851,36 @@ def login_tutor():
             'message': 'Invalid email or password.'
         }
         return jsonify(response), 401
+        
+@version.route("/logout", methods=["POST"])
+def logout():
+    # Pulls a user's session_id from the browser cookie
+    session_id = request.args.get('session_id')
+
+    # Determine if the session id belongs to a tutor or user
+    user_id, tutor_id, authorized = get_id(session_id)
+
+    if not authorized:  # Invalid session id
+        response = {
+            'error': True,
+            'status_code': 401,
+            'message': 'Unauthorized access.'
+        }
+        return jsonify(response), 401
+
+    # Delete the session from the database
+    delete_session_from_db(session_id)
+
+    # Create a response object and delete the session cookie from the browser
+    response = jsonify({
+        'error': False,
+        'status_code': 200,
+        'message': 'Successfully logged out.'
+    })
+    response.delete_cookie('sessionCookie')
+
+    return response, 200
+
 
 @version.route("/test_protected", methods=["GET"])
 def test_protected():
