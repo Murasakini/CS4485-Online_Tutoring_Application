@@ -83,7 +83,7 @@ export default function EditProfileInfo(props) {
         label="Subject List"
         name="subject"
         value={props.accInfo.subject[0].class_name ? 
-               props.accInfo.subject.map((subj) => (' ' + subj.class_name)) : 
+               props.accInfo.subject.map((subj) => (' ' + subj?.class_name)) : 
                props.accInfo.subject.length > 0 ?
                props.accInfo.subject.join(', ') : 'N/A'}
         onChange={props.handleChange}

@@ -14,8 +14,11 @@ import SearchIcon from '@mui/icons-material/Search';
 import LeaderboardIcon from '@mui/icons-material/Leaderboard';
 import { Link } from 'react-router-dom';
 import FrontAPI from '../api/FrontAPI.js';
+import { UserContext } from '../App.js';
 
 export default function BasicList() {
+  // global variable to hold account type
+  const { user, setUser } = React.useContext(UserContext);
   
   // delete a tutor
   const logOut = async () => {
@@ -63,32 +66,38 @@ export default function BasicList() {
             </ListItemButton>
           </ListItem>
 
-          <ListItem disablePadding component={Link} to="/Favorite">
-            <ListItemButton>
-              <ListItemIcon>
-                <StarIcon />
-              </ListItemIcon>
-              <ListItemText primary="Favorite" />
-            </ListItemButton>
-          </ListItem>
+          {user === 'user' &&
+            <ListItem disablePadding component={Link} to="/Favorite">
+              <ListItemButton>
+                <ListItemIcon>
+                  <StarIcon />
+                </ListItemIcon>
+                <ListItemText primary="Favorite" />
+              </ListItemButton>
+            </ListItem>
+          }
 
-          <ListItem disablePadding component={Link} to="/AppointmentScheduler">
-            <ListItemButton>
-              <ListItemIcon>
-                <CalendarMonthIcon />
-              </ListItemIcon>
-              <ListItemText primary="Appointments" />
-            </ListItemButton>
-          </ListItem>
+          {user === 'user' &&
+            <ListItem disablePadding component={Link} to="/AppointmentScheduler">
+              <ListItemButton>
+                <ListItemIcon>
+                  <CalendarMonthIcon />
+                </ListItemIcon>
+                <ListItemText primary="Appointments" />
+              </ListItemButton>
+            </ListItem>
+          }
 
-          <ListItem disablePadding component={Link} to="/TutorScheduler">
-            <ListItemButton>
-              <ListItemIcon>
-                <CalendarMonthIcon />
-              </ListItemIcon>
-              <ListItemText primary="Tutor Scheduler" />
-            </ListItemButton>
-          </ListItem>
+          {user === 'tutor' && 
+            <ListItem disablePadding component={Link} to="/TutorScheduler">
+              <ListItemButton>
+                <ListItemIcon>
+                  <CalendarMonthIcon />
+                </ListItemIcon>
+                <ListItemText primary="Tutor Scheduler" />
+              </ListItemButton>
+            </ListItem>
+          }
 
           <ListItem disablePadding component={Link} to="/FindTutor">
             <ListItemButton>
@@ -112,7 +121,7 @@ export default function BasicList() {
 
       <Divider />
 
-      <nav aria-label="account setting">
+      <nav aria-label="Sign-out">
         <List>
           <ListItem disablePadding component={Link} to="/SignIn"
             onClick={() => logOut()}>

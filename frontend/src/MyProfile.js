@@ -74,6 +74,7 @@ const MyAccount = () => {
             setSeverity('error');
             setSnackbarMessage('There profile image is not found.');
             setSnackbarOpen(true);
+            return;
           });
     };
 
