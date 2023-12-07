@@ -12,9 +12,24 @@ import StarIcon from '@mui/icons-material/Star';
 import CalendarMonthIcon from '@mui/icons-material/CalendarMonth';
 import SearchIcon from '@mui/icons-material/Search';
 import LeaderboardIcon from '@mui/icons-material/Leaderboard';
+import ExitToAppIcon from '@mui/icons-material/ExitToApp';
 import { Link } from 'react-router-dom';
 
 export default function BasicList() {
+
+  const handleLogout = async () => {
+    const confirmLogout = window.confirm('Do you want to sign out?');
+    if (confirmLogout) {
+      try {
+        const session_id = document.cookie.split("; ").find((row) => row.startsWith("sessionCookie="))?.split("=")[1];
+        await FrontAPI.logout(session_id);
+        navigate('/SignIn');
+      } catch (error) {
+        console.error('Error during logout:', error);
+      }
+    }
+  };
+
   return (
     <Box sx={{ bgcolor: 'background.paper' }}>
       <nav aria-label="main menu">
@@ -107,7 +122,10 @@ export default function BasicList() {
           </ListItem> */}
 
           <ListItem disablePadding>
-            <ListItemButton>
+            <ListItemButton onClick={handleLogout}>
+              <ListItemIcon>
+                <ExitToAppIcon />
+              </ListItemIcon>
               <ListItemText primary="Sign out" />
             </ListItemButton>
           </ListItem>
