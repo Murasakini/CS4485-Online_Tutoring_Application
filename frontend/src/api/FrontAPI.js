@@ -751,6 +751,30 @@ const FrontAPI = {
       }
     }
   },
+
+  // logout
+  logout: async (session_id) => {
+    try {
+      // POST request to /logout endpoint
+      const response = await axiosInstance.post('/logout', {
+        session_id: session_id,
+      });
+
+      return response.data;
+    } catch (error) {
+      if (error.response) {
+        console.error('Error response status:', error.response.status);
+        console.error('Error response data:', error.response.data);
+        return error.response.data;
+      } else if (error.request) {
+        console.error('No response received:', error.request);
+        return { status_code: -1, message: 'Network error occurred' };
+      } else {
+        console.error('Error message:', error.message);
+        return { status_code: -1, message: 'Network error occurred' };
+      }
+    }
+  },
 };
 
 export default FrontAPI;
