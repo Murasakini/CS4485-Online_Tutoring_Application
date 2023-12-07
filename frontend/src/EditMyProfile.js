@@ -6,8 +6,15 @@ import Body from './components/Body.js';
 import EditMyProfileInfo from './components/EditMyProfileInfo.js'
 import FrontAPI from './api/FrontAPI.js';
 import CustomSnackbar from './components/CustomSnackbar.js';
+import { Navigate } from 'react-router-dom';
+import { UserContext } from './App.js';
 
 const EditMyProfile = () => {
+  const[verified, setVerified] = useState(true);   // hold status of session id
+
+  // global variable to hold account type 
+  const { user, setUser } = React.useContext(UserContext);
+
   // get data passed from MyAccount page
   const location = useLocation();
   const {fromMyAccount} = location.state;
@@ -158,45 +165,69 @@ const EditMyProfile = () => {
 
   // store tutor list retrieved
   useEffect(() => {
-    console.log(accInfo);
     // define function to get tutor list
-    const storeDepartmentList = async () => {
+    const editProfile = async () => {
+      // validate session id
+      const session_id = document.cookie.split("; ").find((row) => row.startsWith("sessionCookie="))?.split("=")[1];
+      const verify = await FrontAPI.verifySession(session_id);
+
+      if (verify.status_code === 400 || verify.status_code === 401)  {// invalid or missing session id
+          setVerified(false);
+          return;
+      }
+
+      // account is verified
+      setVerified(true);
+
+      // set account type 
+      setUser(verify.user_type);
+
+      // define function to get tutor list
+      const storeDepartmentList = async () => {
         // call function to get tutor list
         const dept = await getDepartmentList();  
 
         // store list
         if (dept) setDepartmentList(dept);
-    }
+      }
 
-    storeDepartmentList();
-    console.log(departmentList);
+      storeDepartmentList();
+      console.log(departmentList);
+    }
+    
+    editProfile();
+    
   }, []);
 
   return (
     <div>
       <Header title="MY ACCOUNT" />
-      <Body content={
-        <React.Fragment>
-          <EditMyProfileInfo
-            accInfo={accInfo}
-            departmentList={departmentList} subjectList={subjectList}
-            handleChange={handleChange}
-            subjects={subjects} departments={departments}
-            handleChangeDepartments={handleChangeDepartments}
-            handleChangeSubjects={handleChangeSubjects}
-            handleSaveSubmit={handleSaveSubmit}
-          />
-
-            {/* CustomSnackbar for displaying error messages */}
-            <CustomSnackbar
-              open={snackbarOpen}
-              message={snackbarMessage}
-              onClose={() => setSnackbarOpen(false)}
-              severity={severity}
+      {!verified ?
+        <Navigate to='/SignIn' replace={true} /> :
+        
+        <Body content={
+          <React.Fragment>
+            <EditMyProfileInfo
+              accInfo={accInfo}
+              departmentList={departmentList} subjectList={subjectList}
+              handleChange={handleChange}
+              subjects={subjects} departments={departments}
+              handleChangeDepartments={handleChangeDepartments}
+              handleChangeSubjects={handleChangeSubjects}
+              handleSaveSubmit={handleSaveSubmit}
             />
-        </React.Fragment>
-        }
-      />
+
+              {/* CustomSnackbar for displaying error messages */}
+              <CustomSnackbar
+                open={snackbarOpen}
+                message={snackbarMessage}
+                onClose={() => setSnackbarOpen(false)}
+                severity={severity}
+              />
+          </React.Fragment>
+          }
+        />
+      }
     </div>
   );
 }
