@@ -586,6 +586,7 @@ def delete_session_from_db(session_id):
             return "Session successfully deleted.", True
         else:
             return "No session found with the given session ID.", False
+        
     except SQLAlchemyError as e:  # Catch any SQLAlchemyError
         db.session.rollback()
         return str(e), False
@@ -1852,13 +1853,13 @@ def login_tutor():
         }
         return jsonify(response), 401
         
-@version.route("/logout", methods=["POST"])
+@version.route("/logout", methods=["GET"])
 def logout():
     # Pulls a user's session_id from the browser cookie
     session_id = request.args.get('session_id')
 
     # Determine if the session id belongs to a tutor or user
-    user_id, tutor_id, authorized = get_id(session_id)
+    _, _, authorized = get_id(session_id)
 
     if not authorized:  # Invalid session id
         response = {
@@ -1880,7 +1881,6 @@ def logout():
     response.delete_cookie('sessionCookie')
 
     return response, 200
-
 
 @version.route("/test_protected", methods=["GET"])
 def test_protected():
