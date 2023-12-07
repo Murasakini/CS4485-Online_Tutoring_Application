@@ -3,9 +3,13 @@ import { Container, Typography, Table, TableContainer, TableHead, TableRow, Tabl
 import FrontAPI from '../api/FrontAPI';
 import CustomSnackbar from './CustomSnackbar';
 import { Navigate } from "react-router-dom";
+import { UserContext } from '../App.js';
 
 function UpcomingApmt() {
   const [verified, setVerified] = useState(true);   // hold status of session id
+
+  // global variable to hold account type 
+  const { user, setUser } = React.useContext(UserContext);
 
   const [upcomingAppointments, setUpcomingAppointments] = useState([]);
   const [snackbarOpen, setSnackbarOpen] = useState(false);
@@ -23,7 +27,11 @@ function UpcomingApmt() {
         return;
       }
 
+      // account is verified
       setVerified(true);
+
+      // set account type 
+      setUser(verify.user_type);
 
     // TODO: change to switch ; link to homepage
       try {

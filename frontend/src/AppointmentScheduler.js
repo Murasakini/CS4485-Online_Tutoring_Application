@@ -13,10 +13,14 @@ import {Box, Grid, Paper} from '@mui/material';
 import MenuList from './components/MenuList.js';
 import CustomSnackbar from './components/CustomSnackbar.js';
 import { Navigate } from "react-router-dom";
+import { UserContext } from './App.js';
 
 export default function AppointmentScheduler() {
   const[verified, setVerified] = useState(true);   // hold status of session id
   const session_id = document.cookie.split("; ").find((row) => row.startsWith("sessionCookie="))?.split("=")[1];
+
+  // global variable to hold account type 
+  const { user, setUser } = React.useContext(UserContext);
 
   const [formData, setFormData] = useState({
     subject: '',
@@ -32,6 +36,8 @@ export default function AppointmentScheduler() {
   //const [selectedTimeSlot, setSelectedTimeSlot] = useState('');
 
   // display error msg to the user
+  // display error msg to the user
+  const [severity, setSeverity] = useState('error');
   const [snackbarOpen, setSnackbarOpen] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState('');
 
@@ -43,13 +49,13 @@ export default function AppointmentScheduler() {
     // validate session id
     const session_id = document.cookie.split("; ").find((row) => row.startsWith("sessionCookie="))?.split("=")[1];
     FrontAPI.verifySession(session_id)
-    .then((data) => {
-      if (data.error) {
+    .then((verify) => {
+      
+      if (verify.error) {
         // custom error handling
         setVerified(false);
-        setSnackbarMessage(data.message);
+        setSnackbarMessage(verify.message);
         setSnackbarOpen(true);
-
       } 
       
       else {
@@ -61,15 +67,21 @@ export default function AppointmentScheduler() {
             setSnackbarMessage(data.message);
             setSnackbarOpen(true);
           } else {
+            
             setSubjects(data);
+            
+            // account is verified
             setVerified(true);
+
+            // set account type 
+            setUser(verify.user_type);
           }
         })
 
         // catch error getting subjects
         .catch((error) => {
           // network error
-          setSnackbarMessage('Network error. Please try again.'); 
+          setSnackbarMessage('Network error. Please try again.', error); 
           setSnackbarOpen(true);
         });
       }
@@ -193,6 +205,7 @@ export default function AppointmentScheduler() {
           // success. 
           console.log('Successfully created appointment!');
           setSnackbarMessage('Successfully created appointment!');
+          setSeverity('success');  // set level of severiy
           setSnackbarOpen(true);
           break;
         case 400:
@@ -332,6 +345,7 @@ export default function AppointmentScheduler() {
                 <CustomSnackbar
                   open={snackbarOpen}
                   message={snackbarMessage}
+                  severity={severity}
                   onClose={() => setSnackbarOpen(false)}
                 />
 

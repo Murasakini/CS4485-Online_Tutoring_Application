@@ -47,76 +47,78 @@ export default function BasicList() {
   return (
     <Box sx={{ bgcolor: 'background.paper' }}>
       <nav aria-label="main menu">
-        <List>
-          <ListItem disablePadding component={Link} to="/">
-            <ListItemButton>
-              <ListItemIcon>
-                <HomeIcon />
-              </ListItemIcon>
-              <ListItemText primary="Home" />
-            </ListItemButton>
-          </ListItem>
-
-          <ListItem disablePadding component={Link} to="/MyProfile">
-            <ListItemButton>
-              <ListItemIcon>
-                <Person2Icon />
-              </ListItemIcon>
-              <ListItemText primary="My Profile" />
-            </ListItemButton>
-          </ListItem>
-
-          {user === 'user' &&
-            <ListItem disablePadding component={Link} to="/Favorite">
+        {user &&
+          <List>
+            <ListItem disablePadding component={Link} to="/">
               <ListItemButton>
                 <ListItemIcon>
-                  <StarIcon />
+                  <HomeIcon />
                 </ListItemIcon>
-                <ListItemText primary="Favorite" />
+                <ListItemText primary="Home" />
               </ListItemButton>
             </ListItem>
-          }
 
-          {user === 'user' &&
-            <ListItem disablePadding component={Link} to="/AppointmentScheduler">
+            <ListItem disablePadding component={Link} to="/MyProfile">
               <ListItemButton>
                 <ListItemIcon>
-                  <CalendarMonthIcon />
+                  <Person2Icon />
                 </ListItemIcon>
-                <ListItemText primary="Appointments" />
+                <ListItemText primary="My Profile" />
               </ListItemButton>
             </ListItem>
-          }
 
-          {user === 'tutor' && 
-            <ListItem disablePadding component={Link} to="/TutorScheduler">
+            {user === 'user' &&
+              <ListItem disablePadding component={Link} to="/Favorite">
+                <ListItemButton>
+                  <ListItemIcon>
+                    <StarIcon />
+                  </ListItemIcon>
+                  <ListItemText primary="Favorite" />
+                </ListItemButton>
+              </ListItem>
+            }
+
+            {user === 'user' &&
+              <ListItem disablePadding component={Link} to="/AppointmentScheduler">
+                <ListItemButton>
+                  <ListItemIcon>
+                    <CalendarMonthIcon />
+                  </ListItemIcon>
+                  <ListItemText primary="Appointments" />
+                </ListItemButton>
+              </ListItem>
+            }
+
+            {user === 'tutor' && 
+              <ListItem disablePadding component={Link} to="/TutorScheduler">
+                <ListItemButton>
+                  <ListItemIcon>
+                    <CalendarMonthIcon />
+                  </ListItemIcon>
+                  <ListItemText primary="Tutor Scheduler" />
+                </ListItemButton>
+              </ListItem>
+            }
+
+            <ListItem disablePadding component={Link} to="/FindTutor">
               <ListItemButton>
                 <ListItemIcon>
-                  <CalendarMonthIcon />
+                  <SearchIcon />
                 </ListItemIcon>
-                <ListItemText primary="Tutor Scheduler" />
+                <ListItemText primary="Find a tutor" />
               </ListItemButton>
             </ListItem>
-          }
 
-          <ListItem disablePadding component={Link} to="/FindTutor">
-            <ListItemButton>
-              <ListItemIcon>
-                <SearchIcon />
-              </ListItemIcon>
-              <ListItemText primary="Find a tutor" />
-            </ListItemButton>
-          </ListItem>
-
-          <ListItem disablePadding component={Link} to="/Leaderboard">
-            <ListItemButton>
-              <ListItemIcon>
-                <LeaderboardIcon />
-              </ListItemIcon>
-              <ListItemText primary="Leaderboard" />
-            </ListItemButton>
-          </ListItem>
-        </List>
+            <ListItem disablePadding component={Link} to="/Leaderboard">
+              <ListItemButton>
+                <ListItemIcon>
+                  <LeaderboardIcon />
+                </ListItemIcon>
+                <ListItemText primary="Leaderboard" />
+              </ListItemButton>
+            </ListItem>
+          </List>
+        }
       </nav>
 
       <Divider />

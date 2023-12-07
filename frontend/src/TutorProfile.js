@@ -6,9 +6,14 @@ import Body from './components/Body.js';
 import TutorProfileInfo from './components/TutorProfileInfo.js';
 import FrontAPI from './api/FrontAPI.js';
 import CustomSnackbar from './components/CustomSnackbar.js';
+import { UserContext } from './App.js';
 
 const TutorAccount = () => {
     const[verified, setVerified] = useState(true);   // hold status of session id
+
+    // global variable to hold account type 
+    const { user, setUser } = React.useContext(UserContext);
+
     // store previous page
     const history = useNavigate();
 
@@ -96,7 +101,11 @@ const TutorAccount = () => {
                 return;
             }
 
+            // account is verified
             setVerified(true);
+
+            // set account type 
+            setUser(verify.user_type);
 
             // call function to get tutor list
             const profile = await getTutorProfile(); 
@@ -119,9 +128,9 @@ const TutorAccount = () => {
                 // check session id status
                 !verified ?
                     <Navigate to='/SignIn' replace={true} /> :
-
-                    accInfo && 
+                    
                         <Body content={
+                            accInfo &&
                             <React.Fragment>
                                 <TutorProfileInfo 
                                 accInfo={accInfo} 

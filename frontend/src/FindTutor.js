@@ -6,9 +6,13 @@ import Search from './components/Search.js'
 import FrontAPI from './api/FrontAPI.js';
 import CustomSnackbar from './components/CustomSnackbar.js';
 import { Navigate } from 'react-router-dom';
+import { UserContext } from './App.js';
 
 const FindTutor = () => {
     const[verified, setVerified] = useState(true);   // hold status of session id
+
+    // global variable to hold account type 
+    const { user, setUser } = React.useContext(UserContext);
 
     // create holder for values and function to update values
     const [searchInfo, setSearchInfo] = useState({});
@@ -33,7 +37,11 @@ const FindTutor = () => {
                 return;
             }
 
+            // account is verified
             setVerified(true);
+
+            // set account type 
+            setUser(verify.user_type);
         }
 
         verifySession();

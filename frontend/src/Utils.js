@@ -30,7 +30,6 @@ export const calculateAvailableTimeSlots = (allPossibleTimeSlots, tutorTimeSlots
   const availableSlots = allPossibleTimeSlots.filter(
     (slot) => !bookedTimeSlots.has(new Date(slot).getTime())
   );
-  console.log('time', availableSlots);
   return availableSlots;
 };
 

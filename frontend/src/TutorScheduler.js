@@ -7,16 +7,19 @@ import MenuItem from '@mui/material/MenuItem';
 import 'react-big-calendar/lib/css/react-big-calendar.css';
 import FrontAPI from './api/FrontAPI';
 import CalendarDisplay from './components/CalendarDisplay';
-import TextField from '@mui/material/TextField';
 import {generateAllPossibleTimeSlots, calculateAvailableTimeSlots, addToDate, convertToMySQLTimestamp } from './Utils';
 import CustomSnackbar from './components/CustomSnackbar';
 import Header from './components/Header.js';
 import {Box, Grid, Paper} from '@mui/material';
 import MenuList from './components/MenuList.js';
 import { Navigate } from "react-router-dom";
+import { UserContext } from './App.js';
 
 export default function TutorAppointmentScheduler() {
   const[verified, setVerified] = useState(true);   // hold status of session id
+
+  // global variable to hold account type 
+  const { user, setUser } = React.useContext(UserContext);
 
   // start date (rounded up to the next hour). used for determining possible time slots
   const currentDateTime = new Date();
@@ -34,24 +37,32 @@ export default function TutorAppointmentScheduler() {
 
   const [subjects, setSubjects] = useState([]);
   const [availableSlots, setAvailableSlots] = useState([]);
+
+  // display error msg to the user
+  const [severity, setSeverity] = useState('error');
   const [openSnackbar, setSnackbarOpen] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState('');
+
   const [cooldown, setCooldown] = useState(false);
 
   useEffect(() => {
     // validate session id
     const session_id = document.cookie.split("; ").find((row) => row.startsWith("sessionCookie="))?.split("=")[1];
     FrontAPI.verifySession(session_id)
-    .then((data) => {
-      if (data.error) {
+    .then((verify) => {
+      if (verify.error) {
         // custom error handling
         setVerified(false);
-        setSnackbarMessage(data.message);
+        setSnackbarMessage(verify.message);
         setSnackbarOpen(true);
-
       } 
       
       else {
+        // account is verified
+        setVerified(true);
+
+        // set account type 
+        setUser(verify.user_type);
         // fetch the list of subjects. unconditional 
         const session_id = document.cookie.split("; ").find((row) => row.startsWith("sessionCookie="))?.split("=")[1];
         FrontAPI.fetchSubjects(session_id)
@@ -66,7 +77,7 @@ export default function TutorAppointmentScheduler() {
           })
           .catch((error) => {
             // network error
-            setSnackbarMessage('Network error. Please try again.');
+            setSnackbarMessage('Network error. Please try again.', error);
             setSnackbarOpen(true);
           });
         }
@@ -104,14 +115,14 @@ export default function TutorAppointmentScheduler() {
     }
   }, [formData.tutorId, formData.startDate, formData.endDate]);
   
-  // handle when user change tutorID
-  const handleTutorIdChange = (event) => {
-    const tutorId = event.target.value;
-    setFormData({
-      ...formData,
-      tutorId: tutorId,
-    });
-  };
+  // // handle when user change tutorID
+  // const handleTutorIdChange = (event) => {
+  //   const tutorId = event.target.value;
+  //   setFormData({
+  //     ...formData,
+  //     tutorId: tutorId,
+  //   });
+  // };
   
   // handle when user change subject
   const handleSubjectChange = (event) => {
@@ -130,7 +141,7 @@ export default function TutorAppointmentScheduler() {
       timeSlot: selectedTimeSlot,
     });
 
-    console.log('form data', formData);
+    // console.log('form data', formData);
   };
 
   // handle when user click submit
@@ -167,11 +178,13 @@ export default function TutorAppointmentScheduler() {
     // createAppointment function from FrontAPI
     const response = await FrontAPI.createAvailability(formData, session_id);
 
-    console.log(response);
+    // console.log(response);
     switch (response.status_code) {
       case 201:
         // success. 
         console.log('Successfully created availability!');
+
+        setSeverity('success');  // set level of severity of message
         setSnackbarMessage('Successfully created availability!');
         setSnackbarOpen(true);
         break;
@@ -303,6 +316,7 @@ export default function TutorAppointmentScheduler() {
                 <CustomSnackbar
                   open={openSnackbar}
                   message={snackbarMessage}
+                  severity={severity}
                   onClose={() => setSnackbarOpen(false)}
                 />
               </form>
