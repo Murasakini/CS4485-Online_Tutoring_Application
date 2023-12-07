@@ -1416,6 +1416,7 @@ def signup_user():
         response = {
             'error': False,
             'status_code': 201,
+            'user_type': 'user',
             'result': inserted_data
         }
         return jsonify(response), 201
@@ -1737,6 +1738,7 @@ def signup_tutor():
         response = {
             'error': False,
             'status_code': 201,
+            'user_type': 'tutor',
             'result': inserted_data
         }
         return jsonify(response), 201
