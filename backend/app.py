@@ -1373,6 +1373,8 @@ def verify_session_manual():
         return jsonify(response), 400
     
     session_id = request.args.get('session_id')
+    user_id, _, _ = get_id(session_id)
+
     # SQL query first deletes expired session_ids, then checks if session_id exists in table
     validate_auth_table()
     sql = text("""
@@ -1385,6 +1387,7 @@ def verify_session_manual():
         response = {
             'error': False,
             'status_code': 201,
+            'user_type': 'user' if user_id != None else 'tutor',
             'message': 'session_id exists and is valid.'
         }
         return jsonify(response), 201
