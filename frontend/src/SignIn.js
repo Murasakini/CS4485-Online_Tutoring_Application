@@ -11,12 +11,14 @@ import Box from '@mui/material/Box';
 import CustomSnackbar from './components/CustomSnackbar.js';
 import { ThemeProvider, createTheme } from '@mui/material/styles';
 import './App.css';
-import { useState, useRef } from 'react';
+import { useState } from 'react';
 import FrontAPI from './api/FrontAPI.js';
 import List from '@mui/material/List';
 import ListItem from '@mui/material/ListItem';
 import ListItemText from '@mui/material/ListItemText';
 import Copyright from './components/Copyright';
+import { UserContext } from './App.js';
+
 
 const theme = createTheme({
   palette: {
@@ -30,6 +32,9 @@ const theme = createTheme({
 });
 
 export default function SignIn() {
+  // global variable to hold account type 
+  const { user, setUser } = React.useContext(UserContext);
+
   // keep track if logging in successfully
   const [isSuccessful, setSuccessful] = useState(false);
 
@@ -86,6 +91,9 @@ export default function SignIn() {
         // success
         setSuccessful(true);
         console.log('Login successful');
+
+        // set account type globally
+        setUser(response.user_data.user_type);
         break;
       case 400:
         console.log(`Error ${response.status_code}: ${response.message}`);

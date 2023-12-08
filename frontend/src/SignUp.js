@@ -16,6 +16,7 @@ import ListItem from '@mui/material/ListItem';
 import ListItemText from '@mui/material/ListItemText';
 import Copyright from './components/Copyright';
 import CustomSnackbar from './components/CustomSnackbar';
+import { UserContext } from './App.js';
 
 const theme = createTheme({
   palette: {
@@ -29,6 +30,9 @@ const theme = createTheme({
 });
 
 export default function SignUp() {
+  // global variable to hold account type 
+  const { user, setUser } = React.useContext(UserContext);
+
   // keep track if logging in successfully
   const [isSuccessful, setSuccessful] = useState(false);
 
@@ -173,6 +177,9 @@ export default function SignUp() {
                 setSuccessful(true);
                 setSnackbarMessage('Registration successful! Please navigate to Sign In page.');
                 setSnackbarOpen(true);
+
+                // set account type globally
+                setUser(response.user_type);
                 break;
               case 400:
                 // Bad request

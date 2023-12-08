@@ -5,9 +5,13 @@ import CustomSnackbar from './components/CustomSnackbar';
 import { Navigate } from "react-router-dom";
 import Header from "./components/Header";
 import Body from "./components/Body";
+import { UserContext } from './App.js';
 
 function Leaderboard() {
   const[verified, setVerified] = useState(true);   // hold status of session id
+
+  // global variable to hold account type 
+  const { user, setUser } = React.useContext(UserContext);
 
   const [tutorLeaderboard, setTutorLeaderboard] = useState([]);
   const [userLeaderboard, setUserLeaderboard] = useState([]);
@@ -27,7 +31,11 @@ function Leaderboard() {
         return;
       }
 
+      // account is verified
       setVerified(true);
+
+      // set account type 
+      setUser(verify.user_type);
 
       const tutorLeaderboardData = await FrontAPI.fetchTutorLeaderboard();
       switch (tutorLeaderboardData.status_code) {

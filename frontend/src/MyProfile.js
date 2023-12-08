@@ -6,9 +6,13 @@ import MyProfileInfo from './components/MyProfileInfo.js';
 import FrontAPI from './api/FrontAPI.js';
 import CustomSnackbar from './components/CustomSnackbar.js';
 import { Navigate } from 'react-router-dom';
+import { UserContext } from './App.js';
 
 const MyAccount = () => {
     const[verified, setVerified] = useState(true);   // hold status of session id
+
+    // global variable to hold account type 
+    const { user, setUser } = React.useContext(UserContext);
 
     // hold json data from db and function to store data
     const [accInfo, setAccInfo] = useState(null);
@@ -74,6 +78,7 @@ const MyAccount = () => {
             setSeverity('error');
             setSnackbarMessage('There profile image is not found.');
             setSnackbarOpen(true);
+            return;
           });
     };
 
@@ -90,7 +95,11 @@ const MyAccount = () => {
                 return;
             }
 
+            // account is verified
             setVerified(true);
+
+            // set account type 
+            setUser(verify.user_type);
 
             // call function to get tutor list
             const profile = await getMyProfile();   // get profile info
@@ -156,8 +165,8 @@ const MyAccount = () => {
             {!verified ?
                 <Navigate to='/SignIn' replace={true} /> :
 
-                accInfo &&
                 <Body content={
+                    accInfo &&
                     <React.Fragment>
                         <MyProfileInfo 
                         accInfo={accInfo} 

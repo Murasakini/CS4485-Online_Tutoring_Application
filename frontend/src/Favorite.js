@@ -5,9 +5,13 @@ import React, { useEffect, useState } from 'react';
 import FrontAPI from './api/FrontAPI.js';
 import CustomSnackbar from './components/CustomSnackbar.js';
 import { Navigate } from 'react-router-dom';
+import { UserContext } from './App.js';
 
 const Favorite = () => {
     const[verified, setVerified] = useState(true);   // hold status of session id
+
+    // global variable to hold account type 
+    const { user, setUser } = React.useContext(UserContext);
 
     // hold json data from db and function to store data
     const [tutorList, setTutorList] = useState([]);
@@ -85,8 +89,12 @@ const Favorite = () => {
                 return;
             }
 
+            // account is verified
             setVerified(true);
 
+            // set account type 
+            setUser(verify.user_type);
+            
             // call function to get tutor list
             const tutors = await getTutorList();  
 

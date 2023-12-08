@@ -76,7 +76,7 @@ export default function MyProfileInfo(props) {
         />
       }
 
-      {data.subject &&
+      {(data.subject.length > 0) &&
         <TextField
           id="subject"
           label="Subject List"
